@@ -1,0 +1,5 @@
+# List of untracked files to ignore
+# .vtk files
+*.vtk
+# .eps files
+*.eps

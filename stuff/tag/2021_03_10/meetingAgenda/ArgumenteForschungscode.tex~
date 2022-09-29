@@ -1,0 +1,39 @@
+\documentclass{scrarticle}
+
+\begin{document}
+\section*{Argumente daf\"ur}
+\begin{itemize}
+\item Eigenst\"andigkeit
+\item AG Betsch selbst aber auch Seelig arbeiten mehr zusammen
+\item 
+\end{itemize}
+\section*{Argumente dagegen}
+\begin{itemize}
+\item Aufwand (alleine meine Objekte mit Anpassungen in Pr\"aprozessor, Solver etc.)
+  \begin{itemize}
+  \item solid
+  \item contactNTS
+  \item contactMortar
+  \item contactThermoMortarNURBS
+  \item domain
+  \item phaseFracture
+  \item solidThermo
+  \item solidElectro
+  \item solidElectroThermo
+  \item dirichlet
+  \item neumann
+  \item neumannSolidThermo
+  \item neumannSolidElectro
+  \item neumannSolidElectroThermo
+  \item adaptivTime
+  \end{itemize}
+\item erste Geschwindigkeitstests in python sind um etwa 40\% langsamer als in Matlab (etwa gleicher code: Lehrcode parallellisiert und sparse-assembly)
+\item Argument Mark: weniger Leute finden weniger Fehler
+\item Argument Robin: Matlab schnelle \& flexible Entwicklung, C++ schnell
+\end{itemize}
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

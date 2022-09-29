@@ -1,0 +1,40 @@
+from setuptools import setup, find_packages
+
+setup(
+    name='pyfemkit',
+    version='0.1.0',
+    author="Marlon Franke",
+    author_email="marlon.franke@kit.edu",
+    description="python finite element code",
+    long_description="Minimal, modular, object-oriented and parallel finite element code using python",
+    url="https://git.scc.kit.edu/franke/pyfemkit",
+    packages = find_packages(include=['commonFunctions', 'commonFunctions.*', 
+                                     'continuumClasses/dirichletClass', 'continuumClasses/dirichletClass.*',
+                                     'continuumClasses/solidClass', 'continuumClasses/solidClass.*',
+                                     'coreClasses', 'coreClasses.*',
+                                     'coreClasses/solidSuperClass', 'coreClasses/solidSuperClass.*',
+                                     'meshes/meshGenerators', 'meshes/meshGenerators.*',
+                                     'scripts/pre', 'scripts/pre.*',
+                                     'scripts/solver', 'scripts/solver.*',
+                                     'scripts/post', 'scripts/post.*']),
+    install_requires=["numpy",
+                      #"sys",
+                      "auto_diff",
+                      "scipy",
+                      #"inspect",
+                      "joblib",
+                      "ttictoc",],
+    extras_require={
+        ":python_version>'3.8'": ["matplotlib",
+                                  "pyvista",
+                                  "vtk",
+                                  "inspect",
+                                  "sys",
+                                  ],
+    },
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "Operating System :: OS Independent",
+        
+    ],
+)

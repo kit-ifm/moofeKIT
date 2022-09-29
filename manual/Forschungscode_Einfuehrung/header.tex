@@ -1,0 +1,67 @@
+%-----------------------------------------------------------------------
+%special user commands and packages
+%-----------------------------------------------------------------------
+%ENTER USER COMMANDS AND PACKAGES HERE
+
+%\usepackage{url}
+\def\UrlBreaks{\do\a\do\b\do\c\do\d\do\e\do\f\do\g\do\h\do\i\do\j\do\k\do\l\do\m\do\n\do\o\do\p\do\q\do\r\do\s\do\t\do\u\do\v\do\w\do\x\do\y\do\z\do\0\do\1\do\2\do\3\do\4\do\5\do\6\do\7\do\8\do\9\do\-}%
+
+%\usepackage[hyphens]{url}
+%\usepackage{hyperref}
+%-----------------------------------------------------------------------
+%standard user commands and additional packages (most in ifmthesis.cls)
+%-----------------------------------------------------------------------
+%assembly symbol (simple)
+\DeclareMathOperator*{\assem}{\text{\Large\ensuremath{\mathbf{\textsf A}}}}
+\DeclareMathOperator*{\assemtext}{\text{{\ensuremath{\mathbf{\textsf A}}}}}
+%functions, operators
+\newcommand{\cof}{\ensuremath{\operatorname{cof}}}
+\renewcommand{\div}{\ensuremath{\operatorname{div}}}
+\newcommand{\Div}{\ensuremath{\operatorname{Div}}}
+\newcommand{\Grad}{\ensuremath{\operatorname{Grad}}}
+\newcommand{\grad}{\ensuremath{\operatorname{grad}}}
+\newcommand{\Curl}{\ensuremath{\operatorname{Curl}}}
+\newcommand{\curl}{\ensuremath{\operatorname{curl}}}
+\newcommand{\tr}{\ensuremath{\operatorname{tr}}}
+\newcommand{\sign}{\ensuremath{\operatorname{sign}}}
+%differential signs
+\renewcommand{\d}[1][]{\ensuremath{\,\mathrm{d}#1}}
+\newcommand{\D}[1][]{\ensuremath{\mathrm{D}#1}}
+\newcommand{\nablaq}[1]{\ensuremath{\nabla_{\hspace{-0.5ex}\mbox{\begin{scriptsize}\vec{#1}\end{scriptsize}}}}\hspace{0.1ex}}
+%useful for continuum mechanics fem
+\renewcommand{\phi}{\varphi}
+\renewcommand{\epsilon}{\varepsilon}
+\newcommand{\body}{\ensuremath{\mathcal{B}}}
+\newcommand{\refgeb}{\hat{\Omega}}
+\newcommand{\he}{\ensuremath{^{h,e}}}
+\newcommand{\transp}{\mathrm{T}}
+%misc
+\newcommand{\degree}{\textdegree}
+\def\clap#1{\hbox to 0pt{\hss#1\hss}}
+\def\mathclap{\mathpalette\mathclapinternal}
+\def\mathclapinternal#1#2{\clap{$\mathsurround=0pt#1{#2}$}}
+\newcommand{\matlab}{\textsc{Matlab}}
+%floats
+\newcommand{\picfontsize}{\small}
+\newenvironment{myfigure}{\begin{figure}[htb]\centering\picfontsize}{\end{figure}}
+\newenvironment{mytable}{\begin{table}[htb]\centering}{\end{table}}
+\hyphenation{in-te-gra-ble in-te-gra-bil-i-ty}% Silbentrennung
+%dot and comma to end equations
+\newcommand{\eqcomma}{\ensuremath{\text{,}}}
+\newcommand{\eqdot}{\ensuremath{\text{.}}}
+%vec and tens
+\renewcommand{\vec}[1]{\ensuremath{\mbox{\boldmath $\mathrm{#1}$}}}
+\newcommand{\tens}[1]{\vec{#1}}
+%checkmark and xmark
+\usepackage{bbding}
+\newcommand{\cmark}{\Checkmark}
+\newcommand{\xmark}{\XSolidBrush}
+%Tensorcrossproduct
+\usepackage{stackengine}
+\def\stacktype{L}
+\stackMath
+\def\newhash{\mathrel{\abovebaseline[-.9ex]{\rotatebox{45}{\stackon[0pt]{%
+					\stackon[0pt]{\rule[.28em]{.8em}{.045em}}{\rule[.67em]{.8em}{.045em}}%
+				}{\rule[.1em]{.045em}{.8em}\rule{.3em}{0pt}\rule[.1em]{.045em}{.8em}}}}}}
+\newcommand{\hhash}{\scalebox{0.75}{\raisebox{.7ex}{$\newhash$}}} 
+

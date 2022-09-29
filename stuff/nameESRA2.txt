@@ -1,0 +1,47 @@
+#final poll
+
+moofeKIT III
+matlab object oriented finite element kit
+
+GANDALF III
+General Application for Nonlinear Deformation Analysis of Large-scale Fem
+General Analysis and Design Application for Large scale  Fem
+Great Analysis and Development Application for Lit Fem
+
+#proposals
+
+FINEST
+FINite Element SofTware 
+
+FENCE
+Finite Element Numerical Coding Environment
+
+MARLON
+Matlab Application for Resarch of Large scale Objectoriented Numerics
+
+FLAME
+Finite eLement Analysis Matlab Engine
+
+FEANOR
+Finite Element Analysis for NO limit Research
+
+GANDALF
+Great Analysis and Development Application for Lit Fem
+General Analysis and Design Application for Large scale  Fem
+
+FRANK
+Finite element Research ANalysis tool Karlsruhe
+
+MOOFEKIT
+Matlab Object Oriented Finite Element KIT
+
+MOOFECAT
+Matlab Object Oriented Finite Element Computational Analysis Toolbox
+
+COOPER
+Computational Object Oriented Parallel Environment Research
+
+cooperKIT
+Computational Object Oriented Parallel Environment Research KIT
+
+

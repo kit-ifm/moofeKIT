@@ -1,0 +1,312 @@
+% !TeX spellcheck = de_DE
+\documentclass[12pt,bibstyle=none,pagenumberinfooter]{ifmdocument}
+
+
+%general settings
+\author{...}
+\title{Einf\"uhrung in den Forschungscode}
+\date{\the\day.\the\month.\the\year}
+\headerblock{%
+	{\bfseries\normalsize Institut für Mechanik}\\[0.2em]
+	\thetitle\\
+	\theauthor, \thedate
+}
+
+%usercommands
+\input{header}
+
+\begin{document}
+	\maketitle
+	\section{objektorientierte Programmierung}
+	Bei der objektorientierten Programmierung (OOP) wird alles in Objekten gespeichert. Beispielsweise auch Variablen, diese m\"ussen dann nicht mehr einzeln an andere Dateien/Funktionen übergeben werden, sondern es reicht aus das passende Objekt zu \"ubergeben. Die Objekte geh\"oren einer bestimmten Klasse an. In dieser Klasse sind alle Attribute (Eigenschaften) und Methoden (Funktionen) definiert, die ein Objekt haben/ausführen kann. Ein Objekt ist die Instanz einer Klasse und kann mit anderen Objekten kommunizieren durch senden und empfangen von Nachrichten.
+	\subsection{Klasse}
+	Eine Klasse ist ein sogenannter Bauplan f\"ur eine bestimmte Gruppe von Objekte. Sie enth\"alt Methoden (Funktionen) und Attribute (Eigenschaften/Konfigurationsparameter). 
+	Die Gruppierung von Objekten ist m\"oglich durch die Zugeh\"origkeit zu einer bestimmten Klasse. 
+	
+	Wenn mehrere Objekte sich nur in wenigen Eigenschaften unterscheiden, aber der restliche Aufbau gleich ist, kann mit Vererbung gearbeitet werden. Dass bedeutet, die gleichen Eigenschaften werden in einer Basisklasse (engl. superclass) definiert. Die sich unterscheidenden Eigenschaften werden dann in Unterklassen definiert, die von der Basisklasse abgeleitet sind. So erbt die Unterklasse die Datenstruktur der Basisklasse und erg\"anzt sie entsprechend.\\
+	Syntax: 
+	\begin{align*}
+		\text{classdef}& \,\text{Unterklasse} < \text{Basisklasse}  \\
+		&\text{properties}\\
+		& \qquad \ldots \\
+		&\text{end}\\
+		&\text{methods}\\
+		&\qquad	\ldots \\
+		&\text{end}\\
+		\text{end} \quad &
+	\end{align*}	
+	\subsection{Objekt}
+	Wie bereits erw\"ahnt kann auf Grundlage der Klassendefinition ein Objekt erstellt werden. Dabei beschreiben die Attribute/Eigenschaften den Zustand des Objekts. Die Methoden/Funktionen sind hingegen s\"amtliche Aktionen, die ein Benutzer ausf\"uhren kann. Objekte sind immer in einem wohldefinierten, selbstkontrollierten Zustand. 
+	Um zu überprüfen aus welcher Klasse ein Objekt stammt:
+	\begin{gather*}
+	>> \text{class}(\text{Objekt})
+	\end{gather*}
+
+	\subsection{Attribute}
+	Die Attribute sind die Eigenschaften eines Objekts. Wer Zugriff auf diese Eigenschaften hat, kann in der zugehörigen Klasse definiert werden:
+	\begin{itemize}
+		\item Get Access = private: Eigenschaft nur sichtbar f\"ur Methoden, die mit ihr arbeiten (schreibgesch\"utzt)
+		\item constant: keine \"Anderung der Eigenschaft m\"oglich
+		\item dependent: Eigenschaft wird nur berechnet, wenn sie angefordert wird $\rightarrow$ Get-Methode angeben, die beim Zugriff auf die Eigenschaft automatisch aufgerufen wird
+	\end{itemize}
+Syntax:
+	\begin{align*}
+		&\text{properties} \\
+		& \qquad \ldots \\
+		&\text{end} \\
+		&\text{properties} (\text{SetAccess}=\text{private}) \\
+		& \qquad \ldots \\               
+		&\text{end} \\
+		&\text{properties} (\text{Constant})\\
+		& \qquad\ldots \\
+		&\text{end}\\
+		&\text{properties} (\text{Dependent} = true)\\
+		& \qquad \ldots \\
+		&\text{end} 
+	\end{align*}
+
+	\subsection{Methoden}
+	Methoden sind Funktionen, die in einer bestimmten Klasse definiert sind. Auf diese Funktionen k\"onnen je nach Zugriffsebene unterschiedlich viele Objekte zugreifen und diese ausführen. 
+	Im Forschungscode wurden drei Zugriffsebenen verwendet: 
+	\begin{itemize}
+		\item \"offentliche (public) Methoden: d\"urfen von allen Klassen und deren Instanzen aufgerufen werden
+		\item gesch\"utzte (protected) Methoden: d\"urfen von Klassen im selben Paket und abgeleiteten Klassen aufgerufen werden
+		\item private (private) Methoden: k\"onnen nur von anderen Methoden derselben Klasse aufgerufen werden 
+	\end{itemize}
+Syntax:
+	\begin{align*}
+		&\text{methods} \\\
+		&\quad\text{function} \, ordinaryMethod(obj,arg1,...) \\
+		&\quad \qquad \ldots \\
+		&\quad\text{end} \\
+		&\text{end}	
+	\end{align*}
+Konstruktormethoden dienen der Dateninitialisierung und -validierung eines Objekts.\\
+Syntax:
+	\begin{align*}
+		&\text{methods} \\
+		&\quad\text{function}\, obj = set.PropertyName(obj,value) \\
+		&\quad \qquad \ldots \\               
+		&\quad\text{end} \\
+		&\quad\text{function}\, value = get.PropertyName(obj)\\
+		&\quad \qquad\ldots \\
+		&\quad\text{end}\\
+		&\text{end}	
+	\end{align*}
+
+	\subsection{Ziel/Vorteile}
+	\begin{itemize}
+		\item Vererbung: Dopplungen im Forschungscode vermeiden
+		\item Polymorphie: gleiche Nachricht l\"ost bei unterschiedlichen Objekten entsprechend andere Aktionen aus 
+		\item Datenkapselung: keine unkontrollierte \"Anderung des Objekts von außen
+		\item bessere Strukturierung des Codes
+	\end{itemize}
+	
+	\section{Aufbau des Forschungscodes}
+	Der Forschungscode ist in mehrere Ordner unterteilt. In jedem dieser Ordner sind Klassen definiert und/oder Funktionen. Die wichtigsten Matlab-Dateien zum Verst\"andnis des Codes sind in den einzelnen Unterpunkten aufgef\"uhrt und ihre Funktionen dort erl\"autert. Die \"Uberschriften der einzelnen Abschnitte entsprechen den Ordnern im Forschungscode.
+	\subsection{commonFunctions}
+		\begin{itemize}
+			\item \textit{callElements.m} \"offnet die richtige Elementroutine mithilfe des dofObjects, des setupObject und der feval-Funktion (siehe Erkl\"arung weiter unten).
+			\item \textit{lagrangeShapeFunctions.m} beinhaltet die Formfunktionen für 1D, 2D und 3D und Gaußpunkte mit Gewichten
+		\end{itemize}
+	\subsection{continuumClasses}
+		\begin{itemize}
+			\item @neumannClass
+			\begin{itemize}
+				\item \textit{neumannClass.m} notwendige Eigenschaften und Methoden zur Berechnung eines Neumannrandes sind hier implementiert.
+				\item \textit{deadLoad.m} beinhaltet die Berechnung eines Neumannrandes in 3D.
+			\end{itemize}
+			\item @dirichletClass 
+			\begin{itemize}
+				\item \textit{dirichletClass.m} Berechnung des Dirichletrandes ist hiermit m\"oglich. Alle relevanten Informationen in Form einer Klasse gespeichert. Das zugeh\"orige Objekt ist auch jeweils im dofObject enthalten (Eigenschaft: listContinuumObjects) 
+			\end{itemize}
+			\item @solidClass 
+			\begin{itemize}
+				\item \textit{solidClass.m}
+				\item \textit{displacementHookeEndpoint.m} enth\"alt die Elementroutinen zur Berechnung mit linear-elastischem Ansatz (hier mit dem impliziten Eulerverfahren). Diese Elementroutinen bestehen im Wesentlichen aus der Gaußschleife. 
+			\end{itemize}
+			\item @solidViscoClass 
+			\begin{itemize}
+				\item \textit{solidViscoClass.m} enth\"alt die zus\"atzlich notwendigen 
+				Eigenschaften und Methoden f\"ur Viskoelastizit\"at.
+				\item \textit{displacementHookeMidpoint.m} hier sind die passenden Elementroutinen auf Gaußpunktebene abgespeichert.
+			\end{itemize}
+			\item weitere Klassen wie die @solidViscoClass und @solidClass sind in dem Ordner abgespeichert und sind alle von der solidSuperClass abgeleitet. 
+		\end{itemize}
+	\subsection{coreClasses}
+	core = Kern, Ader
+	
+		\begin{itemize}
+			\item @solidSuperClass
+			\begin{itemize}
+				\item \textit{solidSuperClass} definiert notwendige Attribute und Methoden, die für alle continuumClasses gleich sind und daher an diese vererbt werden.
+			\end{itemize}
+			\item \textit{dofClass.m} in dieser Klasse werden Attribute wie Verschiebungen und Geschwindigkeiten der einzelnen Knoten definiert und initialisiert. Die Objekte dieser Klasse beinhalten also zu jedem Zeitschritt die Verschiebungen und Geschwindigkeiten der Knoten zum Zeitpunkt $t$ ($uN$ und $vN$) und zum Zeitpunkt $t+1$ ($uN1$ und $vN1$).
+			\item \textit{plotClass.m} definiert die Grafikeinstellungen.
+			\item \textit{shapeFunctionClass.m} beinhaltet alle Ansatzfunktionen und deren Ableitungen (f\"ur 1D, 2D und 3D).
+			\item \textit{storageFEclass.m} erm\"oglicht unteranderem das Abspeichern der elementweise ausgerechneten Tangenten (Ke) und Residuen (Re).
+		\end{itemize}
+	\subsection{meshes}
+	mesh = Netz, Gitter\\
+	Hier sind alle Funktionen untergebracht, die das gegebene Gebiet diskretisieren. 
+		\begin{itemize}
+			\item meshGenerator: z.B. \textit{netzdehnstab.m}
+		\end{itemize}
+	\subsection{scripts}
+		\begin{itemize}
+			\item pre: z.B. \textit{cooksMembrane.m}, \textit{oneDimensionalContinuum.m}
+			\item solver: z.B. \textit{runNewton.m}, \textit{solveScript.m}
+		\end{itemize}
+	Anhand von der Datei \glqq \textit{oneDimensionalContinuum.m}\grqq{} ist die Abfolge der einzelnen Funktionen und Klassen bei Ausf\"uhrung des Programms genauer beschrieben.
+%TODO Bild mit Vererbung der Klassen
+		
+	\section{wichtige Funktionen/Befehle in MATLAB}
+	\subsection{assert}
+		\glqq throw error if condition false\grqq{}\\
+		Mithilfe dieser Funktion kann eine bestimmte Bedingung \"uberpr\"uft werden. 
+		\begin{gather*}
+			assert(cond)
+		\end{gather*}
+		Wenn die Bedingung $cond$ (z.B. $x < 1$) nicht eingehalten ist, wird eine Fehlermeldung ausgerufen.
+	\subsection{strcmp}
+		\glqq compare strings\grqq{}\\
+		Hier werden zwei Zeichenketten verglichen. Wenn sie identisch sind, ist der 'output' 1 (true), ansonsten 0 (false). 
+		\begin{gather*}
+			tf = strcmp(s1,s2)\\
+			tf = 1 \text{ (true) } \text{ oder } 0 \text{ (false) }
+		\end{gather*}
+		$s1$ und $s2$ k\"onnen eine Kombination aus Zeichenketten und Vektoren sein. Es werden die einzelnen Eintr\"age an gleicher Stelle miteinander verglichen, wenn die Zeichenketten beide mehr als einen Eintrag haben.
+	\subsection{strcmpi}
+		\glqq  compare strings (case insensitive)\grqq{}\\
+		Wie vorherigen Abschnitt werden zwei Zeichenketten miteinander verglichen. Hier wird zwischen Groß- und Kleinschreibung nicht unterschieden. Zwischen Leerzeichen hingegen schon. 
+		\begin{gather*}
+			tf = strcmpi(s1,s2)\\
+			tf = 1 \text{ (true) } \text{ oder } 0 \text{ (false) }
+		\end{gather*}
+	\subsection{ischar}
+		\glqq determine if input is character array\grqq{}\\
+		Es wird \"uberpr\"uft, ob das \glqq input argument\grqq{} ein \glqq character array\grqq{} ist.
+		\begin{gather*}
+			tf = ischar(A)\\
+			tf = 1 \text{ (true) } \text{ oder } 0 \text{ (false) }
+		\end{gather*}
+	\subsection{isfield}
+		\glqq determine if input is structure array field\grqq{}\\
+		Diese Funktion \"uberpr\"uft, ob ein $field$ in einem \glqq structure array\grqq{} enthalten ist.
+		\begin{gather*}
+			TF = isfield(S,field)\\
+			TF = 1 \text{ (true) } \text{ oder } 0 \text{ (false) }
+		\end{gather*}
+		Wenn $field$ der Name eines Feldes aus dem \glqq structure array\grqq{} $S$ ist, ist $TF=1$. Sonst, gibt die Funktion $0$ zur\"uck.
+	\subsection{isnumeric}
+		\glqq determine whether input is numeric array\grqq{}\\
+		Es wird \"uberpr\"uft, ob das \glqq input argument\grqq{} ein \glqq array of numeric data type\grqq{} ist.
+		\begin{gather*}
+			tf = isnumeric(A)\\
+			tf = 1 \text{ (true) } \text{ oder } 0 \text{ (false) }
+		\end{gather*}
+		Numeric types in MATLAB: int8, int16, int32, int64, uint8, uint16, uint32, uint64, single, and double.
+	\subsection{isprop}
+		\glqq True if property exists\grqq{}\\
+		Wenn die Eigenschaft (unter $propertyName$ abgespeichert) existiert in dem Objekt, gibt die Funktion eine $1$ wieder, sonst $0$.
+		\begin{gather*}
+			tf = isprop(obj,PropertyName)\\
+			tf = 1 \text{ (true) } \text{ oder } 0 \text{ (false) }
+		\end{gather*}
+	\subsection{vertcat}
+		\glqq Concatenate arrays vertically\grqq{}\\
+		Mithilfe dieser Funktion k\"onnen mehrere Matrizen in einer zusammengefasst untereinander geschrieben werden, sofern deren Anzahl an Spalten \"ubereinstimmt. 
+		\begin{gather*}
+			C = vertcat(A,B)\\
+			C = vertcat(A1,A2,…,An)
+		\end{gather*}
+		Im ersten Fall wird $B$ unter $A$ geschrieben, diese Funktion ist \"aquivalent zu $[A ; B]$. Es k\"onnen auch mehrere Matrizen vereint werden, sofern deren erste Dimension \"ubereinstimmt, wie in Zeile 2 gezeigt.
+	\subsection{full}
+		\glqq Convert sparse matrix to full storage\grqq{}\\
+		Durch diese Funktion kann eine \glqq sparse matrix\grqq{} in eine Matrix mit allen Eintr\"agen \"uberf\"uhrt werden.  
+		\begin{gather*}
+			A = full(S)
+		\end{gather*}
+		Hier ist $S$ die \glqq sparse matrix\grqq{} und $A$ die volle Matrix. 
+	\subsection{strcat}
+		\glqq concatenate strings horizontally\grqq{}\\
+		Zeichenfolgen horizontal verketten
+		\begin{gather*}
+			s=strcat(s1, ... , sN) \rightarrow s = 's1, ... , sN'
+		\end{gather*}
+	\subsection{isa}
+		\glqq determine if input has specified data type\grqq{}\\
+		Entspricht $A$ einem bestimmten Datentyp?
+		\begin{gather*}
+			tf = isa(A,\text{dataType)} \\
+			tf = 1 \text{ (true) } \text{ oder } 0 \text{ (false) }
+		\end{gather*}
+		Wenn $A$ ein Objekt ist, dann wird $tf=1$, wenn \glqq dataType\grqq{} entweder die Klasse oder Basisklasse von $A$.
+	\subsection{isafield}
+		\glqq  returns 1 if field is the name of a field of the structure array S\grqq{}\\
+		Hiermit wird herausgefunden, ob im array $S$ ein bestimmter Datentyp mit gleichem Namen vorhanden ist.
+		\begin{gather*}
+			tf = isafield(S,\text{(field)} \\
+			tf = 1 \text{ (true) } \text{ oder } 0 \text{ (false) }
+		\end{gather*}
+	\subsection{feval}
+		\glqq evaluate function\grqq{}\\
+		Mithilfe dieser Funktion kann das erste \glqq input argument\grqq{} als Funktion mit den darauffolgenden \glqq input arguments\grqq{} aufgerufen werden, um \glqq output arguments\grqq{} zu generieren
+		\begin{gather*}
+			[y_1, ..., y_N] = feval(fun, X_1, ..., X_M)
+		\end{gather*}
+		Es wird die Funktion $fun$ mit den Parametern $X_1, .., X_M$ aufgerufen und es werden dann die Parameter $Y_1, ..., Y_N$ berechnet. 
+	\subsection{numel}
+		\glqq number of array elements\grqq{}
+		gibt die Anzahl der Elemente eines \glqq arrays\grqq{} wieder
+		\begin{gather*}
+			n=numel(A)
+		\end{gather*}
+%	\subsection{parfor}
+%		\glqq executes for-loop iterations on workers in a parallel pool on your multi-core computer or cluster\grqq{}\\
+%		der Syntax ist wie bei einer for-Schleife. 
+%		\begin{align*}
+%			&parfor \quad loopVar = initVal:endVal\\
+%			 &\qquad statements;\\
+%			&end
+%		\end{align*}Jedoch kann dadurch an mehreren Schleifendurchläufen gleichzeitig gerechnet werden um Zeit zu sparen. Die Berechnungen in den Schleifen dürfen nicht von den vorangegangen Durchläufen abhängig sein, da die es nicht mehr chronologisch berechnet wird. Es kann keine $parfor$-Schleife innerhalb einer anderen $parfor$-Schleife erfolgen.
+	\subsection{handle}
+	Eine \glqq handle\grqq{} ist eine Variable, die sich auf ein bestimmtes Objekt aus der handle-Klasse bezieht. Mehrere dieser handle-Variablen k\"onnen sich auf ein Objekt beziehen. Sie erm\"oglichen es Datenstrukturen wie etwa verkn\"upfte Listen zu erstellen oder mit einem großen Datensatz zu arbeiten ohne ihn zu kopieren.\\
+	Die handle-Klasse ist eine abstrakte Basisklasse, mit der keine Objekte gebildet werden k\"onnen. Jedoch k\"onnen in Unterklassen, die von der handle-Klasse abgeleitet sind, handle-Objekte erstellt werden. Dies wurde in dem Forschungscode gemacht.
+	
+	\section{GitLab}
+	\subsection{Ersteinrichtung}
+	siehe Einf\"uhrung GitLab
+	\subsection{eigenen Branch erstellen}
+	\begin{itemize}
+	\item zum Eigenst\"andigen und unabh\"angigen Arbeiten 
+	\item neuen Branch erstellen (git branch feature branch)
+	\item checkout aus eigenem Branch (git checkout feature branch)
+	\item add, commit und push nach dem am feature branch gearbeitet wurde
+\end{itemize}
+
+	\subsection{merge Request an master branch}
+	\begin{itemize}
+	\item add, commit and push the feature branch
+	\item switch to master branch (git checkout master)
+	\item pull master branch to latest state (git pull)
+	\item switch back to feature branch (git checkout feature branch)
+	\item merge feature branch with master branch (git merge master)
+	\item push feature branch to remote (git push)
+	\item submit merge request via the webpage (recommend) and assign suitable reviewers
+\end{itemize}
+Wichtig:
+keine eigenen Kommentare sondern nur f\"ur alle relevante Informationen im Forschungscode / master branch 
+
+%TODO Url-Problem lösen
+	\section{weiterf\"uhrende Literatur}
+	\subsection{Objektorientierte Programmierung:}
+	\begin{itemize}
+		\item \url{https://de.wikipedia.org/wiki/Objektorientierte_Programmierung}
+		\item \url{https://de.mathworks.com/company/newsletters/articles/introduction-to-object-oriented-programming-in-matlab.html}
+	\end{itemize}
+	\subsection{GitLab}
+		\begin{itemize}
+			\item \url{https://git.scc.kit.edu/ifm/anleitungen/software/-/blob/master/git/simple_cheat_sheet.md}
+		\end{itemize}
+\end{document}

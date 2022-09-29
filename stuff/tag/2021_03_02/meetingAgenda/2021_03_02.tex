@@ -1,0 +1,68 @@
+\documentclass{scrarticle}
+
+\begin{document}
+\section*{Code-Besprechung 02.03.2021}
+\subsection*{Spyder-IDE Vorstellung}
+\begin{itemize}
+\item Matlab-\"ahnliche Entwicklungsumgebung f\"ur Python
+  \begin{itemize}
+  \item Editor
+  \item Command Window
+  \item Variable Editor
+  \item Figure Window
+  \item Profiler
+    \end{itemize}
+\item Lehrcode (+ Parallelisierung und symbolischer Berechnungen)
+\item Parallelisierung etwas langsamer als in Matlab (Implementierungsabh\"angig?)
+\end{itemize}
+\subsection*{Struktur des neuen Codes}
+\begin{itemize}
+\item Idee
+  \begin{enumerate}
+    \item Auf Grundstruktur in Matlab zwecks Abstimmung festlegen (in git)
+    \item Umsetzung in Python
+    \item Entscheidung f\"ur Matlab + .mex-files oder Python
+    \end{enumerate}
+  \item Vorschlag f\"ur Grundstruktur \(\rightarrow\) siehe Matlab
+    \item Ordnerstruktur: Funktionen/Klassen/Skripte/ReadME (best practice)
+    \item Code in Matlab
+      \begin{itemize}
+      \item prepareWorkspace
+      \item setupClass
+      \item solidClass
+        \begin{itemize}
+        \item edof \(\rightarrow\) lokale Element-Knotenfreiheitsgradtabelle
+        \item (fullEdof \(\rightarrow\) lokale, komplette Element-Freiheitsgradtabelle)
+        \item (globalEdof \(\rightarrow\) globale Element-Knotenfreiheitsgrade, bei mehr als einem continuumObjekt relevant)
+        \item globalFullEdof \(\rightarrow\) globale, komplette Element-Freiheitsgradtabelle
+        \item (nodesDof \(\rightarrow\) lokale komplette Knotenfreiheitsgradtabelle)
+        \item globalNodesDof \(\rightarrow\)globale komplette Knotenfreiheitsgradtabelle
+        \end{itemize}
+        \end{itemize}
+      \item dirichletClass
+      \item runNewton, konzeptionelle Baustellen:
+        \begin{itemize}
+        \item TODO: als Funktion? Wie Objekte einsammeln?
+        \item TODO: globale Freiheitsgrade zuordnen? datenManager? 
+        \end{itemize}
+      \end{itemize}
+      \subsection*{TODOs}
+      \begin{itemize}
+      \item git aufsetzen, Name?
+        \item auf Struktur einigen
+      \item automatisches Testen mittels Testskript von Beginn an: CI (matlabrunner) in git checken
+      \item Basisklasse f\"ur Kontinuumselemente
+      \item Superklasse f\"ur solids
+      \item weitere Klassen und Elemente
+        \begin{itemize}
+        \item solidThermoClass
+        \item solidElectroThermoClass
+        \item gemischte Elemente, statische Kondensation
+        \end{itemize}
+      \end{itemize}
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
