@@ -51,8 +51,8 @@ meshObject = obj.meshObject;
 % aquire general data
 N_k_I = shapeFunctionObject.N_k_I;
 dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
-dN0_xi_k_I = shapeFunctionObject.dN0_xi_k_I;
-E_k_I = mixedFEObject.shapeFunctionObject.N_k_I;
+dN0_xi_I = shapeFunctionObject.dN0_xi_I;
+EAll = mixedFEObject.shapeFunctionObject.M;
 
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
 gaussWeight = shapeFunctionObject.gaussWeight;
@@ -81,7 +81,6 @@ alphaN1e = dofs.edAlphaN1.';
 uN1 = edN1(:) - edR(:);
 
 % compute Jacobian matrices
-dN0_xi_I = reshape(dN0_xi_k_I(:,1,:),[size(dN0_xi_k_I,1),size(dN0_xi_k_I,3)]);
 J0 = edR * dN0_xi_I';
 detJ0 = det(J0);
 
@@ -103,7 +102,7 @@ for k = 1:numberOfGausspoints
 
     % shape functions for the enhanced part of the strain field
     indx2 = 3 * (k - 1) + 1:3 * k;
-    Er = E_k_I(indx2, :);
+    Er = EAll(indx2, :);
 %     E_I = E_k_I(k,:);
 
     % nodal operator matrix & approximation matrix

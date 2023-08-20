@@ -1,9 +1,7 @@
-function plot(obj,setupObject)
+function plot(obj, setupObject)
 %plots loads of neumann
 plotObject = setupObject.plotObject;
 time = plotObject.time;
-
-updateNodalForce(obj)
 
 %formatting
 lineWeight = plotObject.lineWeight;
@@ -12,8 +10,10 @@ lengthPoint = 0.2;
 phiPoint = pi/6;
 
 %% getting nodal data
-nodalForce = obj.nodalForce;
-maxF = max(max(abs(nodalForce)));
+updateNodalForces(obj);
+nodalForces = obj.nodalForces;
+
+maxF = max(max(abs(nodalForces)));
 switch time
     case 'R'
         nodes = obj.masterObject.qR;
@@ -23,23 +23,26 @@ switch time
         nodes = obj.masterObject.qN1;
     otherwise
         error('unknown timepoint')
-end 
+end
+if isa(obj.masterObject, 'plateClass')
+    nodes = obj.masterObject.meshObject.nodes;
+end
 
-%adujust dimension of arrays if 1D: everything in y-direction is zero
+%adjust dimension of arrays if 1D: everything in y-direction is zero
 if obj.masterObject.dimension==1 
-    nodalForce = [nodalForce, zeros(size(nodalForce,1),1)];
+    nodalForces = [nodalForces, zeros(size(nodalForces,1),1)];
     nodes = [nodes, zeros(size(nodes,1),1)];
 end
 
-numLoad = size(nodalForce,1);
+numLoad = size(nodalForces,1);
 
 %% plotting of mesh
 x = zeros(numLoad,5);
 y = zeros(numLoad,5);
 
 for e=1:numLoad    
-    Fx = nodalForce(e,1);
-    Fy = nodalForce(e,2);
+    Fx = nodalForces(e,1);
+    Fy = nodalForces(e,2);
     F = sqrt(Fx^2+Fy^2);
     
     if F>eps

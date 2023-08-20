@@ -8,7 +8,6 @@ classdef mixedFEClass < matlab.mixin.Copyable
         typeShapeFunction = 'sameOrder'; %'detailedOrder','other'
         typeShapeFunctionData = 0;
         continuousShapeFunctions = false;
-        numberOfNodes
         numberOfDofs = 0;
         numberOfFields = 0;
         dofsPerField = {};
@@ -18,46 +17,28 @@ classdef mixedFEClass < matlab.mixin.Copyable
     methods
         function initializeMixedElements(obj,dofObject,continuumObject)
             obj.shapeFunctionObject = shapeFunctionClass();
-            shapeFunctionObject = obj.shapeFunctionObject;
             if strcmpi(obj.typeShapeFunction,'sameOrder')
-                shapeFunctionObject.order = obj.typeShapeFunctionData;
+                obj.shapeFunctionObject.order = obj.typeShapeFunctionData;
             end
             dimension = continuumObject.dimension;
-            numberOfGausspoints = continuumObject.shapeFunctionObject.numberOfGausspoints;
-            gaussPoint = continuumObject.shapeFunctionObject.gaussPoint';
             computeShapeFunctions = true;
-            centerEvaluationDisplacementShapeFunction = false;
+            numberOfGausspoints = obj.shapeFunctionObject.numberOfGausspoints;
+            numberOfNodes = obj.shapeFunctionObject.numberOfNodes;
             switch continuumObject.elementDisplacementType
                 case 'pianSumihara'
                     obj.numberOfFields = 1;
                     obj.dofsPerField{1} = obj.typeShapeFunctionData;
                     obj.numberOfDofs = obj.typeShapeFunctionData;
-                    centerEvaluationDisplacementShapeFunction = true;
-                    [N_k_I, dN_xi_k_I] = computePianSumiharaAnsatzFunctions(dimension, obj.typeShapeFunctionData, numberOfGausspoints, gaussPoint);
                     computeShapeFunctions = false;
                 case {'incompatibleModesWilson','incompatibleModesTaylor'}
                     obj.numberOfFields = 1;
                     obj.dofsPerField{1} = 4;
                     obj.numberOfDofs = 4;
-                    centerEvaluationDisplacementShapeFunction = true;
-                    %bubble modes
-                    N_k_I = zeros(numberOfGausspoints,dimension);
-                    dN_xi_k_I = zeros(dimension,numberOfGausspoints,dimension);
-                    N_k_I(:,1) = 1-gaussPoint(:,1).^2;
-                    N_k_I(:,2) = 1-gaussPoint(:,2).^2;
-                    %derivatives w.r.t. x
-                    dN_xi_k_I(1,:,1) = -2*gaussPoint(:,1);
-                    dN_xi_k_I(1,:,2) = 0;
-                    %derivatives w.r.t. y
-                    dN_xi_k_I(2,:,1) = 0;
-                    dN_xi_k_I(2,:,2) = -2*gaussPoint(:,2);
                     computeShapeFunctions = false;
                 case {'eas', 'easSC', 'easPetrovGalerkin'}
                     obj.numberOfFields = 1;
                     obj.dofsPerField{1} = obj.typeShapeFunctionData;
                     obj.numberOfDofs = obj.typeShapeFunctionData;
-                    [N_k_I, dN_xi_k_I] = computeEASAnsatzFunctions(dimension, obj.typeShapeFunctionData, numberOfGausspoints, gaussPoint);
-                    centerEvaluationDisplacementShapeFunction = true;
                     computeShapeFunctions = false;
                 case {'incompressibleSimoTaylorPistor','incompressibleSimoTaylorPistorContinuous'}
                     if floor(obj.typeShapeFunctionData)~=ceil(obj.typeShapeFunctionData) || obj.typeShapeFunctionData < 0
@@ -74,9 +55,7 @@ classdef mixedFEClass < matlab.mixin.Copyable
                     if obj.typeShapeFunctionData~=0 || continuumObject.shapeFunctionObject.order~=1
                         error('Simo-Taylor-Pister element as B-bar-method only implemented for Q1P0')
                     end
-                    if obj.condensation==false
-                        error('B-bar method can only be statically condensed')
-                    end
+                    assert(obj.condensation, 'B-bar method can only be statically condensed');
                     % volumetric strain and pressure ansatz (lagrangian)
                     numberOfNodes = 1;
                 case {'incompressibleHughes','incompressibleHerrmann'}
@@ -88,18 +67,28 @@ classdef mixedFEClass < matlab.mixin.Copyable
                     obj.dofsPerField{1} = obj.numberOfDofs;
                     %volumetric strain and pressure ansatz (lagrangian)
                     numberOfNodes = obj.numberOfDofs;
+                case 'mixed'
+                    obj.numberOfDofs = obj.typeShapeFunctionData;
+                    obj.numberOfFields = 1;
+                    obj.dofsPerField{1} = obj.numberOfDofs;
                 case 'selectiveReducedIntegration'
-                    if obj.condensation==false
-                        error('selective reduced integration method can only be statically condensed')
-                    end
+                    assert(obj.condensation, 'selective reduced integration method can only be statically condensed');
                     numberOfGausspoints = (continuumObject.shapeFunctionObject.order)^dimension;
                     numberOfNodes = size(continuumObject.meshObject.edof,2);
                 case {'mixedSC','mixedD_SC'}
                     switch continuumObject.elementDisplacementType
-                        case 'mixedSC'
+                        case {'mixedSC'}
                             if isa(continuumObject,'solidClass')
-                                obj.numberOfFields = 6;
-                                obj.dofsPerFieldVector = [6;6;1;6;6;1];
+                                if (isempty(continuumObject.elementNameAdditionalSpecification) || strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeCGc'))
+                                    obj.numberOfFields = 6;
+                                    obj.dofsPerFieldVector = [6;6;1;6;6;1];
+                                elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeGc') || strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeGJ')
+                                    obj.numberOfFields = 4;
+                                    obj.dofsPerFieldVector = [6;1;6;1];
+                                elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'InvariantCGc') || strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeIIIJ')
+                                    obj.numberOfFields = 6;
+                                    obj.dofsPerFieldVector = [1;1;1;1;1;1];
+                                end
                             elseif isa(continuumObject,'solidElectroClass') || isa(continuumObject,'solidElectroThermoClass')
                                 obj.numberOfFields = 7;
                                 obj.dofsPerFieldVector = [3;6;6;1;6;6;1];
@@ -108,12 +97,10 @@ classdef mixedFEClass < matlab.mixin.Copyable
                             end
                         case 'mixedD_SC'
                             obj.numberOfFields = 1;
-                            obj.dofsPerFieldVector = [3];
+                            obj.dofsPerFieldVector = 3;
                     end
                     if strcmpi(obj.typeShapeFunction,'sameOrder')
-                        if ~isempty(obj.numberOfNodes)
-                            numberOfNodes = obj.numberOfNodes;
-                        else
+                        if isempty(numberOfNodes)
                             orderMixedShapeFunction = obj.typeShapeFunctionData;
                             if any(strcmpi(continuumObject.elementGeometryType, {'quadrilateral', 'hexahedral'}))
                                 numberOfNodes = (orderMixedShapeFunction+1)^continuumObject.dimension;
@@ -155,30 +142,31 @@ classdef mixedFEClass < matlab.mixin.Copyable
                     elseif strcmpi(obj.typeShapeFunction,'other')
                         error('not implemented yet')
                     end
+                case {'mixedPH'}
+                    obj.numberOfFields = 1;
+                    obj.dofsPerField{1} = 1;
+                    obj.numberOfDofs = 1; %extended strain variables
+                    numberOfNodes = 1; % discontinuous ansatz constant elementwise
+
                 otherwise
                     error('elementDisplacementType not implemented')
             end
-            if computeShapeFunctions
-                shapeFunctionObject.numberOfGausspoints = numberOfGausspoints;
-                if strcmpi(obj.typeShapeFunction,'detailedOrder')
-                    assert(obj.numberOfFields == numel(fieldnames(obj.typeShapeFunctionData)),'number of fields did not match');
-                    shapeFunctionObject.computeShapeFunctionCellArray(dimension,numberOfNodes,continuumObject.elementGeometryType,obj.typeShapeFunctionData);
-                else
-                    shapeFunctionObject.computeShapeFunction(dimension,numberOfNodes,continuumObject.elementGeometryType);
-                end
-            else
-                shapeFunctionObject.dN_xi_k_I = dN_xi_k_I;
-                shapeFunctionObject.N_k_I = N_k_I;
+
+            % Compute mixed shape functions
+            obj.shapeFunctionObject.numberOfNodes = numberOfNodes;
+            if isempty(numberOfNodes)
+                obj.shapeFunctionObject.numberOfNodes = continuumObject.shapeFunctionObject.numberOfNodes;
             end
-            if centerEvaluationDisplacementShapeFunction
-                numberOfGausspoints = 1;
-                [gaussPoints, ~] = gaussPointsAndWeights(dimension, numberOfGausspoints, continuumObject.elementGeometryType);
-                [~,dNxi0,~] = computeLagrangeShapeFunction(dimension,continuumObject.shapeFunctionObject.numberOfNodes,numberOfGausspoints,gaussPoints);
-                continuumObject.shapeFunctionObject.dN0_xi_k_I = dNxi0;
+            obj.shapeFunctionObject.numberOfGausspoints = numberOfGausspoints;
+            if isempty(numberOfGausspoints)
+                obj.shapeFunctionObject.numberOfGausspoints = continuumObject.shapeFunctionObject.numberOfGausspoints;
             end
+            obj.shapeFunctionObject.computeMixedAnsatzFunctions(continuumObject, obj, computeShapeFunctions);
+
+
             numberOfElements = size(continuumObject.meshObject.edof,1);
             if obj.continuousShapeFunctions == false  % discontinous dofs
-                if obj.condensation == true 
+                if obj.condensation
                     % globalEdof (not needed if condensated)
                     obj.globalEdof = [];
                 else
@@ -226,44 +214,175 @@ classdef mixedFEClass < matlab.mixin.Copyable
                 if strcmp(continuumObject.elementDisplacementType, 'mixedSC')
                     if dimension == 3
                         switch continuumObject.materialObject.name
-                            case {'MooneyRivlin', 'MooneyRivlinFullCoupled', 'MooneyRivlinFullCoupledMehnert'}
+                            case {'ANN','MooneyRivlin', 'MooneyRivlinFullCoupled', 'MooneyRivlinFullCoupledMehnert'}
                                 C = eye(3);
                                 Cv = matrixToVoigt(C, 'stress')';
                                 G = 1/2*wedge(C, C);
                                 Gv = matrixToVoigt(G, 'stress')';
-                                I3 = 1/3*innerProduct(G, C);
+                                c = 1/3*innerProduct(G, C);
 %                                 numberOfNodes = size(obj.shapeFunctionObject.N, 2);
                                 if isa(continuumObject,'solidClass')
-                                    Sigma_C = continuumObject.materialObject.a*eye(3);
-                                    Sigma_G = continuumObject.materialObject.b*eye(3);
-                                    Sigma_I = -continuumObject.materialObject.d/(2*I3)+continuumObject.materialObject.c/2*(1-1/sqrt(I3));
+                                    if isempty(continuumObject.elementNameAdditionalSpecification)
+                                        if strcmpi(continuumObject.materialObject.name,'MooneyRivlin')
+                                            dW_C = continuumObject.materialObject.a*eye(3);
+                                            dW_G = continuumObject.materialObject.b*eye(3);
+                                            dW_c = -continuumObject.materialObject.d/(2*c)+continuumObject.materialObject.c/2*(1-1/sqrt(c));
+                                        elseif strcmpi(continuumObject.materialObject.name,'ANN')
+                                            ANNObject = continuumObject.artificialNeuralNetworkObject;
+                                            [dW_C, dW_G, dW_c, ~, ~, ~, ~, ~, ~] = ANNObject.computeDiffEnergyCGcANN(C,G,c);
+                                        else
+                                            error('material model not implemented')
+                                        end
 
-                                    lambdaI3 = Sigma_I;
-                                    lambdaG = Sigma_G + 1/3*lambdaI3*C;
-                                    lambdaC = Sigma_C + wedge(lambdaG, C) + 1/3*lambdaI3*G;
-                                    lambdaGv = matrixToVoigt(lambdaG, 'stress')';
-                                    lambdaCv = matrixToVoigt(lambdaC, 'stress')';
+                                        lambdac = dW_c;
+                                        lambdaG = dW_G + 1/3*lambdac*C;
+                                        lambdaC = dW_C + wedge(lambdaG, C) + 1/3*lambdac*G;
+                                        lambdaGv = matrixToVoigt(lambdaG, 'stress')';
+                                        lambdaCv = matrixToVoigt(lambdaC, 'stress')';
 
-                                    if numel(numberOfNodes)==1
-                                        obj.qN = [repmat(Cv,numberOfElements,numberOfNodes), repmat(Gv,numberOfElements,numberOfNodes), repmat(I3,numberOfElements,numberOfNodes), repmat(lambdaCv,numberOfElements,numberOfNodes), repmat(lambdaGv,numberOfElements,numberOfNodes), repmat(lambdaI3,numberOfElements,numberOfNodes)];
-                                    else
-                                        obj.qN = [repmat(Cv,numberOfElements,numberOfNodes(1)), repmat(Gv,numberOfElements,numberOfNodes(2)), repmat(I3,numberOfElements,numberOfNodes(3)), repmat(lambdaCv,numberOfElements,numberOfNodes(4)), repmat(lambdaGv,numberOfElements,numberOfNodes(5)), repmat(lambdaI3,numberOfElements,numberOfNodes(6))];
-                                    end                                    
+                                        if numel(numberOfNodes)==1
+                                            obj.qN = [repmat(Cv,numberOfElements,numberOfNodes), repmat(Gv,numberOfElements,numberOfNodes), repmat(c,numberOfElements,numberOfNodes), repmat(lambdaCv,numberOfElements,numberOfNodes), repmat(lambdaGv,numberOfElements,numberOfNodes), repmat(lambdac,numberOfElements,numberOfNodes)];
+                                        else
+                                            obj.qN = [repmat(Cv,numberOfElements,numberOfNodes(1)), repmat(Gv,numberOfElements,numberOfNodes(2)), repmat(c,numberOfElements,numberOfNodes(3)), repmat(lambdaCv,numberOfElements,numberOfNodes(4)), repmat(lambdaGv,numberOfElements,numberOfNodes(5)), repmat(lambdac,numberOfElements,numberOfNodes(6))];
+                                        end
+                                    elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeCGc')
+                                        C = eye(3);
+                                        Cv = matrixToVoigt(C, 'strain')';
+                                        G = 1/2*wedge(C, C);
+                                        Gv = matrixToVoigt(G, 'strain')';
+                                        c = 1/3*innerProduct(G, C);
+                                        if strcmpi(continuumObject.materialObject.name,'MooneyRivlin')
+                                            dW_C = continuumObject.materialObject.a*eye(3);
+                                            dW_G = continuumObject.materialObject.b*eye(3);
+                                            dW_c = -continuumObject.materialObject.d/(2*c)+continuumObject.materialObject.c/2*(1-1/sqrt(c));
+                                        elseif strcmpi(continuumObject.materialObject.name,'ANN')
+                                            ANNObject = continuumObject.artificialNeuralNetworkObject;
+                                            [dW_C, dW_G, dW_c, ~, ~, ~, ~, ~, ~] = ANNObject.computeDiffEnergyCGcANN(C,G,c);
+                                        else
+                                            error('material model not implemented')
+                                        end
+                                        lambdac = dW_c;
+                                        lambdaG = dW_G;
+                                        lambdaC = dW_C;
+                                        lambdaGv = matrixToVoigt(lambdaG, 'stress')';
+                                        lambdaCv = matrixToVoigt(lambdaC, 'stress')';
+
+                                        if numel(numberOfNodes)==1
+                                            obj.qN = [repmat(Cv,numberOfElements,numberOfNodes), repmat(Gv,numberOfElements,numberOfNodes), repmat(c,numberOfElements,numberOfNodes), repmat(lambdaCv,numberOfElements,numberOfNodes), repmat(lambdaGv,numberOfElements,numberOfNodes), repmat(lambdac,numberOfElements,numberOfNodes)];
+                                        else
+                                            obj.qN = [repmat(Cv,numberOfElements,numberOfNodes(1)), repmat(Gv,numberOfElements,numberOfNodes(2)), repmat(c,numberOfElements,numberOfNodes(3)), repmat(lambdaCv,numberOfElements,numberOfNodes(4)), repmat(lambdaGv,numberOfElements,numberOfNodes(5)), repmat(lambdac,numberOfElements,numberOfNodes(6))];
+                                        end
+                                    elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeGc')
+                                        C = eye(3);
+                                        G = 1/2*wedge(C, C);
+                                        Gv = matrixToVoigt(G, 'strain')';
+                                        c = 1/3*innerProduct(G, C);
+                                        if strcmpi(continuumObject.materialObject.name,'MooneyRivlin')
+                                            dW_II = continuumObject.materialObject.b;
+                                            dW_III = -continuumObject.materialObject.d/(2*c)+continuumObject.materialObject.c/2*(1-1/sqrt(c));
+                                        elseif strcmpi(continuumObject.materialObject.name,'ANN')
+                                            ANNObject = continuumObject.artificialNeuralNetworkObject;
+                                            [~, ~, dW_III, ~, dW_II, ~, ~, ~, ~] = ANNObject.computeDiffEnergyCGcANN(C,G,c);
+                                        else
+                                            error('material model not implemented')
+                                        end
+                                        lambdac = dW_III;
+                                        lambdaG = dW_II*eye(3);
+                                        lambdaGv = matrixToVoigt(lambdaG, 'stress')';
+                                        if numel(numberOfNodes)==1
+                                            obj.qN = [repmat(Gv,numberOfElements,numberOfNodes), repmat(c,numberOfElements,numberOfNodes), repmat(lambdaGv,numberOfElements,numberOfNodes), repmat(lambdac,numberOfElements,numberOfNodes)];
+                                        else
+                                            obj.qN = [repmat(Gv,numberOfElements,numberOfNodes(1)), repmat(c,numberOfElements,numberOfNodes(2)), repmat(lambdaGv,numberOfElements,numberOfNodes(3)), repmat(lambdac,numberOfElements,numberOfNodes(4))];
+                                        end
+                                    elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeGJ')
+                                        C = eye(3);
+                                        G = 1/2*wedge(C, C);
+                                        Gv = matrixToVoigt(G, 'strain')';
+                                        c = 1/3*innerProduct(G, C);
+                                        J = sqrt(c);
+                                        if strcmpi(continuumObject.materialObject.name,'MooneyRivlin')
+                                            dW_II = continuumObject.materialObject.b;
+%                                             - d * log(J) + c / 2 * (J - 1)^2)
+                                            dW_J = -continuumObject.materialObject.d/J + continuumObject.materialObject.c*(J-1);
+                                        elseif strcmpi(continuumObject.materialObject.name,'ANN')
+                                            ANNObject = continuumObject.artificialNeuralNetworkObject;
+                                            [~, dW_II, dW_J] = ANNObject.computeDiffEnergyANNJ(C,G,J);
+                                        else
+                                            error('material model not implemented')
+                                        end
+                                        lambdaJ = dW_J;
+                                        lambdaG = dW_II*eye(3);
+                                        lambdaGv = matrixToVoigt(lambdaG, 'stress')';
+                                        if numel(numberOfNodes)==1
+                                            obj.qN = [repmat(Gv,numberOfElements,numberOfNodes), repmat(J,numberOfElements,numberOfNodes), repmat(lambdaGv,numberOfElements,numberOfNodes), repmat(lambdaJ,numberOfElements,numberOfNodes)];
+                                        else
+                                            obj.qN = [repmat(Gv,numberOfElements,numberOfNodes(1)), repmat(J,numberOfElements,numberOfNodes(2)), repmat(lambdaGv,numberOfElements,numberOfNodes(3)), repmat(lambdaJ,numberOfElements,numberOfNodes(4))];
+                                        end
+                                    elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'InvariantCGc')
+                                        C = eye(3);
+                                        I = trace(C);
+                                        G = 1/2*wedge(C, C);
+                                        II = trace(G);
+                                        III = 1/3*innerProduct(G, C);
+                                        if strcmpi(continuumObject.materialObject.name,'MooneyRivlin')
+                                            dW_I = continuumObject.materialObject.a;
+                                            dW_II = continuumObject.materialObject.b;
+                                            dW_III = -continuumObject.materialObject.d / (2 * III) + continuumObject.materialObject.c / 2 * (1 - 1 / sqrt(III));
+                                        elseif strcmpi(continuumObject.materialObject.name,'ANN')
+                                            ANNObject = continuumObject.artificialNeuralNetworkObject;
+                                            [dW_I, dW_II, dW_III] = ANNObject.computeDiffEnergyInvariantANN(I,II,III);
+                                        else
+                                            error('material model not implemented')
+                                        end
+                                        lambdaIII = dW_III;
+                                        lambdaII = dW_II;
+                                        lambdaI = dW_I;
+                                        if numel(numberOfNodes)==1
+                                            obj.qN = [repmat(I,numberOfElements,numberOfNodes), repmat(II,numberOfElements,numberOfNodes), repmat(III,numberOfElements,numberOfNodes), repmat(lambdaI,numberOfElements,numberOfNodes), repmat(lambdaII,numberOfElements,numberOfNodes), repmat(lambdaIII,numberOfElements,numberOfNodes)];
+                                        else
+                                            obj.qN = [repmat(I,numberOfElements,numberOfNodes(1)), repmat(II,numberOfElements,numberOfNodes(2)), repmat(III,numberOfElements,numberOfNodes(3)), repmat(lambdaI,numberOfElements,numberOfNodes(4)), repmat(lambdaII,numberOfElements,numberOfNodes(5)), repmat(lambdaIII,numberOfElements,numberOfNodes(6))];
+                                        end
+                                    elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeIIIJ')
+                                        C = eye(3);
+                                        I = trace(C);
+                                        G = 1/2*wedge(C, C);
+                                        II = trace(G);
+                                        c = 1/3*innerProduct(G, C);
+                                        J = sqrt(c);
+                                        if strcmpi(continuumObject.materialObject.name,'MooneyRivlin')
+                                            dW_I = continuumObject.materialObject.a;
+                                            dW_II = continuumObject.materialObject.b;
+                                            dW_J = -continuumObject.materialObject.d/J + continuumObject.materialObject.c*(J-1);
+                                        elseif strcmpi(continuumObject.materialObject.name,'ANN')
+                                            ANNObject = continuumObject.artificialNeuralNetworkObject;
+                                            [dW_I, dW_II, dW_J] = ANNObject.computeDiffEnergyANNIIIJ(I,II,J);
+                                        else
+                                            error('material model not implemented')
+                                        end
+                                        lambdaI = dW_I;
+                                        lambdaII = dW_II;
+                                        lambdaJ = dW_J;
+                                        if numel(numberOfNodes)==1
+                                            obj.qN = [repmat(I,numberOfElements,numberOfNodes), repmat(II,numberOfElements,numberOfNodes), repmat(J,numberOfElements,numberOfNodes), repmat(lambdaI,numberOfElements,numberOfNodes), repmat(lambdaII,numberOfElements,numberOfNodes), repmat(lambdaJ,numberOfElements,numberOfNodes)];
+                                        else
+                                            obj.qN = [repmat(I,numberOfElements,numberOfNodes(1)), repmat(II,numberOfElements,numberOfNodes(2)), repmat(J,numberOfElements,numberOfNodes(3)), repmat(lambdaI,numberOfElements,numberOfNodes(4)), repmat(lambdaII,numberOfElements,numberOfNodes(5)), repmat(lambdaJ,numberOfElements,numberOfNodes(6))];
+                                        end
+                                    end
                                 elseif isa(continuumObject,'solidElectroClass')
                                     D = [0, 0, 0];
-                                    Sigma_C = continuumObject.materialObject.a*eye(3);
-                                    Sigma_G = continuumObject.materialObject.b*eye(3);
-                                    Sigma_I = -continuumObject.materialObject.d/(2*I3)+continuumObject.materialObject.c/2*(1-1/sqrt(I3));
+                                    dW_C = continuumObject.materialObject.a*eye(3);
+                                    dW_G = continuumObject.materialObject.b*eye(3);
+                                    dW_c = -continuumObject.materialObject.d/(2*c)+continuumObject.materialObject.c/2*(1-1/sqrt(c));
 
-                                    lambdaI3 = Sigma_I;
-                                    lambdaG = Sigma_G + 1/3*lambdaI3*C;
-                                    lambdaC = Sigma_C + wedge(lambdaG, C) + 1/3*lambdaI3*G;
+                                    lambdac = dW_c;
+                                    lambdaG = dW_G + 1/3*lambdac*C;
+                                    lambdaC = dW_C + wedge(lambdaG, C) + 1/3*lambdac*G;
                                     lambdaGv = matrixToVoigt(lambdaG, 'stress')';
                                     lambdaCv = matrixToVoigt(lambdaC, 'stress')';
                                     if numel(numberOfNodes)==1
-                                        obj.qN = [repmat(D,numberOfElements,numberOfNodes), repmat(Cv,numberOfElements,numberOfNodes), repmat(Gv,numberOfElements,numberOfNodes), repmat(I3,numberOfElements,numberOfNodes), repmat(lambdaCv,numberOfElements,numberOfNodes), repmat(lambdaGv,numberOfElements,numberOfNodes), repmat(lambdaI3,numberOfElements,numberOfNodes)];
+                                        obj.qN = [repmat(D,numberOfElements,numberOfNodes), repmat(Cv,numberOfElements,numberOfNodes), repmat(Gv,numberOfElements,numberOfNodes), repmat(c,numberOfElements,numberOfNodes), repmat(lambdaCv,numberOfElements,numberOfNodes), repmat(lambdaGv,numberOfElements,numberOfNodes), repmat(lambdac,numberOfElements,numberOfNodes)];
                                     else
-                                        obj.qN = [repmat(D,numberOfElements,numberOfNodes(1)), repmat(Cv,numberOfElements,numberOfNodes(2)), repmat(Gv,numberOfElements,numberOfNodes(3)), repmat(I3,numberOfElements,numberOfNodes(4)), repmat(lambdaCv,numberOfElements,numberOfNodes(5)), repmat(lambdaGv,numberOfElements,numberOfNodes(6)), repmat(lambdaI3,numberOfElements,numberOfNodes(7))];
+                                        obj.qN = [repmat(D,numberOfElements,numberOfNodes(1)), repmat(Cv,numberOfElements,numberOfNodes(2)), repmat(Gv,numberOfElements,numberOfNodes(3)), repmat(c,numberOfElements,numberOfNodes(4)), repmat(lambdaCv,numberOfElements,numberOfNodes(5)), repmat(lambdaGv,numberOfElements,numberOfNodes(6)), repmat(lambdac,numberOfElements,numberOfNodes(7))];
                                     end
                                 elseif isa(continuumObject,'solidElectroThermoClass')
                                     D = [0, 0, 0];
@@ -273,23 +392,23 @@ classdef mixedFEClass < matlab.mixin.Copyable
                                     beta = continuumObject.materialObject.beta;
                                     c2 = continuumObject.materialObject.c2;
                                     if strcmpi(continuumObject.materialObject.name, 'MooneyRivlin')
-                                        Sigma_C = continuumObject.materialObject.a*eye(3);
-                                        Sigma_G = continuumObject.materialObject.b*eye(3);
-                                        Sigma_I = -continuumObject.materialObject.d1/(2*I3)+continuumObject.materialObject.c1/2*(1-1/sqrt(I3)) - 3*beta*c2*(theta - thetaR);
+                                        dW_C = continuumObject.materialObject.a*eye(3);
+                                        dW_G = continuumObject.materialObject.b*eye(3);
+                                        dW_c = -continuumObject.materialObject.d1/(2*c)+continuumObject.materialObject.c1/2*(1-1/sqrt(c)) - 3*beta*c2*(theta - thetaR);
                                     elseif strcmpi(continuumObject.materialObject.name, 'MooneyRivlinFullCoupled')
-                                        Sigma_C = theta/thetaR *continuumObject.materialObject.a*eye(3);
-                                        Sigma_G = theta/thetaR * continuumObject.materialObject.b*eye(3);
-                                        Sigma_I = theta/thetaR *(-continuumObject.materialObject.d1/(2*I3)+continuumObject.materialObject.c1/2*(1-1/sqrt(I3))) - 3*beta*c2*(theta - thetaR);
+                                        dW_C = theta/thetaR *continuumObject.materialObject.a*eye(3);
+                                        dW_G = theta/thetaR * continuumObject.materialObject.b*eye(3);
+                                        dW_c = theta/thetaR *(-continuumObject.materialObject.d1/(2*c)+continuumObject.materialObject.c1/2*(1-1/sqrt(c))) - 3*beta*c2*(theta - thetaR);
                                     end
-                                    lambdaI3 = Sigma_I;
-                                    lambdaG = Sigma_G + 1/3*lambdaI3*C;
-                                    lambdaC = Sigma_C + wedge(lambdaG, C) + 1/3*lambdaI3*G;
+                                    lambdac = dW_c;
+                                    lambdaG = dW_G + 1/3*lambdac*C;
+                                    lambdaC = dW_C + wedge(lambdaG, C) + 1/3*lambdac*G;
                                     lambdaGv = matrixToVoigt(lambdaG, 'stress')';
                                     lambdaCv = matrixToVoigt(lambdaC, 'stress')';
                                     if numel(numberOfNodes)==1
-                                        obj.qN = [repmat(D,numberOfElements,numberOfNodes), repmat(Cv,numberOfElements,numberOfNodes), repmat(Gv,numberOfElements,numberOfNodes), repmat(I3,numberOfElements,numberOfNodes), repmat(lambdaCv,numberOfElements,numberOfNodes), repmat(lambdaGv,numberOfElements,numberOfNodes), repmat(lambdaI3,numberOfElements,numberOfNodes)];
+                                        obj.qN = [repmat(D,numberOfElements,numberOfNodes), repmat(Cv,numberOfElements,numberOfNodes), repmat(Gv,numberOfElements,numberOfNodes), repmat(c,numberOfElements,numberOfNodes), repmat(lambdaCv,numberOfElements,numberOfNodes), repmat(lambdaGv,numberOfElements,numberOfNodes), repmat(lambdac,numberOfElements,numberOfNodes)];
                                     else
-                                        obj.qN = [repmat(D,numberOfElements,numberOfNodes(1)), repmat(Cv,numberOfElements,numberOfNodes(2)), repmat(Gv,numberOfElements,numberOfNodes(3)), repmat(I3,numberOfElements,numberOfNodes(4)), repmat(lambdaCv,numberOfElements,numberOfNodes(5)), repmat(lambdaGv,numberOfElements,numberOfNodes(6)), repmat(lambdaI3,numberOfElements,numberOfNodes(7))];
+                                        obj.qN = [repmat(D,numberOfElements,numberOfNodes(1)), repmat(Cv,numberOfElements,numberOfNodes(2)), repmat(Gv,numberOfElements,numberOfNodes(3)), repmat(c,numberOfElements,numberOfNodes(4)), repmat(lambdaCv,numberOfElements,numberOfNodes(5)), repmat(lambdaGv,numberOfElements,numberOfNodes(6)), repmat(lambdac,numberOfElements,numberOfNodes(7))];
                                     end
                                 else
                                     error('mixedSC class not implemented yet!');
@@ -307,9 +426,31 @@ classdef mixedFEClass < matlab.mixin.Copyable
                                 error('materialObject.name not implemented')
                         end
                     end
+                elseif strcmp(continuumObject.elementDisplacementType, 'mixedPH')
+
+                    if strcmp(continuumObject.elementNameAdditionalSpecification,'C')
+
+                         obj.qN = ones(numberOfElements,obj.numberOfDofs);
+
+                    elseif strcmp(continuumObject.elementNameAdditionalSpecification,'E')
+
+                         obj.qN = zeros(numberOfElements,obj.numberOfDofs);
+
+                    end
                 end
             end
             obj.qN1 = obj.qN;
+        end
+        function updateGlobalField(obj,continuumObject,dofObject)
+            % update qN for mixed elements without condensation
+            if contains(continuumObject.elementDisplacementType, 'mixedSC')
+                if ~obj.condensation
+                    numberOfElements = size(continuumObject.meshObject.globalFullEdof, 1);
+                    numberOfDisplacementDofs = dofObject.totalNumberOfDofs - numberOfElements*obj.numberOfDofs(1);
+                    internalDofs = obj.qN';
+                    dofObject.qN = dofObject.qN + [zeros(numberOfDisplacementDofs,1); internalDofs(:)];
+                end
+            end
         end
         function [array, dataFEMixed] = mixedFEFunction(obj,setupObject,RD,RA,KDD,KDA,KAD,KAA,varargin)
             if ~isempty(varargin)

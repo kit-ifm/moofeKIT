@@ -31,9 +31,8 @@ numberOfDOFs = size(meshObject.globalFullEdof, 2);
 mechanicalDOFs = 1:numberOfDOFs;
 mechanicalDOFs(4:dimension+1:numberOfDOFs) = [];
 numberOfMechanicalDOFs = numel(mechanicalDOFs);
-NAll = shapeFunctionObject.N';
-dNrAll = shapeFunctionObject.dNr';
-qR = obj.qR;
+N_k_I = shapeFunctionObject.N_k_I;
+dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
 edof = meshObject.edof;
 
 % data for integration
@@ -69,6 +68,7 @@ end
 flagDiscreteGradient = numericalTangentObject.flagDiscreteGradient;
 
 % extract dofs for element
+edR = obj.qR(edof(e, :), 1:dimension).';
 edN1 = dofs.edN1;
 thetaN1 = dofs.thetaN1;
 edN = obj.qN(edof(e, :), 1:dimension).';
@@ -76,25 +76,21 @@ thetaN = obj.qN(edof(e, :), dimension+1).';
 edN05 = 1 / 2 * (edN + edN1);
 thetaN05 = 1 / 2 * (thetaN + thetaN1);
 
-J = qR(edof(e, :), 1:dimension)' * dNrAll;
+JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I);
 
 for k = 1:numberOfGausspoints
-    indx = dimension * k - (dimension - 1):dimension * k;
-    detJ = det(J(:, indx)');
-    if detJ < 10 * eps
-        error('Jacobi determinant equal or less than zero.')
-    end
-    dNx = (J(:, indx)') \ (dNrAll(:, indx))';
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
 
     % Temperature
-    thetaNe = NAll(:, k)' * thetaN.';
-    thetaN1e = NAll(:, k)' * thetaN1.';
+    thetaNe = N_k_I(k, :) * thetaN.';
+    thetaN1e = N_k_I(k, :) * thetaN1.';
     thetaN05e = 0.5 * (thetaN1e+thetaNe);
 
     % Deformation gradient
-    FN = edN * dNx';
-    FN1 = edN1 * dNx';
-    FN05 = edN05 * dNx';
+    FN = edN * dN_X_I';
+    FN1 = edN1 * dN_X_I';
+    FN05 = edN05 * dN_X_I';
 
     CN = FN.' * FN;
     CN1 = FN1.' * FN1;
@@ -111,10 +107,10 @@ for k = 1:numberOfGausspoints
     cN05 = det(CN05);
 
     % B-matrix
-    BN1 = BMatrix(dNx, FN1);
+    BN1 = BMatrix(dN_X_I, FN1);
 
     % B-matrix (midpoint configuration)
-    BN05 = BMatrix(dNx, FN05);
+    BN05 = BMatrix(dN_X_I, FN05);
 
     % Strain energy function
     PsiIsoN1 = a * (trace(CN1) - 3) + b * (trace(GN1) - 3);
@@ -177,11 +173,11 @@ for k = 1:numberOfGausspoints
 
     RD = RD + BN05.' * matrixToVoigt(SAlgo, 'stress') * detJ * gaussWeight(k);
 
-    QN05 = -k0 * (cN05^(-1) * GN05 * (dNx * thetaN05.'));
-    RT = RT + (NAll(:, k) / DT * NAll(:, k)' * (thetaN1 - thetaN).' + NAll(:, k) * Deta_theta^(-1) * Deta_cN05 * innerProduct(GN05, 1/DT*(CN1 - CN)) - dNx' * Du_theta^(-1) * QN05) * detJ * gaussWeight(k);
+    QN05 = -k0 * (cN05^(-1) * GN05 * (dN_X_I * thetaN05.'));
+    RT = RT + (N_k_I(k, :).' / DT * N_k_I(k, :) * (thetaN1 - thetaN).' + N_k_I(k, :).' * Deta_theta^(-1) * Deta_cN05 * innerProduct(GN05, 1/DT*(CN1 - CN)) - dN_X_I' * Du_theta^(-1) * QN05) * detJ * gaussWeight(k);
 
     % create tangent
-    A1 = 1 / 2 * dNx' * SAlgo * dNx;
+    A1 = 1 / 2 * dN_X_I' * SAlgo * dN_X_I;
     KDDGeom = zeros(numberOfMechanicalDOFs);
     for g = 1:dimension
         KDDGeom(g:dimension:numberOfMechanicalDOFs, g:dimension:numberOfMechanicalDOFs) = A1;
@@ -199,21 +195,21 @@ for k = 1:numberOfGausspoints
     KDDMat5 = -BN05' * 2 * thetaAlgo * Deta_cN05 * secDiffOperator(CN05) * BN05;
     KDD = KDD + (KDDGeom + KDDMat1 + KDDMat2 + KDDMat3 + KDDMat4 + KDDMat5) * detJ * gaussWeight(k);
 
-    gamma = dNx * thetaN05';
+    gamma = dN_X_I * thetaN05';
     gammaTransformed = [gamma(1), 0, 0, 1 / 2 * gamma(2), 0, 1 / 2 * gamma(3); 0, gamma(2), 0, 1 / 2 * gamma(1), 1 / 2 * gamma(3), 0; 0, 0, gamma(3), 0, 1 / 2 * gamma(2), 1 / 2 * gamma(1)];
-    KTD1 = NAll(:, k) * Deta_theta^(-1) * D2eta_c_cN05 * innerProduct(GN05, 1/DT*(CN1 - CN)) * matrixToVoigt(GN05, 'stress')' * BN05;
-    KTD2 = NAll(:, k) * Deta_theta^(-1) * Deta_cN05 * matrixToVoigt(wedge(CN05, 1/DT*(CN1 - CN)), 'stress')' * BN05;
-    KTD3 = NAll(:, k) * Deta_theta^(-1) * Deta_cN05 * matrixToVoigt(GN05, 'stress')' * 2 / DT * BN1;
-    KTD4 = -dNx' * Du_theta^(-1) * k0 * (cN05)^(-2) * GN05 * gamma * matrixToVoigt(GN05, 'stress')' * BN05;
-    KTD5 = dNx' * Du_theta^(-1) * k0 * (cN05)^(-1) * gammaTransformed * secDiffOperator2(CN05) * BN05;
+    KTD1 = N_k_I(k, :).' * Deta_theta^(-1) * D2eta_c_cN05 * innerProduct(GN05, 1/DT*(CN1 - CN)) * matrixToVoigt(GN05, 'stress')' * BN05;
+    KTD2 = N_k_I(k, :).' * Deta_theta^(-1) * Deta_cN05 * matrixToVoigt(wedge(CN05, 1/DT*(CN1 - CN)), 'stress')' * BN05;
+    KTD3 = N_k_I(k, :).' * Deta_theta^(-1) * Deta_cN05 * matrixToVoigt(GN05, 'stress')' * 2 / DT * BN1;
+    KTD4 = -dN_X_I' * Du_theta^(-1) * k0 * (cN05)^(-2) * GN05 * gamma * matrixToVoigt(GN05, 'stress')' * BN05;
+    KTD5 = dN_X_I' * Du_theta^(-1) * k0 * (cN05)^(-1) * gammaTransformed * secDiffOperator2(CN05) * BN05;
     KTD = KTD + (KTD1 + KTD2 + KTD3 + KTD4 + KTD5) * detJ * gaussWeight(k);
 
     if flagDiscreteGradient(k, 2)
-        KDT = KDT + kron(2*BN05'*Du_theta*Deta_theta^(-2)*D2eta_theta_theta*Deta_cN05*matrixToVoigt(GN05, 'stress'), NAll(:, k)') * detJ * gaussWeight(k);
-        KTT = KTT + (NAll(:, k) * 1 / DT * NAll(:, k)' - NAll(:, k) * Deta_theta^(-2) * D2eta_theta_theta * Deta_cN05 * innerProduct(GN05, 1/DT*(CN1 - CN)) * NAll(:, k)' + 0.5 * dNx' * Du_theta^(-1) * k0 * (cN05)^(-1) * GN05 * dNx) * detJ * gaussWeight(k);
+        KDT = KDT + kron(2*BN05'*Du_theta*Deta_theta^(-2)*D2eta_theta_theta*Deta_cN05*matrixToVoigt(GN05, 'stress'), N_k_I(k, :)) * detJ * gaussWeight(k);
+        KTT = KTT + (N_k_I(k, :).' * 1 / DT * N_k_I(k, :) - N_k_I(k, :).' * Deta_theta^(-2) * D2eta_theta_theta * Deta_cN05 * innerProduct(GN05, 1/DT*(CN1 - CN)) * N_k_I(k, :) + 0.5 * dN_X_I' * Du_theta^(-1) * k0 * (cN05)^(-1) * GN05 * dN_X_I) * detJ * gaussWeight(k);
     else
-        KDT = KDT + 0.5 * kron(2*BN05'*Du_theta*Deta_theta^(-2)*D2eta_theta_theta*Deta_cN05*matrixToVoigt(GN05, 'stress'), NAll(:, k)') * detJ * gaussWeight(k);
-        KTT = KTT + (NAll(:, k) * 1 / DT * NAll(:, k)' - 0.5 * NAll(:, k) * Deta_theta^(-2) * D2eta_theta_theta * Deta_cN05 * innerProduct(GN05, 1/DT*(CN1 - CN)) * NAll(:, k)' + 0.5 * dNx' * Du_theta^(-1) * k0 * (cN05)^(-1) * GN05 * dNx) * detJ * gaussWeight(k);
+        KDT = KDT + 0.5 * kron(2*BN05'*Du_theta*Deta_theta^(-2)*D2eta_theta_theta*Deta_cN05*matrixToVoigt(GN05, 'stress'), N_k_I(k, :)) * detJ * gaussWeight(k);
+        KTT = KTT + (N_k_I(k, :).' * 1 / DT * N_k_I(k, :) - 0.5 * N_k_I(k, :).' * Deta_theta^(-2) * D2eta_theta_theta * Deta_cN05 * innerProduct(GN05, 1/DT*(CN1 - CN)) * N_k_I(k, :) + 0.5 * dN_X_I' * Du_theta^(-1) * k0 * (cN05)^(-1) * GN05 * dN_X_I) * detJ * gaussWeight(k);
     end
 end
 if ~computePostData

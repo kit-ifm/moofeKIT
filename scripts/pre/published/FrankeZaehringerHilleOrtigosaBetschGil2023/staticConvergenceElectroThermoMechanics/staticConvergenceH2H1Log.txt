@@ -1,0 +1,584 @@
+|--- time step 00001 of 00010; time 0.0000 ---|
+|      iteration  1: norm(R) = 3.73825e-01    |
+|      iteration  2: norm(R) = 2.61437e-04    |
+|      iteration  3: norm(R) = 4.81278e-08    |
+|--- time step 00002 of 00010; time 0.1000 ---|
+|      iteration  1: norm(R) = 3.67686e-01    |
+{Operation terminated by user during <a href="matlab:matlab.internal.language.introspective.errorDocCallback('solidElectroThermoClass/mixedSCMooneyRivlinFullCoupledEndpoint', '/home/marlon/Projekte/moofeKIT/continuumClasses/@solidElectroThermoClass/mixedSCMooneyRivlinFullCoupledEndpoint.m', 333)" style="font-weight:bold">solidElectroThermoClass/mixedSCMooneyRivlinFullCoupledEndpoint</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/continuumClasses/@solidElectroThermoClass/mixedSCMooneyRivlinFullCoupledEndpoint.m',333,0)">line 333</a>)
+
+
+In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('callElements', '/home/marlon/Projekte/moofeKIT/commonFunctions/callElements.m', 151)" style="font-weight:bold">callElements</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/commonFunctions/callElements.m',151,0)">line 151</a>)
+        [rData, kData, elementEnergy, array] = feval(elementName, continuumObject, setupObject, computePostData, e, rDataInitial, kDataInitial, dofs, array, stressTensor, false);
+
+In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('runNewton', '/home/marlon/Projekte/moofeKIT/scripts/solver/runNewton.m', 41)" style="font-weight:bold">runNewton</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/scripts/solver/runNewton.m',41,0)">line 41</a>)
+                callElements(continuumObject,setupObject,false);
+
+In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('staticConvergence', '/home/marlon/Projekte/moofeKIT/scripts/pre/staticConvergenceElectroThermoMechanics/staticConvergence.m', 343)" style="font-weight:bold">staticConvergence</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/scripts/pre/staticConvergenceElectroThermoMechanics/staticConvergence.m',343,0)">line 343</a>)
+        dofObject = runNewton(setupObject,dofObject);
+} 
+oneDimensionalContinuum
+|--- time step 00001 of 00040; time 0.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00002 of 00040; time 0.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00003 of 00040; time 0.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00004 of 00040; time 0.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00005 of 00040; time 1.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00006 of 00040; time 1.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00007 of 00040; time 1.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00008 of 00040; time 1.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00009 of 00040; time 2.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00010 of 00040; time 2.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00011 of 00040; time 2.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00012 of 00040; time 2.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00013 of 00040; time 3.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00014 of 00040; time 3.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00015 of 00040; time 3.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00016 of 00040; time 3.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00017 of 00040; time 4.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00018 of 00040; time 4.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00019 of 00040; time 4.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00020 of 00040; time 4.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00021 of 00040; time 5.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00022 of 00040; time 5.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00023 of 00040; time 5.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00024 of 00040; time 5.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00025 of 00040; time 6.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00026 of 00040; time 6.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00027 of 00040; time 6.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00028 of 00040; time 6.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00029 of 00040; time 7.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00030 of 00040; time 7.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00031 of 00040; time 7.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00032 of 00040; time 7.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00033 of 00040; time 8.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00034 of 00040; time 8.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00035 of 00040; time 8.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+{Operation terminated by user during matlab.graphics.illustration.ColorBar/doSetup
+
+
+In matlab.graphics.illustration.ColorBar
+
+In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('colorbar', '/usr/local/MATLAB/R2021b/toolbox/matlab/scribe/colorbar.m', 235)" style="font-weight:bold">colorbar</a> (<a href="matlab: opentoline('/usr/local/MATLAB/R2021b/toolbox/matlab/scribe/colorbar.m',235,0)">line 235</a>)
+cbar = matlab.graphics.illustration.ColorBar;
+
+In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('solidSuperClass/plot', '/home/marlon/Projekte/moofeKIT/coreClasses/@solidSuperClass/plot.m', 10)" style="font-weight:bold">solidSuperClass/plot</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/coreClasses/@solidSuperClass/plot.m',10,0)">line 10</a>)
+    colorbar;
+
+In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('plotScript', '/home/marlon/Projekte/moofeKIT/scripts/post/plotScript.m', 49)" style="font-weight:bold">plotScript</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/scripts/post/plotScript.m',49,0)">line 49</a>)
+                plot(dofObject.listContinuumObjects{index1},setupObject);
+
+In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('runNewton', '/home/marlon/Projekte/moofeKIT/scripts/solver/runNewton.m', 76)" style="font-weight:bold">runNewton</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/scripts/solver/runNewton.m',76,0)">line 76</a>)
+    plotScript
+
+In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('oneDimensionalContinuum', '/home/marlon/Projekte/moofeKIT/scripts/pre/oneDimensionalContinuum.m', 68)" style="font-weight:bold">oneDimensionalContinuum</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/scripts/pre/oneDimensionalContinuum.m',68,0)">line 68</a>)
+dofObject = runNewton(setupObject,dofObject);
+} 
+oneDimensionalContinuum
+|--- time step 00001 of 00040; time 0.0000 ---|
+{Unrecognized field name "name".
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('callElements', '/home/marlon/Projekte/moofeKIT/commonFunctions/callElements.m', 21)" style="font-weight:bold">callElements</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/commonFunctions/callElements.m',21,0)">line 21</a>)
+        elementName = strcat(continuumObject.elementDisplacementType, continuumObject.materialObject.name, setupObject.integrator);
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('runNewton', '/home/marlon/Projekte/moofeKIT/scripts/solver/runNewton.m', 41)" style="font-weight:bold">runNewton</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/scripts/solver/runNewton.m',41,0)">line 41</a>)
+                callElements(continuumObject,setupObject,false);
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('oneDimensionalContinuum', '/home/marlon/Projekte/moofeKIT/scripts/pre/oneDimensionalContinuum.m', 68)" style="font-weight:bold">oneDimensionalContinuum</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/scripts/pre/oneDimensionalContinuum.m',68,0)">line 68</a>)
+dofObject = runNewton(setupObject,dofObject);
+} 
+dbquit
+oneDimensionalContinuum
+|--- time step 00001 of 00040; time 0.0000 ---|
+{Unrecognized field name "name".
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('callElements', '/home/marlon/Projekte/moofeKIT/commonFunctions/callElements.m', 21)" style="font-weight:bold">callElements</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/commonFunctions/callElements.m',21,0)">line 21</a>)
+        elementName = strcat(continuumObject.elementDisplacementType, continuumObject.materialObject.name, setupObject.integrator);
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('runNewton', '/home/marlon/Projekte/moofeKIT/scripts/solver/runNewton.m', 41)" style="font-weight:bold">runNewton</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/scripts/solver/runNewton.m',41,0)">line 41</a>)
+                callElements(continuumObject,setupObject,false);
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('oneDimensionalContinuum', '/home/marlon/Projekte/moofeKIT/scripts/pre/oneDimensionalContinuum.m', 68)" style="font-weight:bold">oneDimensionalContinuum</a> (<a href="matlab: opentoline('/home/marlon/Projekte/moofeKIT/scripts/pre/oneDimensionalContinuum.m',68,0)">line 68</a>)
+dofObject = runNewton(setupObject,dofObject);
+} 
+dbquit
+oneDimensionalContinuum
+|--- time step 00001 of 00040; time 0.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00002 of 00040; time 0.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00003 of 00040; time 0.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00004 of 00040; time 0.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00005 of 00040; time 1.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00006 of 00040; time 1.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00007 of 00040; time 1.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00008 of 00040; time 1.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00009 of 00040; time 2.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00010 of 00040; time 2.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00011 of 00040; time 2.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00012 of 00040; time 2.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00013 of 00040; time 3.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00014 of 00040; time 3.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00015 of 00040; time 3.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00016 of 00040; time 3.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00017 of 00040; time 4.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00018 of 00040; time 4.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00019 of 00040; time 4.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00020 of 00040; time 4.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00021 of 00040; time 5.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00022 of 00040; time 5.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00023 of 00040; time 5.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00024 of 00040; time 5.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00025 of 00040; time 6.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00026 of 00040; time 6.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00027 of 00040; time 6.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00028 of 00040; time 6.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00029 of 00040; time 7.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00030 of 00040; time 7.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00031 of 00040; time 7.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00032 of 00040; time 7.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00033 of 00040; time 8.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00034 of 00040; time 8.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00035 of 00040; time 8.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00036 of 00040; time 8.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00037 of 00040; time 9.0000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00038 of 00040; time 9.2500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00039 of 00040; time 9.5000 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+|--- time step 00040 of 00040; time 9.7500 ---|
+|      iteration  1: norm(R) = 0.00000e+00    |
+oneDimensionalContinuum
+|--- time step 00001 of 00040; time 0.0000 ---|
+|      iteration  1: norm(R) = 1.75480e+05    |
+|      iteration  2: norm(R) = 1.39132e-10    |
+|--- time step 00002 of 00040; time 0.2500 ---|
+|      iteration  1: norm(R) = 1.75494e+05    |
+|      iteration  2: norm(R) = 2.36572e-10    |
+|--- time step 00003 of 00040; time 0.5000 ---|
+|      iteration  1: norm(R) = 1.75467e+05    |
+|      iteration  2: norm(R) = 4.56577e-10    |
+|--- time step 00004 of 00040; time 0.7500 ---|
+|      iteration  1: norm(R) = 5.26413e+05    |
+|      iteration  2: norm(R) = 3.01549e-10    |
+|--- time step 00005 of 00040; time 1.0000 ---|
+|      iteration  1: norm(R) = 1.56403e+02    |
+|      iteration  2: norm(R) = 2.87256e-10    |
+|--- time step 00006 of 00040; time 1.2500 ---|
+|      iteration  1: norm(R) = 2.57851e+02    |
+|      iteration  2: norm(R) = 3.17758e-10    |
+|--- time step 00007 of 00040; time 1.5000 ---|
+|      iteration  1: norm(R) = 3.58448e+02    |
+|      iteration  2: norm(R) = 3.44227e-10    |
+|--- time step 00008 of 00040; time 1.7500 ---|
+|      iteration  1: norm(R) = 4.59026e+02    |
+|      iteration  2: norm(R) = 1.50017e-10    |
+|--- time step 00009 of 00040; time 2.0000 ---|
+|      iteration  1: norm(R) = 5.59239e+02    |
+|      iteration  2: norm(R) = 2.45099e-10    |
+|--- time step 00010 of 00040; time 2.2500 ---|
+|      iteration  1: norm(R) = 6.59111e+02    |
+|      iteration  2: norm(R) = 1.66045e-10    |
+|--- time step 00011 of 00040; time 2.5000 ---|
+|      iteration  1: norm(R) = 7.58551e+02    |
+|      iteration  2: norm(R) = 2.54584e-10    |
+|--- time step 00012 of 00040; time 2.7500 ---|
+|      iteration  1: norm(R) = 8.57505e+02    |
+|      iteration  2: norm(R) = 1.82635e-10    |
+|--- time step 00013 of 00040; time 3.0000 ---|
+|      iteration  1: norm(R) = 9.55907e+02    |
+|      iteration  2: norm(R) = 2.33848e-10    |
+|--- time step 00014 of 00040; time 3.2500 ---|
+|      iteration  1: norm(R) = 1.05370e+03    |
+|      iteration  2: norm(R) = 3.07762e-10    |
+|--- time step 00015 of 00040; time 3.5000 ---|
+|      iteration  1: norm(R) = 1.15081e+03    |
+|      iteration  2: norm(R) = 1.41227e-10    |
+|--- time step 00016 of 00040; time 3.7500 ---|
+|      iteration  1: norm(R) = 1.24719e+03    |
+|      iteration  2: norm(R) = 3.96541e-10    |
+|--- time step 00017 of 00040; time 4.0000 ---|
+|      iteration  1: norm(R) = 1.34277e+03    |
+|      iteration  2: norm(R) = 1.88180e-10    |
+|--- time step 00018 of 00040; time 4.2500 ---|
+|      iteration  1: norm(R) = 1.43751e+03    |
+|      iteration  2: norm(R) = 9.74724e-11    |
+|--- time step 00019 of 00040; time 4.5000 ---|
+|      iteration  1: norm(R) = 1.53133e+03    |
+|      iteration  2: norm(R) = 1.91516e-10    |
+|--- time step 00020 of 00040; time 4.7500 ---|
+|      iteration  1: norm(R) = 1.62418e+03    |
+|      iteration  2: norm(R) = 3.10374e-10    |
+|--- time step 00021 of 00040; time 5.0000 ---|
+|      iteration  1: norm(R) = 1.71600e+03    |
+|      iteration  2: norm(R) = 1.38575e-10    |
+|--- time step 00022 of 00040; time 5.2500 ---|
+|      iteration  1: norm(R) = 1.80675e+03    |
+|      iteration  2: norm(R) = 3.48250e-10    |
+|--- time step 00023 of 00040; time 5.5000 ---|
+|      iteration  1: norm(R) = 1.89637e+03    |
+|      iteration  2: norm(R) = 2.36066e-10    |
+|--- time step 00024 of 00040; time 5.7500 ---|
+|      iteration  1: norm(R) = 1.98480e+03    |
+|      iteration  2: norm(R) = 3.16580e-10    |
+|--- time step 00025 of 00040; time 6.0000 ---|
+|      iteration  1: norm(R) = 2.07200e+03    |
+|      iteration  2: norm(R) = 1.56468e-10    |
+|--- time step 00026 of 00040; time 6.2500 ---|
+|      iteration  1: norm(R) = 2.15791e+03    |
+|      iteration  2: norm(R) = 1.72240e-10    |
+|--- time step 00027 of 00040; time 6.5000 ---|
+|      iteration  1: norm(R) = 2.24249e+03    |
+|      iteration  2: norm(R) = 1.91271e-10    |
+|--- time step 00028 of 00040; time 6.7500 ---|
+|      iteration  1: norm(R) = 2.32569e+03    |
+|      iteration  2: norm(R) = 2.25649e-10    |
+|--- time step 00029 of 00040; time 7.0000 ---|
+|      iteration  1: norm(R) = 2.40747e+03    |
+|      iteration  2: norm(R) = 1.84609e-10    |
+|--- time step 00030 of 00040; time 7.2500 ---|
+|      iteration  1: norm(R) = 2.48778e+03    |
+|      iteration  2: norm(R) = 2.99818e-10    |
+|--- time step 00031 of 00040; time 7.5000 ---|
+|      iteration  1: norm(R) = 2.56659e+03    |
+|      iteration  2: norm(R) = 9.38344e-11    |
+|--- time step 00032 of 00040; time 7.7500 ---|
+|      iteration  1: norm(R) = 2.64384e+03    |
+|      iteration  2: norm(R) = 3.96230e-10    |
+|--- time step 00033 of 00040; time 8.0000 ---|
+|      iteration  1: norm(R) = 2.71951e+03    |
+|      iteration  2: norm(R) = 3.18726e-10    |
+|--- time step 00034 of 00040; time 8.2500 ---|
+|      iteration  1: norm(R) = 2.79356e+03    |
+|      iteration  2: norm(R) = 1.48438e-10    |
+|--- time step 00035 of 00040; time 8.5000 ---|
+|      iteration  1: norm(R) = 2.86596e+03    |
+|      iteration  2: norm(R) = 2.07465e-10    |
+|--- time step 00036 of 00040; time 8.7500 ---|
+|      iteration  1: norm(R) = 2.93667e+03    |
+|      iteration  2: norm(R) = 1.87485e-10    |
+|--- time step 00037 of 00040; time 9.0000 ---|
+|      iteration  1: norm(R) = 3.00566e+03    |
+|      iteration  2: norm(R) = 1.12086e-10    |
+|--- time step 00038 of 00040; time 9.2500 ---|
+|      iteration  1: norm(R) = 3.07290e+03    |
+|      iteration  2: norm(R) = 3.56925e-10    |
+|--- time step 00039 of 00040; time 9.5000 ---|
+|      iteration  1: norm(R) = 3.13838e+03    |
+|      iteration  2: norm(R) = 2.18746e-10    |
+|--- time step 00040 of 00040; time 9.7500 ---|
+|      iteration  1: norm(R) = 3.20206e+03    |
+|      iteration  2: norm(R) = 2.49749e-10    |
+solidViscoObject
+
+solidViscoObject = 
+
+  <a href="matlab:helpPopup solidViscoClass" style="font-weight:bold">solidViscoClass</a> with properties:
+
+              epsilonViscoN: [10×2 double]
+             epsilonViscoN1: [10×2 double]
+           additionalFields: 0
+             callMassMatrix: 1
+               callElements: 1
+                  dimension: 1
+    elementDisplacementType: 'displacement'
+                       ePot: [1×41 struct]
+                    momenta: [1×41 struct]
+                   plotData: [1×1 struct]
+                          L: [11×1 double]
+                         vN: [11×1 double]
+                        vN1: [11×1 double]
+                         qN: [11×1 double]
+                        qN1: [11×1 double]
+                         qR: [11×1 double]
+                          J: 0
+        shapeFunctionObject: [1×1 shapeFunctionClass]
+            storageFEObject: [1×1 storageFEClass]
+             materialObject: [1×1 struct]
+             mapVoigtObject: [1×1 mapVoigtClass]
+              mixedFEObject: [1×1 mixedFEClass]
+     numericalTangentObject: [1×1 numericalTangentClass]
+                 meshObject: [1×1 meshClass]
+
+solidViscoObject.mixedFEObject
+
+ans = 
+
+  <a href="matlab:helpPopup mixedFEClass" style="font-weight:bold">mixedFEClass</a> with properties:
+
+                condensation: 0
+                          qN: []
+                         qN1: []
+                  globalEdof: []
+         shapeFunctionObject: []
+           typeShapeFunction: 'sameOrder'
+       typeShapeFunctionData: 0
+    continuousShapeFunctions: 0
+               numberOfNodes: []
+                numberOfDofs: 0
+              numberOfFields: 0
+                dofsPerField: {}
+          dofsPerFieldVector: []
+                      dataFE: [1×10 struct]
+
+solidViscoObject.mixedFEObject.dataFE
+
+ans = 
+
+  1×10 <a href="matlab:helpPopup struct" style="font-weight:bold">struct</a> array with fields:
+
+    ReDTilde
+    KeDDTilde
+
+solidViscoObject.mixedFEObject.dataFE.ReDTilde
+
+ans =
+
+     []
+
+
+ans =
+
+     []
+
+
+ans =
+
+     []
+
+
+ans =
+
+     []
+
+
+ans =
+
+     []
+
+
+ans =
+
+     []
+
+
+ans =
+
+     []
+
+
+ans =
+
+     []
+
+
+ans =
+
+     []
+
+
+ans =
+
+     []
+
+solidViscoObject
+
+solidViscoObject = 
+
+  <a href="matlab:helpPopup solidViscoClass" style="font-weight:bold">solidViscoClass</a> with properties:
+
+              epsilonViscoN: [10×2 double]
+             epsilonViscoN1: [10×2 double]
+           additionalFields: 0
+             callMassMatrix: 1
+               callElements: 1
+                  dimension: 1
+    elementDisplacementType: 'displacement'
+                       ePot: [1×41 struct]
+                    momenta: [1×41 struct]
+                   plotData: [1×1 struct]
+                          L: [11×1 double]
+                         vN: [11×1 double]
+                        vN1: [11×1 double]
+                         qN: [11×1 double]
+                        qN1: [11×1 double]
+                         qR: [11×1 double]
+                          J: 0
+        shapeFunctionObject: [1×1 shapeFunctionClass]
+            storageFEObject: [1×1 storageFEClass]
+             materialObject: [1×1 struct]
+             mapVoigtObject: [1×1 mapVoigtClass]
+              mixedFEObject: [1×1 mixedFEClass]
+     numericalTangentObject: [1×1 numericalTangentClass]
+                 meshObject: [1×1 meshClass]
+
+solidViscoObject.qN1
+
+ans =
+
+         0
+    0.1010
+    0.2020
+    0.3029
+    0.4035
+    0.5040
+    0.6041
+    0.7039
+    0.8032
+    0.9019
+    1.0000
+
+solidViscoObject.e
+{Unrecognized method, property, or field 'e' for class 'solidViscoClass'.
+} 
+solidViscoObject.epsilonViscoN
+
+ans =
+
+   1.0e-03 *
+
+   -0.0470   -0.0470
+   -0.0457   -0.0457
+   -0.0428   -0.0428
+   -0.0376   -0.0376
+   -0.0291   -0.0291
+   -0.0163   -0.0163
+    0.0028    0.0028
+    0.0299    0.0299
+    0.0675    0.0675
+    0.1183    0.1183
+
+dofObject
+
+dofObject = 
+
+  <a href="matlab:helpPopup dofClass" style="font-weight:bold">dofClass</a> with properties:
+
+                          qR: [11×1 double]
+                          qN: [11×1 double]
+                         qN1: [11×1 double]
+                          vN: [11×1 double]
+                         vN1: [11×1 double]
+                           L: [11×1 double]
+                           J: []
+                       delta: [11×1 double]
+        listContinuumObjects: {1×3 cell}
+           totalNumberOfDofs: 11
+                dirichletDof: [2×1 int32]
+                           R: [11×1 double]
+              postDataObject: [1×1 postDataClass]
+    numberOfContinuumObjects: 3
+       callMassMatrixElement: [11×11 double]
+                    solveDof: [2 3 4 5 6 7 8 9 10]
+                     doSolve: [11×1 logical]
+
+solidViscoObject
+
+solidViscoObject = 
+
+  <a href="matlab:helpPopup solidViscoClass" style="font-weight:bold">solidViscoClass</a> with properties:
+
+              epsilonViscoN: [10×2 double]
+             epsilonViscoN1: [10×2 double]
+           additionalFields: 0
+             callMassMatrix: 1
+               callElements: 1
+                  dimension: 1
+    elementDisplacementType: 'displacement'
+                       ePot: [1×41 struct]
+                    momenta: [1×41 struct]
+                   plotData: [1×1 struct]
+                          L: [11×1 double]
+                         vN: [11×1 double]
+                        vN1: [11×1 double]
+                         qN: [11×1 double]
+                        qN1: [11×1 double]
+                         qR: [11×1 double]
+                          J: 0
+        shapeFunctionObject: [1×1 shapeFunctionClass]
+            storageFEObject: [1×1 storageFEClass]
+             materialObject: [1×1 struct]
+             mapVoigtObject: [1×1 mapVoigtClass]
+              mixedFEObject: [1×1 mixedFEClass]
+     numericalTangentObject: [1×1 numericalTangentClass]
+                 meshObject: [1×1 meshClass]
+
+solidViscoObject.mapVoigtObject
+
+ans = 
+
+  <a href="matlab:helpPopup mapVoigtClass" style="font-weight:bold">mapVoigtClass</a> with properties:
+
+      mapVoigt: 1
+    reMapVoigt: []
+       mapType: 'symmetric'
+     dimension: 1
+

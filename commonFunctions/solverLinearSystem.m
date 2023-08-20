@@ -19,7 +19,8 @@ assert(~any(any(isnan(A))), "Coefficient matrix contains invalid entries!");
 % check if preconditioning should be done
 flagPreconditioning = false;
 if setupObject.usePreconditioning
-    if cond(A) > 1e10
+    if issparse(A), condA = condest(A); else, condA = cond(A); end
+    if condA > 1e10
         flagPreconditioning = true;
         [P, R, C] = equilibrate(A);
         A = R * P * A * C;

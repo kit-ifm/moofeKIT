@@ -52,21 +52,20 @@ function [rData, kData, elementEnergy, array] = mixedSCMooneyRivlinMidpoint(obj,
 % load objects
 shapeFunctionObject = obj.shapeFunctionObject;
 materialObject = obj.materialObject;
-mapVoigtObject = obj.mapVoigtObject;
 mixedFEObject = obj.mixedFEObject;
 meshObject = obj.meshObject;
 
 % aquire general data
-N = shapeFunctionObject.N;
-dNr = shapeFunctionObject.dNr;
-M = mixedFEObject.shapeFunctionObject.N;
+N_k_I = shapeFunctionObject.N_k_I;
+dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
+M_k_I = mixedFEObject.shapeFunctionObject.N_k_I;
 
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
 gaussWeight = shapeFunctionObject.gaussWeight;
 
 edof = meshObject.edof;
 numberOfXDofs = size(meshObject.globalFullEdof, 2) - size(mixedFEObject.globalEdof, 2);
-numberOfInternalNodes = size(M, 2);
+numberOfInternalNodes = size(M_k_I, 2);
 
 dimension = obj.dimension;
 
@@ -99,8 +98,7 @@ extractedLambdaGN1v = edAlphaN1(19*numberOfInternalNodes+1:25*numberOfInternalNo
 extractedLambdacN1 = edAlphaN1(25*numberOfInternalNodes+1:26*numberOfInternalNodes);
 
 % compute Jacobian matrices
-J = edRef * dNr';
-JN1 = edN1 * dNr';
+JAll = computeJacobianForAllGausspoints(edRef, dN_xi_k_I);
 
 % initialize residual
 RX = rData{1};
@@ -138,48 +136,44 @@ elementEnergy.strainEnergy = 0;
 
 %% GAUSS LOOP
 for k = 1:numberOfGausspoints
-    indx = dimension * k - (dimension - 1):dimension * k;
-    detJ = det(J(:, indx)');
-    detJN1 = det(JN1(:, indx)');
-    if detJ < 10 * eps
-        error('Jacobi determinant equal or less than zero.')
-    end
-    dNx = (J(:, indx)') \ (dNr(indx, :));
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
+    
 
     % compute the values of the variables at the current Gauss point
-    CNv = reshape(extractedCNv, 6, []) * M(k, :)';
+    CNv = reshape(extractedCNv, 6, []) * M_k_I(k, :)';
     CN = voigtToMatrix(CNv, 'stress');
-    CN1v = reshape(extractedCN1v, 6, []) * M(k, :)';
+    CN1v = reshape(extractedCN1v, 6, []) * M_k_I(k, :)';
     CN1 = voigtToMatrix(CN1v, 'stress');
     CN05 = 0.5 * (CN + CN1);
 
-    GNv = reshape(extractedGNv, 6, []) * M(k, :)';
+    GNv = reshape(extractedGNv, 6, []) * M_k_I(k, :)';
     GN = voigtToMatrix(GNv, 'stress');
-    GN1v = reshape(extractedGN1v, 6, []) * M(k, :)';
+    GN1v = reshape(extractedGN1v, 6, []) * M_k_I(k, :)';
     GN1 = voigtToMatrix(GN1v, 'stress');
     GN05 = 0.5 * (GN + GN1);
 
-    cN = extractedcN.' * M(k, :)';
-    cN1 = extractedcN1.' * M(k, :)';
+    cN = extractedcN.' * M_k_I(k, :)';
+    cN1 = extractedcN1.' * M_k_I(k, :)';
     cN05 = 0.5 * (cN + cN1);
 
-    lambdaCN1v = reshape(extractedLambdaCN1v, 6, []) * M(k, :)';
+    lambdaCN1v = reshape(extractedLambdaCN1v, 6, []) * M_k_I(k, :)';
     lambdaCN1 = voigtToMatrix(lambdaCN1v, 'stress');
 
-    lambdaGN1v = reshape(extractedLambdaGN1v, 6, []) * M(k, :)';
+    lambdaGN1v = reshape(extractedLambdaGN1v, 6, []) * M_k_I(k, :)';
     lambdaGN1 = voigtToMatrix(lambdaGN1v, 'stress');
 
-    lambdacN1 = extractedLambdacN1.' * M(k, :)';
+    lambdacN1 = extractedLambdacN1.' * M_k_I(k, :)';
 
     % deformation gradient
-    FxN1 = edN1 * dNx';
-    FxN05 = edN05 * dNx';
+    FxN1 = edN1 * dN_X_I';
+    FxN05 = edN05 * dN_X_I';
 
     % strain measures
     CxN05 = FxN05.' * FxN05;
 
     % nodal operator matrix
-    BN05 = BMatrix(dNx, FxN05);
+    BN05 = BMatrix(dN_X_I, FxN05);
 
     if ~computePostData
         % ENERGY
@@ -192,16 +186,16 @@ for k = 1:numberOfGausspoints
 
         % RESIDUAL
         RX = RX + 2 * BN05.' * lambdaCN1v * detJ * gaussWeight(k);
-        RCv = RCv + kron(M(k, :)', matrixToVoigt(DW_C-lambdaCN1+wedge(lambdaGN1, CN05)+1/3*lambdacN1*GN05, 'strain')) * detJ * gaussWeight(k);
-        RGv = RGv + kron(M(k, :)', matrixToVoigt(DW_G-lambdaGN1+1/3*lambdacN1*CN05, 'strain')) * detJ * gaussWeight(k);
-        Rc = Rc + M(k, :)' * (DW_c - lambdacN1) * detJ * gaussWeight(k);
-        RLambdaCv = RLambdaCv + kron(M(k, :)', matrixToVoigt(CxN05-CN05, 'strain')) * detJ * gaussWeight(k);
-        RLambdaGv = RLambdaGv + kron(M(k, :)', matrixToVoigt(0.5*wedge(CN05, CN05)-GN05, 'strain')) * detJ * gaussWeight(k);
-        RLambdac = RLambdac + M(k, :)' * (1 / 3 * innerProduct(GN05, CN05) - cN05) * detJ * gaussWeight(k);
+        RCv = RCv + kron(M_k_I(k, :)', matrixToVoigt(DW_C-lambdaCN1+wedge(lambdaGN1, CN05)+1/3*lambdacN1*GN05, 'strain')) * detJ * gaussWeight(k);
+        RGv = RGv + kron(M_k_I(k, :)', matrixToVoigt(DW_G-lambdaGN1+1/3*lambdacN1*CN05, 'strain')) * detJ * gaussWeight(k);
+        Rc = Rc + M_k_I(k, :)' * (DW_c - lambdacN1) * detJ * gaussWeight(k);
+        RLambdaCv = RLambdaCv + kron(M_k_I(k, :)', matrixToVoigt(CxN05-CN05, 'strain')) * detJ * gaussWeight(k);
+        RLambdaGv = RLambdaGv + kron(M_k_I(k, :)', matrixToVoigt(0.5*wedge(CN05, CN05)-GN05, 'strain')) * detJ * gaussWeight(k);
+        RLambdac = RLambdac + M_k_I(k, :)' * (1 / 3 * innerProduct(GN05, CN05) - cN05) * detJ * gaussWeight(k);
 
         % TANGENT
         % KXX
-        A1 = dNx' * lambdaCN1 * dNx * detJ * gaussWeight(k);
+        A1 = dN_X_I' * lambdaCN1 * dN_X_I * detJ * gaussWeight(k);
         temporaryKXX = zeros(numberOfXDofs);
         for g = 1:dimension
             temporaryKXX(g:dimension:numberOfXDofs, g:dimension:numberOfXDofs) = A1;
@@ -209,78 +203,79 @@ for k = 1:numberOfGausspoints
         KXX = KXX + temporaryKXX;
 
         % KXLambdaC
-        KXLambdaC = KXLambdaC + 2 * kron(M(k, :), BN05') * detJ * gaussWeight(k);
+        KXLambdaC = KXLambdaC + 2 * kron(M_k_I(k, :), BN05') * detJ * gaussWeight(k);
 
         % =====
 
         % KCC
-        KCC = KCC + 1 / 2 * kron(M(k, :)'*M(k, :), tangentOperatorD(lambdaGN1)) * detJ * gaussWeight(k);
+        KCC = KCC + 1 / 2 * kron(M_k_I(k, :)'*M_k_I(k, :), tangentOperatorD(lambdaGN1)) * detJ * gaussWeight(k);
 
         % KCG
-        KCG = KCG + 1 / 6 * kron(M(k, :)'*M(k, :), lambdacN1*I6) * detJ * gaussWeight(k);
+        KCG = KCG + 1 / 6 * kron(M_k_I(k, :)'*M_k_I(k, :), lambdacN1*I6) * detJ * gaussWeight(k);
 
         % KCLambdaC
-        KCLambdaC = KCLambdaC - kron(M(k, :)'*M(k, :), I6) * detJ * gaussWeight(k);
+        KCLambdaC = KCLambdaC - kron(M_k_I(k, :)'*M_k_I(k, :), I6) * detJ * gaussWeight(k);
 
         % KCLambdaG
-        KCLambdaG = KCLambdaG + kron(M(k, :)'*M(k, :), tangentOperatorD(CN05)) * detJ * gaussWeight(k);
+        KCLambdaG = KCLambdaG + kron(M_k_I(k, :)'*M_k_I(k, :), tangentOperatorD(CN05)) * detJ * gaussWeight(k);
 
         % KCLambdac
-        KCLambdac = KCLambdac + 1 / 3 * kron(M(k, :)'*M(k, :), matrixToVoigt(GN05, 'strain')) * detJ * gaussWeight(k);
+        KCLambdac = KCLambdac + 1 / 3 * kron(M_k_I(k, :)'*M_k_I(k, :), matrixToVoigt(GN05, 'strain')) * detJ * gaussWeight(k);
 
         % =====
 
         % KGC
-        KGC = KGC + 1 / 6 * kron(M(k, :)'*M(k, :), lambdacN1*I6) * detJ * gaussWeight(k);
+        KGC = KGC + 1 / 6 * kron(M_k_I(k, :)'*M_k_I(k, :), lambdacN1*I6) * detJ * gaussWeight(k);
 
         % KGLambdaG
-        KGLambdaG = KGLambdaG - kron(M(k, :)'*M(k, :), I6) * detJ * gaussWeight(k);
+        KGLambdaG = KGLambdaG - kron(M_k_I(k, :)'*M_k_I(k, :), I6) * detJ * gaussWeight(k);
 
         % KGLambdac
-        KGLambdac = KGLambdac + 1 / 3 * kron(M(k, :)'*M(k, :), matrixToVoigt(CN05, 'strain')) * detJ * gaussWeight(k);
+        KGLambdac = KGLambdac + 1 / 3 * kron(M_k_I(k, :)'*M_k_I(k, :), matrixToVoigt(CN05, 'strain')) * detJ * gaussWeight(k);
 
         % =====
 
         % Kcc
         D2W_c_cN1 = 1 / 2 * (d / (2 * cN05^2) + c / (4 * (cN05)^(3 / 2)));
-        Kcc = Kcc + M(k, :)' * M(k, :) * D2W_c_cN1 * detJ * gaussWeight(k);
+        Kcc = Kcc + M_k_I(k, :)' * M_k_I(k, :) * D2W_c_cN1 * detJ * gaussWeight(k);
 
         % KcLambdac
-        KcLambdac = KcLambdac - M(k, :)' * M(k, :) * detJ * gaussWeight(k);
+        KcLambdac = KcLambdac - M_k_I(k, :)' * M_k_I(k, :) * detJ * gaussWeight(k);
 
         % =====
 
         % KLambdaCX
-        KLambdaCX = KLambdaCX + kron(M(k, :)', BN05) * detJ * gaussWeight(k);
+        KLambdaCX = KLambdaCX + kron(M_k_I(k, :)', BN05) * detJ * gaussWeight(k);
 
         % KLambdaCC
-        KLambdaCC = KLambdaCC - 1 / 2 * kron(M(k, :)'*M(k, :), I6) * detJ * gaussWeight(k);
+        KLambdaCC = KLambdaCC - 1 / 2 * kron(M_k_I(k, :)'*M_k_I(k, :), I6) * detJ * gaussWeight(k);
 
         % =====
 
         % KLambdaGC
-        KLambdaGC = KLambdaGC + 1 / 2 * kron(M(k, :)'*M(k, :), tangentOperatorD(CN05)) * detJ * gaussWeight(k);
+        KLambdaGC = KLambdaGC + 1 / 2 * kron(M_k_I(k, :)'*M_k_I(k, :), tangentOperatorD(CN05)) * detJ * gaussWeight(k);
 
         % KLambdaGG
-        KLambdaGG = KLambdaGG - 1 / 2 * kron(M(k, :)'*M(k, :), I6) * detJ * gaussWeight(k);
+        KLambdaGG = KLambdaGG - 1 / 2 * kron(M_k_I(k, :)'*M_k_I(k, :), I6) * detJ * gaussWeight(k);
 
         % =====
 
         % KLambdacC
-        KLambdacC = KLambdacC + 1 / 6 * kron(M(k, :)'*M(k, :), matrixToVoigt(GN05, 'strain')') * detJ * gaussWeight(k);
+        KLambdacC = KLambdacC + 1 / 6 * kron(M_k_I(k, :)'*M_k_I(k, :), matrixToVoigt(GN05, 'strain')') * detJ * gaussWeight(k);
 
         % KLambdacG
-        KLambdacG = KLambdacG + 1 / 6 * kron(M(k, :)'*M(k, :), matrixToVoigt(CN05, 'strain')') * detJ * gaussWeight(k);
+        KLambdacG = KLambdacG + 1 / 6 * kron(M_k_I(k, :)'*M_k_I(k, :), matrixToVoigt(CN05, 'strain')') * detJ * gaussWeight(k);
 
         % KLambdacc
-        KLambdacc = KLambdacc - 1 / 2 * M(k, :)' * M(k, :) * detJ * gaussWeight(k);
+        KLambdacc = KLambdacc - 1 / 2 * M_k_I(k, :)' * M_k_I(k, :) * detJ * gaussWeight(k);
     else
         % STRESS COMPUTATION
+        [~, detJStruct, ~, ~] = computeAllJacobian(edRef, edN, edN1, dN_xi_k_I, k, setupObject);
         SN1 = 2 * lambdaCN1;
         PN1 = FxN1 * SN1;
         stressTensor.FirstPK = PN1;
         stressTensor.Cauchy = 1 / det(FxN1) * PN1 * FxN1';
-        array = postStressComputation(array, N, k, gaussWeight, detJ, detJN1, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, detJN1, stressTensor, setupObject, dimension);
     end
 end
 

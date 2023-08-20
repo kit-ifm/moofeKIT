@@ -10,7 +10,6 @@ classdef dirichletClass < baseFEClass
         functionDof = [];
         timeFunction = @(t,XYZ) 0;
         time = 0;
-        dimension = 3;
     end
     properties (Dependent = true)
         globalNodesDof          % global list of Dirichlet nodes
@@ -28,9 +27,6 @@ classdef dirichletClass < baseFEClass
     end
     %% mandatory methods
     methods
-%         
-        plot(obj,setupObject)
-%         
         function initializeShapeFunctions(obj,dofObject)
             % nothing to do here
         end

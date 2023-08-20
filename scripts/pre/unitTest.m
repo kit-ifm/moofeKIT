@@ -75,22 +75,16 @@ bcTimeEnd = 2;
 FA = [256;512;768];
 
 neumannObject1 = neumannClass(dofObject);
-neumannObject1.typeOfLoad = 'deadLoad';
+neumannObject1.loadGeometry = 'area';
 neumannObject1.masterObject = solidElectroThermoObject;
-neumannObject1.forceVector = 1/9*FA;
-neumannObject1.shapeFunctionObject.order = solidElectroThermoObject.shapeFunctionObject.order;
-neumannObject1.shapeFunctionObject.numberOfGausspoints = 2^(solidElectroThermoObject.dimension-1);
-neumannObject1.projectionType = 'none';
+neumannObject1.loadVector = 1/9*FA;
 neumannObject1.timeFunction = @(t) t.*(t <= bcTimeEnd/2)+(bcTimeEnd-t).*(t > bcTimeEnd/2 & t <= bcTimeEnd);
 neumannObject1.meshObject.edof = abaqusMeshData.subsets(3).edof;
 
 neumannObject2 = neumannClass(dofObject);
-neumannObject2.typeOfLoad = 'deadLoad';
+neumannObject2.loadGeometry = 'area';
 neumannObject2.masterObject = solidElectroThermoObject;
-neumannObject2.forceVector = -1/9*FA;
-neumannObject2.shapeFunctionObject.order = solidElectroThermoObject.shapeFunctionObject.order;
-neumannObject2.shapeFunctionObject.numberOfGausspoints = 2^(solidElectroThermoObject.dimension-1);
-neumannObject2.projectionType = 'none';
+neumannObject2.loadVector = -1/9*FA;
 neumannObject2.timeFunction = @(t)  t.*(t <= bcTimeEnd/2)+(bcTimeEnd-t).*(t > bcTimeEnd/2 & t <= bcTimeEnd);
 neumannObject2.meshObject.edof = abaqusMeshData.subsets(4).edof;
 
@@ -101,10 +95,10 @@ dirichletObject1.nodalDof = 4;
 dirichletObject1.masterObject = solidElectroThermoObject;
 dirichletObject1.timeFunction = @(t,Z) (6e6).*(t > bcTimeEnd) + (6e6*sin(pi/2*t/bcTimeEnd)).*(t >= 0).*(t <= bcTimeEnd);
 
-dirichletObject1 = dirichletClass(dofObject);
-dirichletObject1.nodeList = find(solidElectroThermoObject.meshObject.nodes(:,3) == 3);
-dirichletObject1.nodalDof = 4;
-dirichletObject1.masterObject = solidElectroThermoObject;
+dirichletObject2 = dirichletClass(dofObject);
+dirichletObject2.nodeList = find(solidElectroThermoObject.meshObject.nodes(:,3) == 3);
+dirichletObject2.nodalDof = 4;
+dirichletObject2.masterObject = solidElectroThermoObject;
 
 %% solver
 warning off;

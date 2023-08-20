@@ -34,25 +34,18 @@ dirichletObject.nodeList = find(solidViscoObject.meshObject.nodes(:,1)==0);
 dirichletObject.nodalDof = 1;
 dirichletObject.masterObject = solidViscoObject;
 dirichletObject.timeFunction = str2func('@(t,X) 0*X');
-dirichletObject.dimension = 1;
 
-neumannObject = neumannClass(dofObject);
-neumannObject.typeOfLoad = 'deadLoad';
-neumannObject.masterObject = solidViscoObject;
-neumannObject.forceVector = [1000];
-neumannObject.shapeFunctionObject.order = solidViscoObject.shapeFunctionObject.order;
-neumannObject.shapeFunctionObject.numberOfGausspoints = 2^(solidViscoObject.dimension-1);
-neumannObject.projectionType = 'none';
-neumannObject.timeFunction = str2func('@(t) t');
-neumannObject.meshObject.edof = find(solidViscoObject.meshObject.nodes(:,1)==0.5);
-neumannObject.dimension = 1;
+nodalLoadObject = nodalForceClass(dofObject);
+nodalLoadObject.masterObject = solidViscoObject;
+nodalLoadObject.loadVector = 1000;
+nodalLoadObject.timeFunction = str2func('@(t) t');
+nodalLoadObject.nodeList= find(solidViscoObject.meshObject.nodes(:,1)==0.5);
 
 dirichletObject = dirichletClass(dofObject);
 dirichletObject.nodeList = find(solidViscoObject.meshObject.nodes(:,1)==1);
 dirichletObject.nodalDof = 1;
 dirichletObject.masterObject = solidViscoObject;
 dirichletObject.timeFunction = str2func('@(t,X) 0*X');
-dirichletObject.dimension = 1;
 
 %% solver
 dofObject = runNewton(setupObject,dofObject);

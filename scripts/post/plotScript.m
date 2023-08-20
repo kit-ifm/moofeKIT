@@ -1,5 +1,6 @@
-if setupObject.plotObject.flag
-    if setupObject.plotObject.everyNewtonStep
+plotObject = setupObject.plotObject;
+if plotObject.flag
+    if plotObject.everyNewtonStep
         %% plot
         if ~exist('figurePlot','var')
             if ~setupObject.plotObject.docked
@@ -9,11 +10,12 @@ if setupObject.plotObject.flag
                 figurePlot = figure();
             end
         else
-            cla(figureAxes)
+            if ~setupObject.plotObject.keepFormerPlots
+                cla(figureAxes)
+            end
         end
-        plotObject = setupObject.plotObject;
         %formatting of axis
-        if ~exist('timeStep','var') || timeStep==1
+        if ~exist('timeStep','var') || timeStep==1 || timeStep == 0
             plotObject.findXminXmax(dofObject.listContinuumObjects{1})  % FIXME listContinuumObjects{1}: other objects?
             %scale axes
             xlim([plotObject.xmin(1)-plotObject.deltaXY*plotObject.border, plotObject.xmax(1)+plotObject.deltaXY*plotObject.border]);
@@ -43,22 +45,43 @@ if setupObject.plotObject.flag
             view(plotObject.view)
         end
         %% plot objects
-        for index1 = 1:dofObject.numberOfContinuumObjects
-            % solids
-            if isa(dofObject.listContinuumObjects{index1}, 'solidSuperClass')
-                plot(dofObject.listContinuumObjects{index1},setupObject);
-            end
-            % boundarys 2D
-            if dofObject.listContinuumObjects{index1}.dimension == 2
+        if mod(timeStep,plotObject.steps) == 0 || timeStep == 0
+
+            for index1 = 1:dofObject.numberOfContinuumObjects
+                % solids
+                if isa(dofObject.listContinuumObjects{index1}, 'solidSuperClass')
+                    plot(dofObject.listContinuumObjects{index1}, setupObject);
+                end
+                % boundarys 2D
                 if isa(dofObject.listContinuumObjects{index1},'dirichletClass') || isa(dofObject.listContinuumObjects{index1},'neumannClass')
-                    plot(dofObject.listContinuumObjects{index1},setupObject);
+                    if dofObject.listContinuumObjects{index1}.masterObject.dimension == 2
+                        plot(dofObject.listContinuumObjects{index1}, setupObject);
+                    end
                 end
             end
         end
         if ~isempty(setupObject.plotObject.colorBarLimits)
             caxis(setupObject.plotObject.colorBarLimits)
         end
+
+        if plotObject.savePlot.flagPlotColorbar
+            clf(figPlot)
+            saveName = strcat(saveName,'Colorbar');
+        end
+
+        axis([-4    10    -4    14])
+
+% % % % % % % % % % % % % % % %         
+        axis off
+        colorbar off
+    %    print(figurePlot,num2str(setupObject.timeStep),'-depsc')
+
+% % % % % % % % % % % % % % % %         
         drawnow
+        if plotObject.savePlot.flag
+            print(figurePlot,strcat(plotObject.savePlot.name,num2str(setupObject.timeStep)),plotObject.savePlot.type);
+        end
+
     end
 end
 % TODO: configuration to export multiple vtk files

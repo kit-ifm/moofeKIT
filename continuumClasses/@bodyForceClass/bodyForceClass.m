@@ -53,7 +53,7 @@ classdef bodyForceClass < baseFEClass
         end
         function initializeGlobalDofs(obj,dofObject)
             masterObject = obj.masterObject;
-            dimension = masterObject.dimension;
+            dimension = obj.dimension;
             edof = obj.meshObject.edof;
             numberOfElements = size(edof,1);
             globalFullEdof = zeros(numberOfElements,size(edof,2)*dimension);

@@ -52,13 +52,9 @@ switch example
 
         % neumann boundary conditions
         neumannObject = neumannClass(dofObject);
-        neumannObject.dimension = 2;
-        neumannObject.typeOfLoad = 'deadLoad';
         neumannObject.masterObject = solidObject;
-        neumannObject.forceVector = [0; -10];
-        neumannObject.shapeFunctionObject.order = solidObject.shapeFunctionObject.order;
-        neumannObject.shapeFunctionObject.numberOfGausspoints = neumannObject.shapeFunctionObject.order + 1;
-        neumannObject.projectionType = 'none';
+        neumannObject.loadGeometry = 'line';
+        neumannObject.loadVector = [0; -10];
         neumannObject.timeFunction = @(t) t;
         neumannObject.meshObject.edof = edofBoundary.SY2;
     case 'patchTestDistorted'
@@ -74,7 +70,6 @@ switch example
             11, 13, 14, 12];
         % dirchlet boundary conditions 1
         dirichletObject1 = dirichletClass(dofObject);
-        dirichletObject1.dimension = 2;
         dirichletObject1.masterObject = solidObject;
         dirichletObject1.nodeList = 1;
         dirichletObject1.nodalDof = 2;
@@ -82,7 +77,6 @@ switch example
 
         % dirchlet boundary conditions 2
         dirichletObject2 = dirichletClass(dofObject);
-        dirichletObject2.dimension = 2;
         dirichletObject2.masterObject = solidObject;
         dirichletObject2.nodeList = 1:4;
         dirichletObject2.nodalDof = 1;
@@ -90,13 +84,9 @@ switch example
 
         %boundary conditions - neumann
         neumannObject = neumannClass(dofObject);
-        neumannObject.dimension = 2;
+        neumannObject.loadGeometry = 'line';
         neumannObject.masterObject = solidObject;
-        neumannObject.forceVector = [-30; 0];
-        neumannObject.shapeFunctionObject.order = solidObject.shapeFunctionObject.order;
-        neumannObject.shapeFunctionObject.numberOfGausspoints = neumannObject.shapeFunctionObject.order + 1;
-        neumannObject.projectionType = 'none';
-        neumannObject.timeFunction = @(t) t;
+        neumannObject.loadVector = [-30; 0];
         neumannObject.meshObject.edof = [13, 14];
     case 'cooksMembrane'
         numberOfElements = 10;
@@ -104,7 +94,6 @@ switch example
 
         % dirchlet boundary conditions
         dirichletObject = dirichletClass(dofObject);
-        dirichletObject.dimension = 2;
         dirichletObject.masterObject = solidObject;
         dirichletObject.nodeList = find(solidObject.meshObject.nodes(:, 1) == 0);
         dirichletObject.nodalDof = 1:2;
@@ -112,14 +101,9 @@ switch example
 
         % neumann boundary conditions
         neumannObject = neumannClass(dofObject);
-        neumannObject.dimension = 2;
-        neumannObject.typeOfLoad = 'deadLoad';
+        neumannObject.loadGeometry = 'line';
         neumannObject.masterObject = solidObject;
-        neumannObject.forceVector = [0; 5];
-        neumannObject.shapeFunctionObject.order = solidObject.shapeFunctionObject.order;
-        neumannObject.shapeFunctionObject.numberOfGausspoints = neumannObject.shapeFunctionObject.order + 1;
-        neumannObject.projectionType = 'none';
-        neumannObject.timeFunction = @(t) t;
+        neumannObject.loadVector = [0; 5];
         neumannObject.meshObject.edof = edofNeumann;
 end
 

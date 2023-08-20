@@ -2,7 +2,7 @@
 setupObject = setupClass;
 setupObject.saveObject.fileName = 'patchTest';
 setupObject.saveObject.saveData = false;
-setupObject.totalTimeSteps = 10;
+setupObject.totalTimeSteps = 100;
 setupObject.totalTime = 5;
 setupObject.plotObject.flag = true;
 setupObject.plotObject.stress.component = 1;
@@ -17,9 +17,9 @@ dofObject = dofClass;   % required object for dof and object handling
 % solidViscoObject = solidClass(dofObject);
     %für linear-viskoelastisch:
 solidViscoObject = solidViscoClass(dofObject);
-
-solidViscoObject.materialObject.name = 'HookeSplit';
-% solidViscoObject.materialObject.name = 'Hooke';
+solidViscoObject.linearity = 'linear';
+% solidViscoObject.materialObject.name = 'HookeSplit';
+solidViscoObject.materialObject.name = 'Hooke';
 solidViscoObject.elementDisplacementType = 'displacement';
 % E = 2.26115e+03;
  E = 300000;

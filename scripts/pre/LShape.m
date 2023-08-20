@@ -18,29 +18,35 @@
 setupObject = setupClass;
 setupObject.saveObject.fileName = 'LShape';
 setupObject.saveObject.saveData = false;
-setupObject.totalTimeSteps = 80;
-setupObject.totalTime = 8;
+setupObject.totalTimeSteps = 12;
+setupObject.totalTime = 3;
 setupObject.plotObject.flag = false;
 % setupObject.plotObject.stress.component = -1;
 setupObject.plotObject.view = [-0.4,90];
-setupObject.newton.tolerance = 1e-4;
-setupObject.integrator = 'Endpoint';
+setupObject.newton.tolerance = 1e-6;
+% setupObject.integrator = 'Endpoint';
 % setupObject.integrator = 'Midpoint';
-% setupObject.integrator = 'DiscreteGradient';
+setupObject.integrator = 'DiscreteGradient';
 
 dofObject = dofClass;   % required object for dof and object handling
 
 %% continuum Objects
 % abaqus mesh
+abaqusMeshData = abaqusInputFileConverter('LShapeH1VeryCoarse.inp');
 % abaqusMeshData = abaqusInputFileConverter('LShapeH1.inp');
-abaqusMeshData = abaqusInputFileConverter('LShapeH2Serendipity.inp');
+% abaqusMeshData = abaqusInputFileConverter('LShapeH2Serendipity.inp');
 solidObject = solidClass(dofObject);
 solidObject.meshObject.nodes = abaqusMeshData.qR;
 solidObject.meshObject.edof = abaqusMeshData.edof;
 if 1
-    solidObject.materialObject.name = 'MooneyRivlin';
-%     solidObject.elementDisplacementType = 'displacementSC';
-    solidObject.elementDisplacementType = 'mixedSC';
+    solidObject.materialObject.name = 'ANNMooneyRivlin';
+%     solidObject.materialObject.name = 'ANNMooneyRivlin3';
+%     solidObject.materialObject.name = 'ANNMooneyRivlin2';
+%     solidObject.materialObject.name = 'MooneyRivlin';
+    solidObject.elementDisplacementType = 'displacementSC';
+%     solidObject.elementDisplacementType = 'mixedSC';
+    solidObject.numericalTangentObject.computeNumericalTangent = true;
+    solidObject.numericalTangentObject.showDifferences = false;
     bulk    = 5209;                                                 % K
     shear   = 997.5;                                                % G
     mu      = shear;                                                % second lame parameter
@@ -52,7 +58,7 @@ if 1
     solidObject.materialObject.c = c;
     solidObject.materialObject.d = 2*(solidObject.materialObject.a + 2*solidObject.materialObject.b);
     solidObject.mixedFEObject.condensation = true;
-    solidObject.mixedFEObject.typeShapeFunctionData = 1;
+    solidObject.mixedFEObject.typeShapeFunctionData = 0;
 elseif 0
     solidObject.materialObject.name = 'NeoHooke';
 %     solidObject.materialObject.name = 'SaintVenant';
@@ -91,32 +97,26 @@ elseif 0
 end
 solidObject.materialObject.rho = 10;
 solidObject.dimension = 3;
-solidObject.shapeFunctionObject.order = 2;
-% solidObject.shapeFunctionObject.numberOfGausspoints = 8;
-solidObject.shapeFunctionObject.numberOfGausspoints = 27;
-% solidObject.numericalTangentObject.computeNumericalTangent = true;
-% solidObject.numericalTangentObject.showDifferences = true;
+solidObject.shapeFunctionObject.order = 1;
+solidObject.shapeFunctionObject.numberOfGausspoints = 8;
+% solidObject.shapeFunctionObject.numberOfGausspoints = 27;
 
-bcTimeEnd = 5;
+bcTimeEnd = 1;
 FA = [256;512;768];
+% bcTimeEnd = 5;
+% FA = [256;512;768];
 %
 neumannObject1 = neumannClass(dofObject);
-neumannObject1.typeOfLoad = 'deadLoad';
 neumannObject1.masterObject = solidObject;
-neumannObject1.forceVector = 1/9*FA;
-neumannObject1.shapeFunctionObject.order = solidObject.shapeFunctionObject.order;
-neumannObject1.shapeFunctionObject.numberOfGausspoints = 2^(solidObject.dimension-1);
-neumannObject1.projectionType = 'none';
+neumannObject1.loadVector = 1/9*FA;
+neumannObject1.loadGeometry = 'area';
 neumannObject1.timeFunction = @(t) t.*(t <= bcTimeEnd/2)+(bcTimeEnd-t).*(t > bcTimeEnd/2 & t <= bcTimeEnd);
 neumannObject1.meshObject.edof = abaqusMeshData.subsets(3).edof;
 %
 neumannObject2 = neumannClass(dofObject);
-neumannObject2.typeOfLoad = 'deadLoad';
+neumannObject2.loadGeometry = 'area';
 neumannObject2.masterObject = solidObject;
-neumannObject2.forceVector = -1/9*FA;
-neumannObject2.shapeFunctionObject.order = solidObject.shapeFunctionObject.order;
-neumannObject2.shapeFunctionObject.numberOfGausspoints = 2^(solidObject.dimension-1);
-neumannObject2.projectionType = 'none';
+neumannObject2.loadVector = -1/9*FA;
 neumannObject2.timeFunction = @(t)  t.*(t <= bcTimeEnd/2)+(bcTimeEnd-t).*(t > bcTimeEnd/2 & t <= bcTimeEnd);
 neumannObject2.meshObject.edof = abaqusMeshData.subsets(4).edof;
 
@@ -133,16 +133,18 @@ externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'exter
 totalEnergy = strainEnergy + kineticEnergy;
 tStartDiff = ceil(bcTimeEnd/setupObject.totalTime*setupObject.totalTimeSteps);
 totalEnergyDiff = totalEnergy(tStartDiff+1:end) - totalEnergy(tStartDiff:end-1);
-figure;
-plot(timeVector, totalEnergy);
-figure;
-plot(timeVector(tStartDiff+1:end), totalEnergyDiff);
-matlab2tikz(['diagram','.tikz'],'width','\figW','height','\figH')
-figure;
-plot(timeVector,linearMomentum);
-figure;
-plot(timeVector,totalLinearMomentum);
-figure;
-plot(timeVector,angularMomentum);
-figure;
-plot(timeVector,totalAngularMomentum);
+totalAngularMomentum
+totalEnergy
+% figure;
+% plot(timeVector, totalEnergy);
+% figure;
+% plot(timeVector(tStartDiff+1:end), totalEnergyDiff);
+% matlab2tikz(['diagram','.tikz'],'width','\figW','height','\figH')
+% figure;
+% plot(timeVector,linearMomentum);
+% figure;
+% plot(timeVector,totalLinearMomentum);
+% figure;
+% plot(timeVector,angularMomentum);
+% figure;
+% plot(timeVector,totalAngularMomentum);

@@ -24,6 +24,10 @@ for i = 1:numel(obj)
     end
     if isa(obj, 'thermoClass')
         ed = obj.meshObject.nodes;
+    elseif isa(obj, 'beamClass')
+        ed = [obj.meshObject.nodes(:, 1), -q(:, 1)];
+    elseif isa(obj, 'plateClass')
+        ed = [obj.meshObject.nodes, q(:, 1)];
     else
         ed = q;
     end
@@ -32,7 +36,8 @@ for i = 1:numel(obj)
     [patchData, meshData, patchFlag] = createPatchLagrange(obj(i),setupObject,colorData, ed);
     [patchData, meshData] = slimPatch(patchData, meshData);        % remove double vertices and patches
     if patchFlag
-        patch(patchData);
+        handlePatch = patch(patchData);
+        handlePatch.LineWidth = setupObject.plotObject.lineWeight;
     end
     colorbar;
     %% scale caxis
@@ -54,7 +59,7 @@ if ~strcmpi(plotObject.postPlotType,'none')
     fdof = obj.meshObject.globalNodesDof(:,1);
     maxElAct = max(fdof);
     if strcmpi(plotObject.postPlotType,'stress') || strcmpi(plotObject.postPlotType,'D1') || strcmpi(plotObject.postPlotType,'D2') || strcmpi(plotObject.postPlotType,'D3')
-        postDataFE = callElements(obj, setupObject, true);        
+        postDataFE = callElements(obj, setupObject, 'postData');
         R = sparse(vertcat(postDataFE(:).indexReI),1,vertcat(postDataFE(:).Se),maxElAct,1);
         K = sparse(vertcat(postDataFE(:).indexKeI), vertcat(postDataFE(:).indexKeJ), vertcat(postDataFE(:).Me),maxElAct,maxElAct);
         colorData = zeros(size(fdof,1),1);

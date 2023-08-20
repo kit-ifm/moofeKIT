@@ -49,10 +49,10 @@ mixedFEObject = obj.mixedFEObject;
 meshObject = obj.meshObject;
 
 % aquire general data
-N = shapeFunctionObject.N;
-dNr = shapeFunctionObject.dNr;
-dNr0 = shapeFunctionObject.dNr0;
-ErAll = mixedFEObject.shapeFunctionObject.N;
+N_k_I = shapeFunctionObject.N_k_I;
+dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
+dN0_xi_I = shapeFunctionObject.dN0_xi_I;
+ErAll = mixedFEObject.shapeFunctionObject.M;
 
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
 gaussWeight = shapeFunctionObject.gaussWeight;
@@ -81,15 +81,15 @@ end
 
 % aquire the nodal values of the variables for the current element
 X = obj.qR(edof(e, :), 1:dimension).';
+edN = obj.qN(edof(e, :), 1:dimension).';
 x = dofs.edN1;
 alphaN1e = dofs.edAlphaN1.';
 uN1 = x(:) - X(:);
 
 % compute Jacobian matrices
-J = X * dNr';
-JN1 = x * dNr';
-J0 = X * dNr0';
+J0 = X * dN0_xi_I';
 detJ0 = det(J0);
+JAll = computeJacobianForAllGausspoints(X, dN_xi_k_I);
 
 % compute F0 matrix
 F0 = F0Matrix(dimension, J0);
@@ -105,22 +105,15 @@ elementEnergy.strainEnergy = 0;
 
 %% GAUSS LOOP
 for k = 1:numberOfGausspoints
-    indx = dimension * k - (dimension - 1):dimension * k;
-    detJ = det(J(:, indx)');
-    detJN1 = det(JN1(:, indx)');
-    if detJ < 10 * eps
-        error('Jacobi determinant equal or less than zero.')
-    end
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
 
     % shape functions for the enhanced part of the strain field
     indx2 = (3*dimension - 3) * (k - 1) + 1:(3*dimension - 3) * k;
     Er = ErAll(indx2, :);
 
-    % derivatives with respect to the physical coordinates
-    dNx = J(:, indx)' \ dNr(indx, :);
-
     % nodal operator matrix & approximation matrix
-    B = BMatrix(dNx);
+    B = BMatrix(dN_X_I);
     G = detJ0 / detJ * (F0' \ Er);
 
     % strain tensor
@@ -140,7 +133,7 @@ for k = 1:numberOfGausspoints
         sigmaVoigt = C * epsilonVoigt;
         sigma = voigtToMatrix(sigmaVoigt, 'stress');
         stressTensor.Cauchy = sigma;
-        array = postStressComputation(array, N, k, gaussWeight, detJ, detJN1, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
     end
 end
 

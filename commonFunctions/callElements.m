@@ -1,50 +1,36 @@
-function dataFEContinuumObject = callElements(continuumObject, setupObject, computePostData)
+function dataFEContinuumObject = callElements(continuumObject, setupObject, requiredData)
+%CALLELEMENTS Loop over all finite elements
+%
+%   CALL
+%   dataFEContinuumObject = callElements(continuumObject, setupObject, requiredData)
+%   continuumObject:    continuumObject (e.g. object of solidClass, solidThermoClass, ...)
+%   setupObject:        setupObject
+%   requiredData:       string that specifies the required data ('residualAndTangent', 'massMatrix', 'postData')
 
-setupObject.computePostData = computePostData;
 %% FIXME: unify (for all classes)
+computePostData = false;
+if strcmp(requiredData, 'postData')
+    computePostData = true;
+end
+
+% assemble elementName for function call
 if isa(continuumObject, 'solidSuperClass')
+    elementDisplacementType = continuumObject.elementDisplacementType;
+    elementMaterialName = continuumObject.materialObject.name;
     if continuumObject.dimension == 2
         switch continuumObject.elementDisplacementType
             case {'incompatibleModesWilson', 'incompatibleModesTaylor'}
                 elementDisplacementType = 'incompatibleModes';
-            otherwise
-                elementDisplacementType = continuumObject.elementDisplacementType;
         end
         switch continuumObject.materialObject.name
             case {'HookeESZ', 'HookeEVZ'}
-                elementName = strcat(elementDisplacementType, 'Hooke2D', setupObject.integrator);
-            otherwise
-                elementName = strcat(continuumObject.elementDisplacementType, continuumObject.materialObject.name, setupObject.integrator);
+                elementMaterialName = 'Hooke2D';
         end
-    elseif continuumObject.dimension == 3
-        elementName = strcat(continuumObject.elementDisplacementType, continuumObject.materialObject.name, setupObject.integrator);
-    elseif continuumObject.dimension == 1
-        elementName = strcat(continuumObject.elementDisplacementType, continuumObject.materialObject.name, setupObject.integrator);
     end
+    elementName = strcat(elementDisplacementType, continuumObject.elementNameAdditionalSpecification, elementMaterialName, setupObject.integrator);
 
 elseif isa(continuumObject, 'neumannClass')
-    if continuumObject.dimension == 2
-        switch continuumObject.typeOfLoad
-            case 'deadLoad'
-                elementName = strcat(continuumObject.typeOfLoad, '2D');
-            otherwise
-                error('load type not implemented')
-        end
-    elseif continuumObject.dimension == 3
-        switch continuumObject.typeOfLoad
-            case 'deadLoad'
-                elementName = strcat(continuumObject.typeOfLoad);
-            otherwise
-                error('load type not implemented')
-        end
-    elseif continuumObject.dimension == 1
-        switch continuumObject.typeOfLoad
-            case 'deadLoad'
-                elementName = strcat(continuumObject.typeOfLoad, '1D');
-            otherwise
-                error('load type not implemented')
-        end
-    end
+    elementName = continuumObject.loadType;
 elseif isa(continuumObject, 'dirichletLagrangeClass')
     elementName = strcat('nodal', setupObject.integrator);
 elseif isa(continuumObject, 'bodyForceClass')
@@ -63,44 +49,59 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
 
     % number of degrees of freedom and more
     N_k_I = shapeFunctionObject.N_k_I;
-    dimension = continuumObject.dimension;
     edof = meshObject.edof;
+    numberOfNodes = shapeFunctionObject.numberOfNodes;
     if isa(continuumObject, 'solidSuperClass')
+        dimension = continuumObject.dimension;
         mixedFEObject = continuumObject.mixedFEObject;
         numericalTangentObject = continuumObject.numericalTangentObject;
+
         globalEdofContinuumObject = meshObject.globalFullEdof;
-        numberOfDisplacementDofs = dimension * size(meshObject.edof, 2);
+        if isa(continuumObject, 'plateClass') || isa(continuumObject, 'stringClass')
+            numberOfPrimaryDofsPerNode = continuumObject.numberOfDofsPerNode;
+        else
+            numberOfPrimaryDofsPerNode = dimension;
+        end
+        
         numberOfAdditionalNonMixedFields = continuumObject.additionalFields;
         numberOfMixedFields = mixedFEObject.numberOfFields;
-        numberOfDofsPerAdditonalNonMixedField = size(meshObject.edof, 2);
+        numberOfDofsPerAdditionalNonMixedField = numberOfNodes;
         dofsPerMixedField = mixedFEObject.dofsPerField;
         if ~isempty(dofsPerMixedField)
             temp = vertcat(dofsPerMixedField{:});
             dofsPerMixedField = temp(:,1);
         end
+
     elseif isa(continuumObject, 'neumannClass')
         globalEdofContinuumObject = continuumObject.globalEdof;
-        numberOfDisplacementDofs = 0;
+        numberOfPrimaryDofsPerNode = size(continuumObject.masterObject.qR, 2) - continuumObject.masterObject.additionalFields;
         numberOfAdditionalNonMixedFields = 0;
         numberOfMixedFields = 0;
-        numberOfDofsPerAdditonalNonMixedField = 0;
+        numberOfDofsPerAdditionalNonMixedField = 0;
         dofsPerMixedField = 0;
+        dimension = 0;
         numberOfDofsNeumann = size(globalEdofContinuumObject, 2);
     elseif isa(continuumObject, 'bodyForceClass')
+        dimension = continuumObject.dimension;
         globalEdofContinuumObject = continuumObject.meshObject.globalFullEdof;
-        numberOfDisplacementDofs = 0;
+        numberOfPrimaryDofsPerNode = 0;
         numberOfAdditionalNonMixedFields = 0;
         numberOfMixedFields = 0;
-        numberOfDofsPerAdditonalNonMixedField = 0;
+        numberOfDofsPerAdditionalNonMixedField = 0;
         dofsPerMixedField = 0;
-        numberOfDofsBodyForce = dimension * size(meshObject.edof, 2);
+        numberOfDofsBodyForce = dimension * size(meshObject.edof, 2);        
+    end
+    if length(numberOfNodes) == 1
+        numberOfPrimaryDofs = numberOfPrimaryDofsPerNode * numberOfNodes;
+    else
+        numberOfPrimaryDofs =  sum(numberOfNodes(1:numberOfPrimaryDofsPerNode));
     end
     numberOfNonMixedFields = 1 + numberOfAdditionalNonMixedFields;
     totalNumberOfFields = numberOfNonMixedFields + numberOfMixedFields;
 
     % save dofs per field
     if isa(continuumObject, 'solidSuperClass')
-        dofsData = [numberOfDisplacementDofs; repmat({numberOfDofsPerAdditonalNonMixedField}, numberOfAdditionalNonMixedFields, 1); dofsPerMixedField];
+        dofsData = [numberOfPrimaryDofs; repmat({numberOfDofsPerAdditionalNonMixedField}, numberOfAdditionalNonMixedFields, 1); dofsPerMixedField];
         dofsData = cell2mat(dofsData);
     elseif isa(continuumObject, 'neumannClass')
         dofsData = numberOfDofsNeumann;
@@ -128,15 +129,19 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
     end
 
     % element loop
-    [dataFEContinuumObject, initialDataFE] = storageFEObject.initializeDataFE(computePostData);
-    dataFEMixed = storageFEObject.initializeDataFEMixed;
+    [dataFEContinuumObject, initialDataFE] = storageFEObject.initializeDataFE(requiredData);
+    if ~strcmp(requiredData, 'massMatrix')
+        dataFEMixed = storageFEObject.initializeDataFEMixed;
+    end
     numberOfElements = size(globalEdofContinuumObject, 1);
-%     parfor e = 1:numberOfElements
+    % parfor e = 1:numberOfElements
     for e = 1:numberOfElements
         dofs = struct();
         if isa(continuumObject, 'solidSuperClass')
-            dofs.edN1 = continuumObject.qN1(edof(e, :), 1:dimension)';
-            if isa(continuumObject, 'solidElectroClass')
+            dofs.edN1 = continuumObject.qN1(edof(e, :), 1:numberOfPrimaryDofsPerNode)';
+            if isa(continuumObject, 'beamClass')
+                dofs.phiN1 = continuumObject.qN1(edof(e, :), dimension+1)';
+            elseif isa(continuumObject, 'solidElectroClass')
                 dofs.phiN1 = continuumObject.qN1(edof(e, :), dimension+1)';
             elseif isa(continuumObject, 'solidThermoClass')
                 dofs.thetaN1 = continuumObject.qN1(edof(e, :), dimension+1)';
@@ -152,15 +157,18 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
         end
 
         if computePostData
-            [array, stressTensor] = storageFEObject.initializeArrayStress(numberOfDisplacementDofs, dimension);
+            [array, stressTensor] = storageFEObject.initializeArrayStress(numberOfPrimaryDofs, numberOfNodes);
         else
             array = struct();
             stressTensor = struct();
         end
-
+        if strcmp(requiredData, 'massMatrix')
+            array = massMatrixElement(continuumObject, setupObject, e);
+        else
             [rData, kData, elementEnergy, array] = feval(elementName, continuumObject, setupObject, computePostData, e, rDataInitial, kDataInitial, dofs, array, stressTensor, false);
+        end
 
-        if ~computePostData
+        if strcmp(requiredData, 'residualAndTangent')
             % numerical tangent
             if numericalTangentInfo.computeNumericalTangent
                 namesOfFields = fieldnames(dofs);
@@ -251,32 +259,27 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
 
             % store energy
             globalEnergy(e) = elementEnergy;
-
         end
 
         % store FE Data
-        elementDataFE = storageFEObject.assignElementDataFE(initialDataFE, array, globalEdofContinuumObject, e, dimension, numberOfAdditionalNonMixedFields, N_k_I, computePostData);
+        elementDataFE = storageFEObject.assignElementDataFE(initialDataFE, array, globalEdofContinuumObject, e, numberOfPrimaryDofsPerNode, numberOfAdditionalNonMixedFields, N_k_I, requiredData);
         dataFEContinuumObject(e) = elementDataFE;
     end
 
-    if ~computePostData
+    if strcmp(requiredData, 'residualAndTangent')
         if isa(continuumObject, 'solidSuperClass')
             mixedFEObject.dataFE = dataFEMixed;
         end
         
         % save energy data for each time step
         fieldnamesEnergy = fieldnames(globalEnergy);
-        if setupObject.timeStep == 1 && setupObject.newton.step == 1
+        if setupObject.timeStep == 1 && setupObject.newton.step(setupObject.timeStep) == 1
             for ii = 1:size(fieldnamesEnergy, 1)
                 continuumObject.ePot(1).(fieldnamesEnergy{ii}) = sum([globalEnergy.(fieldnamesEnergy{ii})]);
             end
-        end 
+        end
         for ii = 1:size(fieldnamesEnergy, 1)
-            if strcmpi(fieldnamesEnergy{ii}, 'dissipatedWork') && ~(setupObject.timeStep == 1)
-                continuumObject.ePot(setupObject.timeStep+1).(fieldnamesEnergy{ii}) = continuumObject.ePot(setupObject.timeStep).(fieldnamesEnergy{ii}) + sum([globalEnergy.dissipatedWork]);
-            else
-                continuumObject.ePot(setupObject.timeStep+1).(fieldnamesEnergy{ii}) = sum([globalEnergy.(fieldnamesEnergy{ii})]);
-            end
+            continuumObject.ePot(setupObject.timeStep+1).(fieldnamesEnergy{ii}) = sum([globalEnergy.(fieldnamesEnergy{ii})]);
         end
         clear globalEnergy;
     end

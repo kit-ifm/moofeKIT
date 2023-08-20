@@ -58,16 +58,16 @@ meshObject = obj.meshObject;
 numericalTangentObject = obj.numericalTangentObject;
 
 % aquire general data
-N = shapeFunctionObject.N;
-dNxi = shapeFunctionObject.dNxi;
+N_k_I = shapeFunctionObject.N_k_I;
+dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
 if strcmpi(mixedFEObject.typeShapeFunction, 'sameOrder')
-    M = mixedFEObject.shapeFunctionObject.N;
-    M_C = M;
-    M_G = M;
-    M_c = M;
-    M_LambdaC = M;
-    M_LambdaG = M;
-    M_Lambdac = M;
+    M_k_I = mixedFEObject.shapeFunctionObject.N_k_I;
+    M_C = M_k_I;
+    M_G = M_k_I;
+    M_c = M_k_I;
+    M_LambdaC = M_k_I;
+    M_LambdaG = M_k_I;
+    M_Lambdac = M_k_I;
 elseif strcmpi(mixedFEObject.typeShapeFunction, 'detailedOrder')
     M_C = mixedFEObject.shapeFunctionObject.N{1, 1};
     M_G = mixedFEObject.shapeFunctionObject.N{2, 1};
@@ -159,9 +159,13 @@ if ~flagNumericalTangent
 end
 flagDiscreteGradient = numericalTangentObject.flagDiscreteGradient;
 
+% compute Jacobian
+JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I);
+
 %% GAUSS LOOP
 for k = 1:numberOfGausspoints
-    [detJ, detJStruct, dNX, ~] = computeJacobian(edR,edN,edN1,dNxi,dimension,k,setupObject);
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
 
     % compute the values of the variables at the current Gauss point
     CNv = reshape(extractedCNv, 6, []) * M_C(k, :)';
@@ -189,8 +193,8 @@ for k = 1:numberOfGausspoints
     lambdacN1 = extractedLambdacN1.' * M_Lambdac(k, :)';
 
     % deformation gradient
-    FxN1 = edN1 * dNX';
-    FxN05 = edN05 * dNX';
+    FxN1 = edN1 * dN_X_I';
+    FxN05 = edN05 * dN_X_I';
 
     % strain measures
     CxN1 = FxN1.' * FxN1;
@@ -198,8 +202,8 @@ for k = 1:numberOfGausspoints
     cxN1 = det(CxN1);
 
     % nodal operator matrices
-    BN1 = BMatrix(dNX, FxN1);
-    BN05 = BMatrix(dNX, FxN05);
+    BN1 = BMatrix(dN_X_I, FxN1);
+    BN05 = BMatrix(dN_X_I, FxN05);
 
     if ~computePostData
         % ENERGY
@@ -235,7 +239,7 @@ for k = 1:numberOfGausspoints
 
         % TANGENT
         % KXX
-        A1 = dNX' * lambdaCN1 * dNX * detJ * gaussWeight(k);
+        A1 = dN_X_I' * lambdaCN1 * dN_X_I * detJ * gaussWeight(k);
         temporaryKXX = zeros(numberOfXDofs);
         for g = 1:dimension
             temporaryKXX(g:dimension:numberOfXDofs, g:dimension:numberOfXDofs) = A1;
@@ -314,11 +318,12 @@ for k = 1:numberOfGausspoints
         KLambdacc = KLambdacc - M_Lambdac(k, :)' * M_c(k, :) * detJ * gaussWeight(k);
     else
         % STRESS COMPUTATION
+        [~, detJStruct, ~, ~] = computeAllJacobian(edR, edN, edN1, dN_xi_k_I, k, setupObject);
         SN1 = 2 * lambdaCN1;
         PN1 = FxN1 * SN1;
         stressTensor.FirstPK = PN1;
         stressTensor.Cauchy = 1 / det(FxN1) * PN1 * FxN1';
-        array = postStressComputation(array, N, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
     end
 end
 

@@ -24,5 +24,6 @@ for k = 1:numberOfGausspoints
     end
     %residual
     rData{1} = rData{1} - timeFunction*kron(N_k_I(k,:),eye(dimension))'*B0*detJ*gaussWeight(k);
+    elementEnergy.externalEnergy = elementEnergy.externalEnergy - xh'*B0*detJ*gaussWeight(k);
 end
 end

@@ -22,7 +22,8 @@ solidObject.materialObject.E = 1e2;
 solidObject.materialObject.nu = 0.499;
 solidObject.dimension = 2;
 solidObject.shapeFunctionObject.numberOfGausspoints = (solidObject.shapeFunctionObject.order+1)^2;
-mixedFEObject.condensation = true;
+solidObject.mixedFEObject.condensation = true;
+solidObject.mixedFEObject.typeShapeFunctionData = 4;
 
 % dirchlet boundary conditions
 dirichletObject = dirichletClass(dofObject);

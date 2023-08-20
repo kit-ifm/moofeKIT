@@ -1,8 +1,8 @@
 %% setup
-% fileName = 'rotatingXElectroThermoMechanicsDT';
-fileName = 'LShapeElectroThermoConvergence';
+fileName = 'rotatingXElectroThermoMechanicsDT';
+% fileName = 'LShapeElectroThermoConvergence';
 simulationDuration = 0.1;
-variableTimeStepSizeVector = [0.025;0.01;0.005;0.0025;0.001;0.0005]; %[0.1;0.05;0.025;0.01;0.005;0.0025;0.001;0.0005];
+variableTimeStepSizeVector = [0.001; 0.0005; 0.00025; 0.0001; 0.00005; 0.000025]; %[0.1;0.05;0.025;0.01;0.005;0.0025;0.001;0.0005];
 
 %% Compute L2 norm
 % load reference solution
@@ -43,10 +43,12 @@ hold on
 AT = newTimeStepSizeVector;
 slopes = zeros(numberOfVariables, 1);
 for markerCounter = 1:numberOfVariables
-    plot(log10(AT), log10(vertcat(errorL2.(variableNames{markerCounter}))), '-x')
+    s = scatter(log10(AT), log10(vertcat(errorL2.(variableNames{markerCounter}))));
+    s.Marker = 'x';
     % plot(log10(AT), log10(vertcat(errorL2.(variableNames{markerCounter}))), strcat('-', symbols(markerCounter)));
     %     loglog(AT,vertcat(errorL2.(variableNames{markerCounter})),strcat('-',symbols(markerCounter)));
     yp = polyfit(log10(AT), log10(vertcat(errorL2.(variableNames{markerCounter}))), 1);
+    plot(log10(AT), polyval(yp, log10(AT)));
     slopes(markerCounter) = yp(1);
 end
 axis tight;

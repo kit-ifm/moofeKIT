@@ -19,13 +19,13 @@ dofObject = dofClass;   % required object for dof and object handling
 solidThermoObject = solidThermoClass(dofObject);
 
 numberOfElements = 2;
-% [solidThermoObject.meshObject.nodes,solidThermoObject.meshObject.edof] = meshGeneratorCube(1,1,1,2,2,2,1,false);
-% solidThermoObject.meshObject.nodes = solidThermoObject.meshObject.nodes + 0.5;
-% solidThermoObject.shapeFunctionObject.numberOfGausspoints = 27;
+[solidThermoObject.meshObject.nodes,solidThermoObject.meshObject.edof, edofBoundary] = meshGeneratorCube(1,1,1,2,2,2,1,false);
+solidThermoObject.meshObject.nodes = solidThermoObject.meshObject.nodes + 0.5;
+solidThermoObject.shapeFunctionObject.numberOfGausspoints = 27;
 
-[solidThermoObject.meshObject.nodes,solidThermoObject.meshObject.edof] = triquadraticTetrahedralBrick(numberOfElements, numberOfElements, numberOfElements, 1, 1, 1, 1);
-solidThermoObject.meshObject.nodes(:,3) = solidThermoObject.meshObject.nodes(:,3) + 1;
-solidThermoObject.shapeFunctionObject.numberOfGausspoints = 11;
+% [solidThermoObject.meshObject.nodes,solidThermoObject.meshObject.edof] = triquadraticTetrahedralBrick(numberOfElements, numberOfElements, numberOfElements, 1, 1, 1, 1);
+% solidThermoObject.meshObject.nodes(:,3) = solidThermoObject.meshObject.nodes(:,3) + 1;
+% solidThermoObject.shapeFunctionObject.numberOfGausspoints = 11;
 
 solidThermoObject.meshObject.nodes = [solidThermoObject.meshObject.nodes, 293.15*ones(size(solidThermoObject.meshObject.nodes,1),1)];
 solidThermoObject.elementDisplacementType = 'displacementSC';
@@ -65,6 +65,13 @@ dirichletObject4 = dirichletClass(dofObject);
 dirichletObject4.nodeList = find(solidThermoObject.meshObject.nodes(:,2) == 0);
 dirichletObject4.nodalDof = 2;
 dirichletObject4.masterObject = solidThermoObject;
+
+neumannObject = neumannClass(dofObject);
+neumannObject.masterObject = solidThermoObject;
+neumannObject.meshObject.edof = edofBoundary.SZ2;
+neumannObject.loadVector = 10;
+neumannObject.loadPhysics = 'thermal';
+neumannObject.loadGeometry = 'area';
 
 % Body force
 % bodyLoad = bodyForceClass(dofObject);

@@ -21,12 +21,10 @@ mapVoigtObject = obj.mapVoigtObject;
 mixedFEObject = obj.mixedFEObject;
 meshObject = obj.meshObject;
 
-
-map.Voigt = [1 5 9 4 8 7]';
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
 gaussWeight = shapeFunctionObject.gaussWeight;
-N = shapeFunctionObject.N;
-dNr = shapeFunctionObject.dNr;
+N_k_I = shapeFunctionObject.N_k_I;
+dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
 dimension = obj.dimension;
 edof = meshObject.edof;
 DT = setupObject.timeStepSize;
@@ -51,31 +49,28 @@ KTT = kData{2, 2};
 % degrees of freedom
 qR = obj.qR;
 qN = obj.qN;
-edN1 = dofs.edN1;
+edR = qR(edof(e,:),1:dimension).';
 edN = qN(edof(e,:),1:dimension).';
+edN1 = dofs.edN1;
 thetaN1 = dofs.thetaN1;
 thetaN = qN(edof(e,:),dimension+1).';
 
 elementEnergy.helmholtzEnergy = 0;
 
-J = qR(edof(e,:),1:dimension)'*dNr';
-JN1 = edN1 * dNr';
+JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I);
+
 % Run through all Gauss points
 for k = 1:numberOfGausspoints
-    index = dimension*k-(dimension-1):dimension*k;
-    detJ = det(J(:,index)');
-    detJN1 = det(JN1(:, index)');
-    if detJ < 10*eps
-        error('Jacobi determinant equal or less than zero.')
-    end
-    dNx = (J(:, index)') \ dNr(index, :);
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
+
     % Temperature
-    thetaN1e = N(k, :) * thetaN1.';
-    thetaNe = N(k, :) * thetaN.';
+    thetaN1e = N_k_I(k, :) * thetaN1.';
+    thetaNe = N_k_I(k, :) * thetaN.';
     
     % Deformation Gradient
-    FxN1 = edN1*dNx';
-    FxN = edN*dNx';
+    FxN1 = edN1*dN_X_I';
+    FxN = edN*dN_X_I';
     CxN1 = FxN1.'*FxN1;
     CxN = FxN.'*FxN;
     if ~numel(CxN1)==1
@@ -87,7 +82,7 @@ for k = 1:numberOfGausspoints
     cxN = det(CxN);    
     
     % B-matrix (current configuration)
-    BN1 = BMatrix(dNx,FxN1);
+    BN1 = BMatrix(dN_X_I,FxN1);
     BN1 = 2*BN1;
 
     % Helmholtz energy function
@@ -118,8 +113,8 @@ for k = 1:numberOfGausspoints
         end
         etaN1 = kappa*log(thetaN1e/thetaR)+dimension*beta*(c*(sqrt(cxN1)-1)-d/sqrt(cxN1));
         etaN = kappa*log(thetaNe/thetaR)+dimension*beta*(c*(sqrt(cxN)-1)-d/sqrt(cxN));
-        Q = -k0*(1/cxN1*GxN1*(dNx*thetaN1'));
-        rT = (N(k, :)'*thetaN1e*(etaN1-etaN)/DT-dNx'*Q);
+        Q = -k0*(1/cxN1*GxN1*(dN_X_I*thetaN1'));
+        rT = (N_k_I(k, :)'*thetaN1e*(etaN1-etaN)/DT-dN_X_I'*Q);
     
         %% summation of tangent and residual
         RX = RX + rX*detJ*gaussWeight(k);
@@ -128,10 +123,11 @@ for k = 1:numberOfGausspoints
         %% TODO: compute tangent
     else
         %% Stress computation
+        [~, detJStruct, ~, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
         PN1 = FxN1 * SN1;
         stressTensor.FirstPK = PN1;
         stressTensor.Cauchy = 1 / det(FxN1) * PN1 * FxN1';
-        array = postStressComputation(array, N, k, gaussWeight, detJ, detJN1, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
     end    
 end
 if ~computePostData

@@ -1,6 +1,6 @@
 function [nodes,edof,edofneumann] = trilinearCooksMembrane(anzElemX, anzElemY, anzElemZ, laenge, hoehelinks, hoeherechts, dicke)
 %% Datei netz.m - Netzgenerator fuer triilineare isoparametrische 8-Knotenelemente
-%   edof - Zuweisung der Knoten zum jeweiligen Element 
+%   edof - Zuweisung der Knoten zum jeweiligen Element
 %   nodes - Lage der Knoten
 
 %Verwendung 8 Knoten-Elementen
@@ -12,13 +12,13 @@ dx = laenge/anzElemX;
 dz = dicke/anzElemZ;
 
 %knotengeometrie ohne Riss
-for i=1:anzElemX+1
-   x=(i-1)*dx;
-   hx=hoehelinks/laenge*x;
-   dy=(hoeherechts/laenge*x+hoehelinks-hx)/anzElemY;
-   
-   nodes((i-1)*(anzElemY+1)+1:i*(anzElemY+1),1)=x;%
-   nodes((i-1)*(anzElemY+1)+1:i*(anzElemY+1),2)=(0:anzElemY)*dy+hx;%y
+for i = 1:anzElemX+1
+    x = (i-1)*dx;
+    hx = hoehelinks/laenge*x;
+    dy=(hoeherechts/laenge*x+hoehelinks-hx)/anzElemY;
+
+    nodes((i-1)*(anzElemY+1)+1:i*(anzElemY+1),1)=x;%
+    nodes((i-1)*(anzElemY+1)+1:i*(anzElemY+1),2)=(0:anzElemY)*dy+hx;%y
 end
 
 for i=1:anzElemZ
@@ -28,10 +28,10 @@ for i=1:anzElemZ
     nodes(anzNodes2D*i+1:anzNodes2D*(i+1),3)=i*dz;
 end
 
-%edof 
+%edof
 for i=1:anzElemX
-   edof((i-1)*anzElemY+1:i*anzElemY,1:4)= ...
-       [(1:anzElemY)'+(i-1)*(anzElemY+1),(1:anzElemY)'+i*(anzElemY+1), ...
+    edof((i-1)*anzElemY+1:i*anzElemY,1:4)= ...
+        [(1:anzElemY)'+(i-1)*(anzElemY+1),(1:anzElemY)'+i*(anzElemY+1), ...
         (1:anzElemY)'+i*(anzElemY+1)+1,(1:anzElemY)'+(i-1)*(anzElemY+1)+1];
 end
 
@@ -46,8 +46,8 @@ edofneumann=zeros(anzElemY*anzElemZ,4);
 for i=1:anzElemZ
     edofneumann((i-1)*anzElemY+1:i*anzElemY,:)= ...
         [(1:anzElemY)'+(anzElemY+1)*anzElemX+(i-1)*anzNodes2D, ...
-         (1:anzElemY)'+(anzElemY+1)*anzElemX+(i-1)*anzNodes2D+1, ...
-         (1:anzElemY)'+(anzElemY+1)*anzElemX+(i)*anzNodes2D+1, ...
-         (1:anzElemY)'+(anzElemY+1)*anzElemX+(i)*anzNodes2D];  
+        (1:anzElemY)'+(anzElemY+1)*anzElemX+(i-1)*anzNodes2D+1, ...
+        (1:anzElemY)'+(anzElemY+1)*anzElemX+(i)*anzNodes2D+1, ...
+        (1:anzElemY)'+(anzElemY+1)*anzElemX+(i)*anzNodes2D];
 end
 

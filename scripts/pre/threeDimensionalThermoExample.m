@@ -50,32 +50,23 @@ dirichletObject1.nodeList = find(solidThermoObject.meshObject.nodes(:,1)==0);
 dirichletObject1.nodalDof = 1:3;
 dirichletObject1.masterObject = solidThermoObject;
 dirichletObject.timeFunction = str2func('@(t) 0');
-dirichletObject1.dimension = 3;
 
 % mechanical load
 neumannObject = neumannClass(dofObject);
 neumannObject.masterObject = solidThermoObject;
-neumannObject.typeOfLoad = 'deadLoad';
-neumannObject.forceVector = [0;0;0];
-neumannObject.shapeFunctionObject.order = solidThermoObject.shapeFunctionObject.order;
-neumannObject.shapeFunctionObject.numberOfGausspoints = 2^(solidThermoObject.dimension-1);
-neumannObject.projectionType = 'none';
+neumannObject.loadVector = [0;0;0];
+neumannObject.loadGeometry = 'area';
 neumannObject.timeFunction = str2func('@(t) t*(t<(3600*20))');
 neumannObject.meshObject.edof = edofNeumann;
-neumannObject.dimension = 3;
 
 % thermal load
 neumannObject2 = neumannClass(dofObject);
 neumannObject2.masterObject = solidThermoObject;
-neumannObject2.typeOfLoad = 'deadLoad';
-neumannObject2.field = 'thermal';
-neumannObject2.energy = 1000;
-neumannObject2.shapeFunctionObject.order = solidThermoObject.shapeFunctionObject.order;
-neumannObject2.shapeFunctionObject.numberOfGausspoints = 2^(solidThermoObject.dimension-1);
-neumannObject2.projectionType = 'none';
+neumannObject2.loadGeometry = 'area';
+neumannObject2.loadPhysics = 'thermal';
+neumannObject2.loadVector = 1000;
 neumannObject2.timeFunction = str2func('@(t) (t<(3600*10 - 3600*30/200))' );
 neumannObject2.meshObject.edof = edofNeumann;
-neumannObject2.dimension = 3;
 
 %% solver
 dofObject = runNewton(setupObject,dofObject);

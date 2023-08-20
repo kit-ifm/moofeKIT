@@ -70,32 +70,43 @@ solidElectroThermoObject.materialObject.timeFunctionRhoSource = @(t) 0;
 solidElectroThermoObject.dimension = 3;
 solidElectroThermoObject.shapeFunctionObject.order = 2;
 solidElectroThermoObject.shapeFunctionObject.numberOfGausspoints = 27;
-solidElectroThermoObject.mixedFEObject.condensation = false;
-solidElectroThermoObject.mixedFEObject.orderShapeFunction = 1;
-solidElectroThermoObject.numericalTangentObject.computeNumericalTangent = false;
+solidElectroThermoObject.mixedFEObject.condensation = true;
+solidElectroThermoObject.mixedFEObject.typeShapeFunctionData = 1;
+solidElectroThermoObject.numericalTangentObject.computeNumericalTangent = true;
 solidElectroThermoObject.numericalTangentObject.showDifferences = true;
-% solidElectroThermoObject.numericalTangentObject.type = 'complex';
+solidElectroThermoObject.numericalTangentObject.type = 'complex';
 
-boundary1 = dirichletClass(dofObject);
-boundary1.nodeList = find(solidElectroThermoObject.meshObject.nodes(:, 3) == 0);
-boundary1.nodalDof = 3;
-boundary1.masterObject = solidElectroThermoObject;
+dirichletBoundary1 = dirichletClass(dofObject);
+dirichletBoundary1.nodeList = find(solidElectroThermoObject.meshObject.nodes(:, 3) == 0);
+dirichletBoundary1.nodalDof = 3;
+dirichletBoundary1.masterObject = solidElectroThermoObject;
 
-boundary1(2) = dirichletClass(dofObject);
-boundary1(2).nodeList = find(solidElectroThermoObject.meshObject.nodes(:, 1) == 0);
-boundary1(2).nodalDof = 1;
-boundary1(2).masterObject = solidElectroThermoObject;
+dirichletBoundary2 = dirichletClass(dofObject);
+dirichletBoundary2.nodeList = find(solidElectroThermoObject.meshObject.nodes(:, 1) == 0);
+dirichletBoundary2.nodalDof = 1;
+dirichletBoundary2.masterObject = solidElectroThermoObject;
 
-boundary1(3) = dirichletClass(dofObject);
-boundary1(3).nodeList = find(solidElectroThermoObject.meshObject.nodes(:, 2) == 0);
-boundary1(3).nodalDof = 2;
-boundary1(3).masterObject = solidElectroThermoObject;
+dirichletBoundary3 = dirichletClass(dofObject);
+dirichletBoundary3.nodeList = find(solidElectroThermoObject.meshObject.nodes(:, 2) == 0);
+dirichletBoundary3.nodalDof = 2;
+dirichletBoundary3.masterObject = solidElectroThermoObject;
 
-boundaryK2 = dirichletClass(dofObject);
-boundaryK2.nodeList = find(solidElectroThermoObject.meshObject.nodes(:, 3) == 1);
-boundaryK2.nodalDof = 3;
-boundaryK2.masterObject = solidElectroThermoObject;
-boundaryK2.timeFunction = str2func('@(t,Z) (Z - 0.5).*(t >= 1) + (Z - 0.5*t).*(t >= 0).*(t < 1)');
+dirichletBoundary4 = dirichletClass(dofObject);
+dirichletBoundary4.nodeList = find(solidElectroThermoObject.meshObject.nodes(:, 3) == 1);
+dirichletBoundary4.nodalDof = 3;
+dirichletBoundary4.masterObject = solidElectroThermoObject;
+dirichletBoundary4.timeFunction = str2func('@(t,Z) (Z - 0.5).*(t >= 1) + (Z - 0.5*t).*(t >= 0).*(t < 1)');
+
+dirichletBoundary5 = dirichletClass(dofObject);
+dirichletBoundary5.nodeList = find(solidElectroThermoObject.meshObject.nodes(:, 2) == 0);
+dirichletBoundary5.nodalDof = 4;
+dirichletBoundary5.masterObject = solidElectroThermoObject;
+dirichletBoundary5.timeFunction = str2func('@(t,Z) 1e6');
+
+dirichletBoundary6 = dirichletClass(dofObject);
+dirichletBoundary6.nodeList = find(solidElectroThermoObject.meshObject.nodes(:, 2) == 1);
+dirichletBoundary6.nodalDof = 4;
+dirichletBoundary6.masterObject = solidElectroThermoObject;
 
 %% solver
 warning off

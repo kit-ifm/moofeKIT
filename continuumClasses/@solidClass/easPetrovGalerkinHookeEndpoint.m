@@ -52,10 +52,10 @@ mixedFEObject = obj.mixedFEObject;
 meshObject = obj.meshObject;
 
 % aquire general data
-N = shapeFunctionObject.N;
-dNr = shapeFunctionObject.dNr;
-dNr0 = shapeFunctionObject.dNr0;
-ErAll = mixedFEObject.shapeFunctionObject.N;
+N_k_I = shapeFunctionObject.N_k_I;
+dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
+dN0_xi_I = shapeFunctionObject.dN0_xi_I;
+easAnsatzFunctionsAll = mixedFEObject.shapeFunctionObject.M;
 
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
 gaussWeight = shapeFunctionObject.gaussWeight;
@@ -84,15 +84,15 @@ end
 
 % aquire the nodal values of the variables for the current element
 X = obj.qR(edof(e, :), 1:dimension).';
+xN = obj.qN(edof(e, :), 1:dimension).';
 x = dofs.edN1;
 alphaN1e = dofs.edAlphaN1.';
 uN1 = x(:) - X(:);
 
 % compute Jacobian matrices
-J = X * dNr';
-JN1 = x * dNr';
-J0 = X * dNr0';
+J0 = X * dN0_xi_I';
 detJ0 = det(J0);
+JAll = computeJacobianForAllGausspoints(X, dN_xi_k_I);
 
 % compute F0 matrix
 F0 = F0Matrix(dimension, J0);
@@ -100,10 +100,12 @@ F0 = F0Matrix(dimension, J0);
 % compute additional shape functions
 nodesInLocalCoordinates = elementNodesInLocalCoordinates(dimension, obj.elementGeometryType, 2^dimension);
 gaussPointsInLocalCoordinates = shapeFunctionObject.gaussPoint;
-nodesInSkewCoordinates = computeSkewCoordinates(dimension, nodesInLocalCoordinates, X, J0);
-gaussPointsInSkewCoordinates = computeSkewCoordinates(dimension, gaussPointsInLocalCoordinates, X, J0);
-[M, dMr] = computeShapeFunctionsTrialFunctionDisplacement(dimension, nodesInSkewCoordinates, gaussPointsInSkewCoordinates);
-[~, dMTilder] = computeShapeFunctionsTrialFunctionEnhancedStrain(dimension, nodesInSkewCoordinates, gaussPointsInSkewCoordinates, M, dMr);
+nodesInSkewCoordinates = computeSkewCoordinates(nodesInLocalCoordinates, X, J0, shapeFunctionObject);
+gaussPointsInSkewCoordinates = computeSkewCoordinates(gaussPointsInLocalCoordinates, X, J0, shapeFunctionObject);
+pianSumiharaAnsatzFunctionsAll = computePianSumiharaAnsatzFunctions(obj, dimension, 18, numberOfGausspoints, gaussPointsInSkewCoordinates);
+[M_k_I, dMr] = computeMetricShapeFunctions(obj, dimension, nodesInSkewCoordinates, gaussPointsInSkewCoordinates);
+[~, dMTilder] = computeShapeFunctionsTrialFunctionEnhancedStrain(dimension, nodesInSkewCoordinates, gaussPointsInSkewCoordinates, M_k_I, dMr);
+ansatzFunctionTestFunctionEnhancedStrainAll = computeShapeFunctionsTestFunctionEnhancedStrain2(dimension, pianSumiharaAnsatzFunctionsAll, easAnsatzFunctionsAll, X, dN_xi_k_I, gaussWeight, nodesInLocalCoordinates);
 
 % initialize tangent
 KDD = kData{1, 1};
@@ -116,27 +118,28 @@ elementEnergy.strainEnergy = 0;
 
 %% GAUSS LOOP
 for k = 1:numberOfGausspoints
-    indx = dimension * k - (dimension - 1):dimension * k;
-    detJ = det(J(:, indx)');
-    detJN1 = det(JN1(:, indx)');
-    if detJ < 10 * eps
-        error('Jacobi determinant equal or less than zero.')
-    end
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
 
     % shape functions for the enhanced part of the strain field
     indx2 = (3 * dimension - 3) * (k - 1) + 1:(3 * dimension - 3) * k;
-    Er = ErAll(indx2, :);
+    ansatzFunctionTestFunctionEnhancedStrain = ansatzFunctionTestFunctionEnhancedStrainAll(indx2, :);
 
     % derivatives with respect to the physical coordinates
-    dNx = J(:, indx)' \ dNr(indx, :);
+    indx = dimension * k - (dimension - 1):dimension * k;
     dMx = J0' \ dMr(indx, :);
     dMTildex = J0' \ dMTilder(indx, :);
 
     % nodal operator matrix & approximation matrices
-    B = BMatrix(dNx);
+    B = BMatrix(dN_X_I);
     L = BMatrix(dMx);
-    G = detJ0 / detJ * (F0' \ Er);
-    H = BMatrix(dMTildex);
+    G = detJ0 / detJ * (F0' \ ansatzFunctionTestFunctionEnhancedStrain);
+    HLeft = BMatrix(dMTildex);
+    HRight = zeros(6, 3);
+    HRight(1:3, 1) = repmat(gaussPointsInSkewCoordinates(1,k)*gaussPointsInSkewCoordinates(2,k), [3, 1]);
+    HRight(1:3, 2) = repmat(gaussPointsInSkewCoordinates(2,k)*gaussPointsInSkewCoordinates(3,k), [3, 1]);
+    HRight(1:3, 3) = repmat(gaussPointsInSkewCoordinates(3,k)*gaussPointsInSkewCoordinates(1,k), [3, 1]);
+    H = [HLeft, (F0.' \ HRight)];
 
     % strain tensor
     epsilonVoigt = B * uN1 + H * alphaN1e;
@@ -155,7 +158,7 @@ for k = 1:numberOfGausspoints
         sigmaVoigt = C * epsilonVoigt;
         sigma = voigtToMatrix(sigmaVoigt, 'stress');
         stressTensor.Cauchy = sigma;
-        array = postStressComputation(array, N, k, gaussWeight, detJ, detJN1, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
     end
 end
 
@@ -172,86 +175,6 @@ if ~computePostData
     kData{2, 1} = KAD;
     kData{2, 2} = KAA;
 end
-end
-
-function xiBar = computeSkewCoordinates(dimension, localCoordinates, XNodes, J0)
-% Computes the skew coordinates for given local coordinates
-numberOfNodes = size(XNodes, 2);
-[hourglassVector, hourglassFunction] = computeHourglassVectorAndFunction(dimension, localCoordinates);
-
-H1 = localCoordinates(1, :) .* localCoordinates(2, :);
-c = 1 / numberOfNodes * XNodes * hourglassVector;
-xiBar = localCoordinates + (J0 \ c) * H1;
-end
-
-function [hourglassVector, hourglassFunction] = computeHourglassVectorAndFunction(dimension, localCoordinates)
-xi = localCoordinates(1, :);
-eta = localCoordinates(2, :);
-if dimension == 2
-    hourglassVector = [+1; -1; +1; -1];
-    hourglassFunction = xi .* eta;
-elseif dimension == 3
-    hourglassVector = zeros(8, 4);
-    hourglassVector(:, 1) = [+1; +1; -1; -1; -1; -1; +1; +1];
-    hourglassVector(:, 2) = [+1; -1; -1; +1; -1; +1; +1; -1];
-    hourglassVector(:, 3) = [+1; -1; +1; -1; +1; -1; +1; -1];
-    hourglassVector(:, 4) = [-1; +1; -1; +1; +1; -1; +1; -1];
-
-    zeta = localCoordinates(3, :);
-    hourglassFunction = zeros(size(localCoordinates, 2), 4);
-    hourglassFunction(1, :) = eta .* zeta;
-    hourglassFunction(2, :) = xi .* zeta;
-    hourglassFunction(3, :) = xi .* eta;
-    hourglassFunction(4, :) = xi .* eta .* zeta;
-else
-    error('Dimension not implemented!');
-end
-end
-
-function [M, dMr] = computeShapeFunctionsTrialFunctionDisplacement(dimension, nodesInSkewCoordinates, gaussPointsInSkewCoordinates)
-% Computes the shape functions for the trial function for the displacement
-numberOfNodes = size(nodesInSkewCoordinates, 2);
-numberOfGausspoints = size(gaussPointsInSkewCoordinates, 2);
-xiBarNodes = nodesInSkewCoordinates(1, :).';
-etaBarNodes = nodesInSkewCoordinates(2, :).';
-xiBarGaussPoints = gaussPointsInSkewCoordinates(1, :).';
-etaBarGaussPoints = gaussPointsInSkewCoordinates(2, :).';
-if dimension == 2
-    A = [ones(numberOfNodes, 1), xiBarNodes, etaBarNodes, xiBarNodes .* etaBarNodes];
-    B = [ones(numberOfGausspoints, 1), xiBarGaussPoints, etaBarGaussPoints, xiBarGaussPoints .* etaBarGaussPoints];
-elseif dimension == 3
-    zetaBarNodes = nodesInSkewCoordinates(3, :).';
-    zetaBarGaussPoints = gaussPointsInSkewCoordinates(3, :).';
-    A = [ones(numberOfNodes, 1), xiBarNodes, etaBarNodes, zetaBarNodes, etaBarNodes .* zetaBarNodes, zetaBarNodes .* xiBarNodes, xiBarNodes .* etaBarNodes, xiBarNodes .* etaBarNodes .* zetaBarNodes];
-    B = [ones(numberOfGausspoints, 1), xiBarGaussPoints, etaBarGaussPoints, zetaBarGaussPoints, etaBarGaussPoints .* zetaBarGaussPoints, zetaBarGaussPoints .* xiBarGaussPoints, xiBarGaussPoints .* etaBarGaussPoints, xiBarGaussPoints .* etaBarGaussPoints .* zetaBarGaussPoints];
-else
-    error('Dimension not implemented!');
-end
-M = B / A;
-
-C = zeros(dimension*numberOfGausspoints, numberOfNodes);
-if dimension == 2
-    C(1:dimension:end, 2) = 1;
-    C(2:dimension:end, 3) = 1;
-    C(1:dimension:end, 4) = etaBarGaussPoints;
-    C(2:dimension:end, 4) = xiBarGaussPoints;
-elseif dimension == 3
-    C(1:dimension:end, 2) = 1;
-    C(2:dimension:end, 3) = 1;
-    C(3:dimension:end, 4) = 1;
-    C(2:dimension:end, 5) = zetaBarGaussPoints;
-    C(3:dimension:end, 5) = etaBarGaussPoints;
-    C(1:dimension:end, 6) = zetaBarGaussPoints;
-    C(3:dimension:end, 6) = xiBarGaussPoints;
-    C(1:dimension:end, 7) = etaBarGaussPoints;
-    C(2:dimension:end, 7) = xiBarGaussPoints;
-    C(1:dimension:end, 8) = etaBarGaussPoints .* zetaBarGaussPoints;
-    C(2:dimension:end, 8) = xiBarGaussPoints .* zetaBarGaussPoints;
-    C(3:dimension:end, 8) = xiBarGaussPoints .* etaBarGaussPoints;
-else
-    error('Dimension not implemented!');
-end
-dMr = C / A;
 end
 
 function [MTilde, dMTilder] = computeShapeFunctionsTrialFunctionEnhancedStrain(dimension, nodesInSkewCoordinates, gaussPointsInSkewCoordinates, M, dMr)
@@ -273,4 +196,82 @@ else
     error('Dimension not implemented!');
 end
 dMTilder = dmTilder - dMr * (nodesInSkewCoordinates.^2).';
+end
+
+function ansatzFunctionTestFunctionEnhancedStrainAll = computeShapeFunctionsTestFunctionEnhancedStrain(dimension, pianSumiharaAnsatzFunctionsAll, easAnsatzFunctionsAll, X, dN_xi_k_I, gaussWeight)
+% Computes the shape functions for the test function for the enhanced part
+% of the strain field
+numberOfGausspoints = size(dN_xi_k_I, 2);
+sigma = pianSumiharaAnsatzFunctionsAll;
+s = zeros(size(sigma));
+for i=1:size(s, 2)
+    delta = zeros(size(s, 1), 1);
+    for m=1:i-1
+        integralTop = 0;
+        integralBottom = 0;
+        for k=1:numberOfGausspoints
+            dN_xi_I = reshape(dN_xi_k_I(:,k,:),[size(dN_xi_k_I,1),size(dN_xi_k_I,3)]);
+            [~,detJ] = computeJacobian(X,dN_xi_I,1e-10);
+            index = (3 * dimension - 3) * (k - 1) + 1:(3 * dimension - 3) * k;
+            integralTop = integralTop + sigma(index, i)' * s(index, m)*detJ*gaussWeight(k);
+            integralBottom = integralBottom + s(index, m)' * s(index, m)*detJ*gaussWeight(k);
+        end
+        delta = delta + integralTop/integralBottom*s(:, m);
+    end
+    s(:, i) = sigma(:, i) - delta;
+end
+
+e = easAnsatzFunctionsAll;
+eps = zeros(size(e));
+for j=1:size(e, 2)
+    delta = zeros(size(s, 1), 1);
+    for m=1:j-1
+        integralTop = 0;
+        integralBottom = 0;
+        for k=1:numberOfGausspoints
+            dN_xi_I = reshape(dN_xi_k_I(:,k,:),[size(dN_xi_k_I,1),size(dN_xi_k_I,3)]);
+            [~,detJ] = computeJacobian(X,dN_xi_I,1e-10);
+            index = (3 * dimension - 3) * (k - 1) + 1:(3 * dimension - 3) * k;
+            integralTop = integralTop + e(index, j)' * s(index, m)*gaussWeight(k);
+            integralBottom = integralBottom + s(index, m)' * s(index, m)*detJ*gaussWeight(k);
+        end
+        delta = delta + integralTop/integralBottom*s(:, m);
+    end
+    eps(:, j) = e(:, j) - delta;
+end
+
+ansatzFunctionTestFunctionEnhancedStrainAll = eps;
+end
+
+function ansatzFunctionTestFunctionEnhancedStrainAll = computeShapeFunctionsTestFunctionEnhancedStrain2(dimension, pianSumiharaAnsatzFunctionsAll, easAnsatzFunctionsAll, XNodes, dN_xi_k_I, gaussWeight, localCoordinates)
+% Computes the shape functions for the test function for the enhanced part
+% of the strain field
+numberOfGausspoints = size(dN_xi_k_I, 2);
+
+numberOfNodes = size(XNodes, 2);
+[hourglassVector, ~] = computeHourglassVectorAndFunction(dimension, localCoordinates);
+c = 1 / numberOfNodes * XNodes * hourglassVector;
+for k=1:numberOfGausspoints
+    index = (3 * dimension - 3) * (k - 1) + 1:(3 * dimension - 3) * k;
+    easAnsatzFunction = easAnsatzFunctionsAll(index, :);
+    xi = easAnsatzFunction(1, 1);
+    eta = easAnsatzFunction(2,2);
+    zeta = easAnsatzFunction(3,3);
+    eps = easAnsatzFunction;
+    eps(:, 10:12) = zeros(6,3);
+    h10_2 = 1/3*(xi*c(1,1)-zeta*c(1,3));
+    h10_3 = 1/3*(xi*c(1,1)-eta*c(1,2));
+    h11_1 = 1/3*(eta*c(2,2)-zeta*c(3,2));
+    h11_3 = 1/3*(eta*c(2,2)-xi*c(1,2));
+    h12_1 = 1/3*(zeta*c(3,3)-eta*c(2,3));
+    h12_2 = 1/3*(zeta*c(3,3)-xi*c(1,3));
+    eps(1, 11) = xi*zeta - h11_1;
+    eps(1, 12) = xi*eta - h12_1;
+    eps(2, 10) = eta*zeta - h10_2;
+    eps(2, 12) = xi*eta - h12_2;
+    eps(3, 10) = eta*zeta - h10_3;
+    eps(3, 11) = xi*zeta - h11_3;
+    easAnsatzFunctionsAll(index, :) = eps;
+end
+ansatzFunctionTestFunctionEnhancedStrainAll = easAnsatzFunctionsAll;
 end

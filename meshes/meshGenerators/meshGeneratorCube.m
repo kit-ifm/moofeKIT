@@ -1,6 +1,6 @@
 function [NODES,EDOF,bounEDOFs] = meshGeneratorCube(lengthX, lengthY, lengthZ, nelX, nelY, nelZ, order, serendipity)
 %% Netzgenerator fuer Quader mit triilinearen isoparametrische 8-Knotenelementen
-%[NODES,EDOF,bounEDOFs] = meshGeneratorCube(lengthX, lengthY, lengthZ, nelx, nely, nelz)
+%[NODES,EDOF,bounEDOFs] = meshGeneratorCube(lengthX, lengthY, lengthZ, nelx, nely, nelz, order, serendipity)
 %
 %INPUT
 %--------------------------------------
@@ -90,27 +90,27 @@ end
 % boundary in the correct order
 if order == 1
     elementSet = kron(ones(nelZ,1),(1:nelX:nelX*nelY-nelX+1)')+kron((0:nelZ-1)',ones(nelY,1))*nelX*nelY;
-    bounEDOFs.SX1 = EDOF(elementSet, [4,1,5,8]);
+    bounEDOFs.SX1 = EDOF(elementSet, [1,4,8,5]);
     bounEDOFs.SX2 = EDOF(elementSet+nelX-1, [2,3,7,6]);
 
     elementSet = kron(ones(nelZ,1),(1:nelX)')+kron((0:nelZ-1)',ones(nelX,1))*nelX*nelY;
     bounEDOFs.SY1 = EDOF(elementSet, [1,2,6,5]);
-    bounEDOFs.SY2 = EDOF(elementSet+nelX*nelY-nelX, [3,4,8,7]);
+    bounEDOFs.SY2 = EDOF(elementSet+nelX*nelY-nelX, [4,3,7,8]);
 
     elementSet = 1:nelX*nelY;
-    bounEDOFs.SZ1 = EDOF(1:nelX*nelY, [4,3,2,1]);
+    bounEDOFs.SZ1 = EDOF(1:nelX*nelY, [1,2,3,4]);
     bounEDOFs.SZ2 = EDOF(elementSet+nelX*nelY*nelZ-nelX*nelY, [5,6,7,8]);
 elseif order == 2
     elementSet = kron(ones(nelZ,1),(1:nelX:nelX*nelY-nelX+1)')+kron((0:nelZ-1)',ones(nelY,1))*nelX*nelY;
-    bounEDOFs.SX1 = EDOF(elementSet, [4,1,5,8, 16,9,21,12, 26]);
+    bounEDOFs.SX1 = EDOF(elementSet, [1, 4, 8, 5, 16, 12, 21, 9, 26]); 
     bounEDOFs.SX2 = EDOF(elementSet+nelX-1, [2,3,7,6, 14,11,19,10, 24]);
     
     elementSet = kron(ones(nelZ,1),(1:nelX)')+kron((0:nelZ-1)',ones(nelX,1))*nelX*nelY;
     bounEDOFs.SY1 = EDOF(elementSet, [1,2,6,5, 13,10,18,9, 23]);
-    bounEDOFs.SY2 = EDOF(elementSet+nelX*nelY-nelX, [3,4,8,7, 15,12,20,11, 25]);
+    bounEDOFs.SY2 = EDOF(elementSet+nelX*nelY-nelX, [4, 3, 7, 8, 15, 11, 20, 12, 25]);
 
     elementSet = 1:nelX*nelY;
-    bounEDOFs.SZ1 = EDOF(1:nelX*nelY, [4,3,2,1, 15,14,13,16, 17]);
+    bounEDOFs.SZ1 = EDOF(1:nelX*nelY, [1, 2, 3, 4, 13, 14, 15, 16, 17]);
     bounEDOFs.SZ2 = EDOF(elementSet+nelX*nelY*nelZ-nelX*nelY, [5,6,7,8, 18,19,20,21, 22]);
 else
     error('order not implemented')

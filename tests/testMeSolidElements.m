@@ -12,7 +12,7 @@ set(0,'DefaultFigureVisible','off')
 
 %% Test 1: check the total energy of a mixed thermo-electro-elastodynamic example
 run('../scripts/pre/unitTest.m')
-assert(lastTotalEnergyValue > -1.3312e04 & lastTotalEnergyValue < -1.3310e04,'total energy in unitTest.m does not reach the specified total energy')
+assert(lastTotalEnergyValue - (-1.334785464144597e+04) < 1e-15, 'Total energy in unitTest.m does not equal the specified total energy');
 
 %% Test 2: check 'Lager' load of 'Aufgabe02' from lecture FEidF
 run('../scripts/pre/FEidF/Aufgabe02.m')

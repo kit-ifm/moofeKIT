@@ -18,7 +18,7 @@ dofObject = dofClass;   % required object for dof and object handling
 %% continuum Objects
 solidThermoObject = solidThermoClass(dofObject);
 numberOfElements = 5;
-[solidThermoObject.meshObject.nodes,solidThermoObject.meshObject.edof,edofNeumann] = netzdehnstab(numberOfElements,1);
+[solidThermoObject.meshObject.nodes,solidThermoObject.meshObject.edof,edofNeumann] = meshOneDimensional(1, numberOfElements, 1);
 solidThermoObject.meshObject.nodes = [solidThermoObject.meshObject.nodes, 293.15*ones(size(solidThermoObject.meshObject.nodes,1),1)];
 
 % solidThermoObject.meshObject.nodes(end,2) = solidThermoObject.meshObject.nodes(end,2) + 20;
@@ -44,35 +44,25 @@ dirichletObject1 = dirichletClass(dofObject);
 dirichletObject1.nodeList = find(solidThermoObject.meshObject.nodes(:,1)==0);
 dirichletObject1.nodalDof = 1;
 dirichletObject1.masterObject = solidThermoObject;
-dirichletObject1.timeFunction = str2func('@(t,X) 0*X');
-dirichletObject1.dimension = 1;
 
-neumannObject = neumannClass(dofObject);
-neumannObject.masterObject = solidThermoObject;
-neumannObject.typeOfLoad = 'deadLoad';
-neumannObject.forceVector = [1];
-neumannObject.shapeFunctionObject.order = solidThermoObject.shapeFunctionObject.order;
-neumannObject.shapeFunctionObject.numberOfGausspoints = 2^(solidThermoObject.dimension-1);
-neumannObject.projectionType = 'none';
-neumannObject.timeFunction = str2func('@(t) t*(t<1)');
-neumannObject.meshObject.edof = edofNeumann;
-neumannObject.dimension = 1;
+nodalLoadObject = nodalLoadClass(dofObject);
+nodalLoadObject.masterObject = solidThermoObject;
+nodalLoadObject.loadVector = 1;
+nodalLoadObject.timeFunction = str2func('@(t) t*(t<1)');
+nodalLoadObject.nodeList = find(solidThermoObject.meshObject.nodes(1, :) == 1);
 
 % dirichletObject2 = dirichletClass(dofObject);
 % dirichletObject2.nodeList = find(solidThermoObject.meshObject.nodes(:,1)==1);
 % dirichletObject2.nodalDof = 1;
 % dirichletObject2.masterObject = solidThermoObject;
 % dirichletObject2.timeFunction = str2func('@(t,X) (X + 0.5*t*(t<1)) ');
-% dirichletObject2.dimension = 1;
 
-neumannObject2 = neumannClass(dofObject);
-neumannObject2.masterObject = solidThermoObject;
-neumannObject2.typeOfLoad = 'deadLoad';
-neumannObject2.field = 'thermal';
-neumannObject2.meshObject.edof = 1;
-neumannObject2.timeFunction = str2func('@(t) t*1*(t<1)');
-neumannObject2.dimension = 1;
-neumannObject2.forceVector = 10;
+nodalLoadObject2 = nodalLoadClass(dofObject);
+nodalLoadObject2.masterObject = solidThermoObject;
+nodalLoadObject2.loadPhysics = 'thermal';
+nodalLoadObject2.nodeList = 1;
+nodalLoadObject2.timeFunction = str2func('@(t) t*1*(t<1)');
+nodalLoadObject2.loadVector = 10;
 
 % boundaryK2 = dirichletClass(dofObject);
 % boundaryK2.masterObject = solidThermoObject;

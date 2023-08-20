@@ -15,18 +15,22 @@ function elementGeometryType = determineElementGeometryType(dimension, numberOfN
 if dimension == 1
     elementGeometryType = 'oneDimensional';
 elseif dimension == 2
-    if ismember(numberOfNodes, [3, 6])
-        elementGeometryType = 'triangular';
-    elseif ismember(numberOfNodes, [4, 8, 9])
+    if mod(sqrt(numberOfNodes), 1) == 0 || numberOfNodes == 8
         elementGeometryType = 'quadrilateral';
+    elseif numberOfNodes == 2 %% for strings
+        elementGeometryType = 'oneDimensional';
+    elseif ismember(numberOfNodes, [3, 6])
+        elementGeometryType = 'triangular';
     else
         error('Element geometry type is not implemented!');
     end
 elseif dimension == 3
-    if ismember(numberOfNodes, [4, 10])
-        elementGeometryType = 'tetrahedral';
-    elseif ismember(numberOfNodes, [8, 20, 27])
+    if mod(nthroot(numberOfNodes, 3), 1) == 0 || numberOfNodes == 20
         elementGeometryType = 'hexahedral';
+    elseif ismember(numberOfNodes, [4, 10])
+        elementGeometryType = 'tetrahedral';
+    elseif numberOfNodes == 2 %% for strings
+        elementGeometryType = 'oneDimensional';
     else
         error('Element geometry type is not implemented!');
     end

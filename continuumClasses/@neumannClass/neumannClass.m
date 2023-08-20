@@ -5,28 +5,22 @@ classdef neumannClass < baseFEClass
     end
     properties
         storageFEObject
-        shapeFunctionObject% = lagrangeShapeFunctionClass();
-        masterObject
-        %         edof
-        forceVector
-        typeOfLoad = 'deadLoad'       % deadLoad or followerLoad
-        time = 0;
+        shapeFunctionObject
+        masterObject % object of solidSuperClass
+        loadVector % load vector (defined in the global coordinate system)
+        loadGeometry % 'line' or 'area'
+        loadType = 'deadLoad'; % 'deadLoad' or 'followerLoad'
+        loadPhysics = 'mechanical'; % 'mechanical', 'thermal', 'electrical', tbc
         timeFunction = @(t) 1;
-        %TODO
-        projectionType = 'none'       % which length is used for calculation of area (not needed in 1D) --> 'none': real length, 'x': length in xdirection, 'y': length in ydirection
-        globalEdof
-        shapeFunctions
-        masterNodes
-        nodalForce
-        dimension = 3;
-        field = 'mechanical'           % mechanical, thermal, electrical, tbc
-        omega_0
-        energy
+        projectionType = 'none' % which length is used for calculation of area (not needed in 1D) --> 'none': real length, 'x': length in xdirection, 'y': length in ydirection
 
-        ePot = struct('externalEnergy',0);
+        ePot = struct('externalEnergy', 0);
     end
-    properties (SetAccess=private)
+    properties (SetAccess = private)
         elementGeometryType
+        masterNodes
+        nodalForces
+        globalEdof
     end
     properties (Dependent = true)
         numberOfElements
@@ -46,45 +40,58 @@ classdef neumannClass < baseFEClass
 
     %% mandatory methods
     methods
-        %
-        plot(obj, setupObject)
-        %
         function initializeShapeFunctions(obj, dofObject)
-            dimensionMasterObject = obj.masterObject.dimension;
-            if dimensionMasterObject == 1
-                % no shape functions in 1D as only nodal loads
-            elseif dimensionMasterObject == 2 || dimensionMasterObject == 3
-                numberOfNodes = size(obj.meshObject.edof,2);
-                obj.elementGeometryType = determineElementGeometryType(dimensionMasterObject-1, numberOfNodes);
-                obj.shapeFunctionObject.computeShapeFunction(dimensionMasterObject-1, numberOfNodes, obj.elementGeometryType);                
+            % initialize shape functions
+            if strcmp(obj.loadGeometry, 'line')
+                dimensionShapeFunctions = 1;
+            elseif strcmp(obj.loadGeometry, 'area')
+                dimensionShapeFunctions = 2;
             end
+            numberOfNodes = size(obj.meshObject.edof, 2);
+            if isempty(obj.shapeFunctionObject.numberOfGausspoints)
+                obj.shapeFunctionObject.numberOfGausspoints = nthroot(obj.masterObject.shapeFunctionObject.numberOfGausspoints, obj.masterObject.dimension)^dimensionShapeFunctions;
+            end
+            if isempty(obj.shapeFunctionObject.order)
+                obj.shapeFunctionObject.order = obj.masterObject.shapeFunctionObject.order;
+            end
+            obj.elementGeometryType = determineElementGeometryType(dimensionShapeFunctions, numberOfNodes);
+            obj.shapeFunctionObject.computeShapeFunction(dimensionShapeFunctions, numberOfNodes, obj.elementGeometryType);
         end
         function initializeGlobalDofs(obj, dofObject)
             edof = obj.meshObject.edof;
-
-            if strcmpi(obj.field, 'mechanical')
-                globalEdof = zeros(obj.numberOfElements, size(edof, 2)*obj.dimension);
-                for index2 = 1:obj.dimension
-                    temp = zeros(obj.numberOfElements, size(edof, 2));
-                    temp(:) = obj.masterObject.meshObject.globalNodesDof(edof, index2);
-                    globalEdof(:, index2:obj.dimension:end) = temp;
+            displacementDofsPerNode = size(obj.masterObject.qR, 2) - obj.masterObject.additionalFields;
+            numberOfNodesPerElement = size(edof, 2);
+            if strcmp(obj.loadPhysics, 'mechanical')
+                numberOfDofsPerElement = numberOfNodesPerElement * displacementDofsPerNode;
+                globalEdof = zeros(obj.numberOfElements, numberOfDofsPerElement);
+                for ii = 1:displacementDofsPerNode
+                    temp = zeros(obj.numberOfElements, numberOfNodesPerElement);
+                    temp(:) = obj.masterObject.meshObject.globalNodesDof(edof, ii);
+                    globalEdof(:, ii:displacementDofsPerNode:end) = temp;
                 end
-            elseif strcmpi(obj.field, 'thermal')
+            elseif strcmp(obj.loadPhysics, 'thermal')
+                globalEdof = zeros(obj.numberOfElements, numberOfNodesPerElement);
                 if isa(obj.masterObject, 'solidThermoClass')
-                    globalEdof = zeros(obj.numberOfElements, size(edof, 2));
-                    globalEdof(:) = obj.masterObject.meshObject.globalNodesDof(edof, obj.dimension+1);
+                    globalEdof(:) = obj.masterObject.meshObject.globalNodesDof(edof, displacementDofsPerNode+1);
                 elseif isa(obj.masterObject, 'solidElectroThermoClass')
-                    globalEdof = zeros(obj.numberOfElements, size(edof, 2));
-                    globalEdof(:) = obj.masterObject.meshObject.globalNodesDof(edof, obj.dimension+2);
+                    globalEdof(:) = obj.masterObject.meshObject.globalNodesDof(edof, displacementDofsPerNode+2);
+                else
+                    error('Not implemented yet!');
                 end
-            elseif strcmpi(obj.field, 'electrical')
-                globalEdof = zeros(obj.numberOfElements, size(edof, 2));
-                globalEdof(:) = obj.masterObject.meshObject.globalNodesDof(edof, obj.dimension+1);
+            elseif strcmp(obj.loadPhysics, 'electrical')
+                globalEdof = zeros(obj.numberOfElements, numberOfNodesPerElement);
+                if isa(obj.masterObject, 'solidElectroClass') || isa(obj.masterObject, 'solidElectroThermoClass')
+                    globalEdof(:) = obj.masterObject.meshObject.globalNodesDof(edof, displacementDofsPerNode+1);
+                else
+                    error('Not implemented yet!');
+                end
             end
             obj.globalEdof = globalEdof;
-            nodes = unique(edof');
-            obj.masterNodes = nodes;
-            obj.nodalForce = zeros(size(nodes, 1), obj.masterObject.dimension);
+
+            determineMasterNodes(obj);
+
+            % verification of input data
+            verificationOfInputData(obj)
         end
         function initializeQV(obj, dofObject)
             % nothing to do here
@@ -103,7 +110,6 @@ classdef neumannClass < baseFEClass
         end
         function updateTimeDependentFieldPreNewtonLoop(obj, dofObject, fieldName, time)
             assert(ischar(fieldName));
-            obj.time = time;
             if isprop(obj, fieldName)
                 dofObject.(fieldName)(obj.meshObject.globalNodesDof) = obj.(fieldName);
             end
@@ -123,43 +129,103 @@ classdef neumannClass < baseFEClass
     methods
 
         %% set routines
-        function set.masterObject(obj, input)
-            assert(isa(input, 'solidSuperClass'), 'masterObject of Neumann Object must be of type solidSuperClass!')
-            obj.masterObject = input;
+        function set.masterObject(obj, value)
+            assert(isa(value, 'solidSuperClass'), 'masterObject of Neumann Object must be of type solidSuperClass!')
+            obj.masterObject = value;
         end
+
+        function set.loadVector(obj, value)
+            assert(size(value, 1) == 1 || size(value, 2) == 1, 'loadVector must be a vector!');
+            if size(value, 1) == 1
+                value = value.';
+            end
+            obj.loadVector = value;
+        end
+
+        function set.loadGeometry(obj, value)
+            assert(ischar(value), 'loadGeometry must be of type string!')
+            value = lower(value);
+            if any(strcmp(value, {'line', 'area'}))
+                obj.loadGeometry = value;
+            else
+                error('Not implemented yet for given loadGeometry!');
+            end
+        end
+        function out = get.loadGeometry(obj)
+            if isempty(obj.loadGeometry)
+                error('loadGeometry is not specified yet!');
+            else
+                out = obj.loadGeometry;
+            end
+        end
+
+        function set.loadType(obj, value)
+            assert(ischar(value), 'loadType must be of type string!')
+            assert(any(strcmp(value, {'deadLoad', 'followerLoad'})), 'loadType must be either "deadLoad" or "followerLoad"!');
+            assert(~strcmp(value, 'followerLoad'), 'followerLoad loads are not implemented yet!');
+            obj.loadType = value;
+        end
+
+        function set.loadPhysics(obj, value)
+            assert(ischar(value), 'loadPhysics must be of type string!')
+            assert(any(strcmp(value, {'mechanical', 'thermal', 'physical'})), 'loadPhysics must be either "mechanical", "thermal" or "electrical"!');
+            obj.loadPhysics = value;
+        end
+
+        function set.timeFunction(obj, input)
+            assert(isa(input, 'function_handle'), 'timeFunction must be of type function_handle');
+            obj.timeFunction = input;
+        end
+
         function set.projectionType(obj, projection)
-            if ~strcmp(projection, 'none') && ~strcmp(projection, 'x') && ~strcmp(projection, 'y')
-                error('projection must be "none", "x" or "y"')
-            else
-                obj.projectionType = projection;
-            end
+            assert(any(strcmp(projection, {'none', 'x', 'y', 'z'})), "projectionType must be 'none', 'x', 'y' or 'z'");
+            obj.projectionType = projection;
         end
-        function set.time(obj, time)
-            obj.time = time;
-        end
-        function set.typeOfLoad(obj, type)
-            if ~strcmp(type, 'deadLoad') && ~strcmp(type, 'followerLoad')
-                error('loadtype must be either "deadLoad" or "followerLoad"')
-            elseif strcmp(type, 'followerLoad')
-                error('followerLoad loads currently not implemented')
-            else
-                obj.typeOfLoad = type;
-            end
-        end
-        function set.forceVector(obj, forceVector)
-            assert(size(forceVector, 1) == obj.masterObject.dimension, 'Force-vector must be of size "dim x 1"') %#ok<MCSUP>
-            assert(size(forceVector, 2) == 1, 'Force-vector must be of size "dim x 1"')
-            obj.forceVector = forceVector;
-        end
-        function setTime(obj, t)
-            obj.time = t;
-        end
+
+
         function out = get.numberOfElements(obj)
             out = size(obj.meshObject.edof, 1);
         end
-        function updateNodalForce(obj)
+    end
+
+    %% Further methods
+    methods
+        function determineMasterNodes(obj)
+            obj.masterNodes = unique(obj.meshObject.edof');
+        end
+
+        function updateNodalForces(obj)
             R = full(sparse(vertcat(obj.storageFEObject.dataFE(:).indexReI), 1, vertcat(obj.storageFEObject.dataFE(:).Re), max(vertcat(obj.storageFEObject.dataFE(:).indexReI)), 1));
-            obj.nodalForce(:, :) = -R(obj.masterObject.meshObject.globalNodesDof(obj.masterNodes, :));
+            obj.nodalForces(:, :) = -R(obj.masterObject.meshObject.globalNodesDof(obj.masterNodes, :));
+        end
+
+        function verificationOfInputData(obj)
+            % load geometry
+            if obj.masterObject.dimension == 2 && isa(obj.masterObject, 'solidSuperClass')
+                if ~isa(obj.masterObject, 'plateClass')
+                    assert(~strcmp(obj.loadGeometry, 'area'), 'Geometry of Neumann object can not be "area" in this case!');
+                end
+            end
+
+            % load vector
+            if strcmp(obj.loadPhysics, 'mechanical')
+                displacementDofsPerNode = size(obj.masterObject.qR, 2) - obj.masterObject.additionalFields;
+                assert(size(obj.loadVector, 1) == displacementDofsPerNode, ['loadVector must be of size "', num2str(displacementDofsPerNode), ' x 1"']);
+            elseif any(strcmp(obj.loadPhysics, {'thermal', 'electrical'}))
+                assert(size(obj.loadVector, 1) == 1, 'loadVector must be of size "1 x 1"');
+            else
+                error('Not implemented yet!');
+            end
+
+            % check edof
+            numberOfNodes = size(obj.meshObject.edof, 2);
+            if strcmp(obj.loadGeometry, 'line')
+                assert(numberOfNodes == obj.masterObject.shapeFunctionObject.order+1, ['edof must be of size "', num2str(obj.numberOfElements), ' x ', num2str(obj.masterObject.shapeFunctionObject.order+1), '"']);
+            elseif strcmp(obj.loadGeometry, 'area')
+                % TODO
+            else
+                error('Not implemented yet!');
+            end
         end
     end
 end

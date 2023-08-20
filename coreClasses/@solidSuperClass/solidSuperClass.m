@@ -33,8 +33,9 @@ classdef solidSuperClass < baseFEClass
         callElements = true;
     end
     properties
-        dimension = 3;
-        elementDisplacementType = 'displacement';
+        dimension
+        elementDisplacementType = 'displacement';   % mixedSC
+        elementNameAdditionalSpecification = '';    % for mixedSC: NonCascadeCGc, InvariantCGc; attention: empty '' means cascade version of CGc
         qR
         ePot = struct();
         momenta = struct('L',[],'J',[]);
@@ -63,6 +64,7 @@ classdef solidSuperClass < baseFEClass
         mapVoigtObject% = mapVoigtClass();
         mixedFEObject% = mixedFEClass();
         numericalTangentObject
+        artificialNeuralNetworkObject
     end
     methods
         function obj = solidSuperClass()
@@ -73,6 +75,7 @@ classdef solidSuperClass < baseFEClass
             obj.mapVoigtObject = mapVoigtClass();
             obj.mixedFEObject = mixedFEClass();
             obj.numericalTangentObject = numericalTangentClass();
+            obj.artificialNeuralNetworkObject = artificialNeuralNetworkClass();
         end
     end
     methods(Access = protected)
@@ -183,7 +186,7 @@ classdef solidSuperClass < baseFEClass
             obj.meshObject.globalFullEdof = globalFullEdof;
             obj.meshObject.globalNodesDof = globalNodesDof;
             dofObject.totalNumberOfDofs = dofObject.totalNumberOfDofs + numberOfNodes*numberOfDofPerNode;
-            if ~contains(obj.elementDisplacementType,{'displacement', 'thermo'})
+            if ~contains(obj.elementDisplacementType,{'displacement', 'thermo', 'beam'})
                 obj.mixedFEObject.initializeMixedElements(dofObject,obj);
                 obj.meshObject.globalFullEdof = [obj.meshObject.globalFullEdof, obj.mixedFEObject.globalEdof];
             end
@@ -203,7 +206,10 @@ classdef solidSuperClass < baseFEClass
                 obj.qN1 = obj.qN;
             end
             if isempty(obj.vN)
-                obj.vN = zeros(size(obj.meshObject.nodes,1), size(obj.meshObject.nodes,2));
+                obj.vN = zeros(size(obj.qR));
+            end
+            if isempty(obj.vN1)
+                obj.vN1 = zeros(size(obj.meshObject.nodes,1), size(obj.meshObject.nodes,2));
             end
         end
         function updateGlobalField(obj,dofObject,fieldNameCell)
@@ -216,15 +222,16 @@ classdef solidSuperClass < baseFEClass
                     dofObject.(fieldName)(obj.meshObject.globalNodesDof) = obj.(fieldName);
                 end
             end
+            updateGlobalField(obj.mixedFEObject,obj,dofObject);
             % update qN for mixed elements without condensation
-            if strcmp(obj.elementDisplacementType, 'mixedSC')
-                if ~obj.mixedFEObject.condensation
-                    numberOfElements = size(obj.meshObject.globalFullEdof, 1);
-                    numberOfDisplacementDofs = dofObject.totalNumberOfDofs - numberOfElements*obj.mixedFEObject.numberOfDofs(1);
-                    internalDofs = obj.mixedFEObject.qN';
-                    dofObject.qN = dofObject.qN + [zeros(numberOfDisplacementDofs,1); internalDofs(:)];
-                end
-            end
+            % if contains(obj.elementDisplacementType, 'mixed')
+            %     if ~obj.mixedFEObject.condensation
+            %         numberOfElements = size(obj.meshObject.globalFullEdof, 1);
+            %         numberOfDisplacementDofs = dofObject.totalNumberOfDofs - numberOfElements*obj.mixedFEObject.numberOfDofs(1);
+            %         internalDofs = obj.mixedFEObject.qN';
+            %         dofObject.qN = dofObject.qN + [zeros(numberOfDisplacementDofs,1); internalDofs(:)];
+            %     end
+            % end
         end
         function updateContinuumFieldPreNewtonLoop(obj,dofObject,fieldNameCell)
         % method                    updateContinuumFieldPreNewtonLoop
@@ -285,6 +292,12 @@ classdef solidSuperClass < baseFEClass
             % set method qR
             assert(ismatrix(value))
             obj.qR = value;
+        end
+
+        function set.elementNameAdditionalSpecification(obj, value)
+            % set method elementNameAdditionalSpecification
+            assert(ischar(value), "Property 'elementNameAdditionalSpecification' must be of type string!");
+            obj.elementNameAdditionalSpecification = value;
         end
     end
 end

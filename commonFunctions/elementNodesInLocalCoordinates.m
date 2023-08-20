@@ -35,19 +35,15 @@ elseif dimension == 2
             error('Element number of nodes not implemented');
         end
     elseif strcmpi(elementGeometryType, 'quadrilateral')
-        if elementNumberOfNodes == 4
-            % 4-node bilinear lagrange element
-            [nodes, edof] = meshRectangle(2, 2, 1, 1, 1);
+        if mod(sqrt(elementNumberOfNodes), 1) == 0
+            % lagrange elements
+            [nodes, edof] = meshRectangle(2, 2, 1, 1, sqrt(elementNumberOfNodes)-1);
             nodesXi = nodes(edof, :)';
         elseif elementNumberOfNodes == 8
             % 8-node serendipity element
             [nodes, edof] = meshRectangle(2, 2, 1, 1, 2);
             nodesXi = nodes(edof, :)';
             nodesXi = nodesXi(:, 1:end-1);
-        elseif elementNumberOfNodes == 9
-            % 9-node bi quadratic lagrange element
-            [nodes, edof] = meshRectangle(2, 2, 1, 1, 2);
-            nodesXi = nodes(edof, :)';
         else
             error('Element number of nodes not implemented');
         end

@@ -1,0 +1,40 @@
+|--- time step 00001 of 00010; time 0.0000 ---|
+|      iteration  1: norm(R) = 2.19997e-01    |
+|      iteration  2: norm(R) = 1.06410e-04    |
+|      iteration  3: norm(R) = 2.10281e-08    |
+|--- time step 00002 of 00010; time 0.1000 ---|
+|      iteration  1: norm(R) = 2.16495e-01    |
+|      iteration  2: norm(R) = 1.04482e-04    |
+|      iteration  3: norm(R) = 2.01447e-08    |
+|--- time step 00003 of 00010; time 0.2000 ---|
+|      iteration  1: norm(R) = 2.13081e-01    |
+|      iteration  2: norm(R) = 1.02591e-04    |
+|      iteration  3: norm(R) = 1.93042e-08    |
+|--- time step 00004 of 00010; time 0.3000 ---|
+|      iteration  1: norm(R) = 2.09753e-01    |
+|      iteration  2: norm(R) = 1.00738e-04    |
+|      iteration  3: norm(R) = 1.85048e-08    |
+|--- time step 00005 of 00010; time 0.4000 ---|
+|      iteration  1: norm(R) = 2.06509e-01    |
+|      iteration  2: norm(R) = 9.89211e-05    |
+|      iteration  3: norm(R) = 1.77443e-08    |
+|--- time step 00006 of 00010; time 0.5000 ---|
+|      iteration  1: norm(R) = 2.03346e-01    |
+|      iteration  2: norm(R) = 9.71402e-05    |
+|      iteration  3: norm(R) = 1.70210e-08    |
+|--- time step 00007 of 00010; time 0.6000 ---|
+|      iteration  1: norm(R) = 2.00263e-01    |
+|      iteration  2: norm(R) = 9.53947e-05    |
+|      iteration  3: norm(R) = 1.63328e-08    |
+|--- time step 00008 of 00010; time 0.7000 ---|
+|      iteration  1: norm(R) = 1.97258e-01    |
+|      iteration  2: norm(R) = 9.36838e-05    |
+|      iteration  3: norm(R) = 1.56781e-08    |
+|--- time step 00009 of 00010; time 0.8000 ---|
+|      iteration  1: norm(R) = 1.94328e-01    |
+|      iteration  2: norm(R) = 9.20071e-05    |
+|      iteration  3: norm(R) = 1.50553e-08    |
+|--- time step 00010 of 00010; time 0.9000 ---|
+|      iteration  1: norm(R) = 1.91472e-01    |
+|      iteration  2: norm(R) = 9.03640e-05    |
+|      iteration  3: norm(R) = 1.44626e-08    |

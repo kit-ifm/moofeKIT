@@ -3,9 +3,16 @@ classdef plotClass < matlab.mixin.Copyable
     properties
         % settings if and when the system is plotted
         flag                    = true;
+        savePlot                = struct('flag',false, ...
+                                         'name','saveName',...
+                                         'type','-depsc',...
+                                         'flagPlotColorbar',false) % '-depsc'
+
         steps                   = 1; % number of steps after which solution is plotted
         everyNewtonStep         = true;
         docked                  = true;
+        keepFormerPlots         = false;
+        plotInitialConfig       = false;
         % parts of drawing that should be plotted
         boundary            = true;
         load                = true;
@@ -16,11 +23,12 @@ classdef plotClass < matlab.mixin.Copyable
         stress = struct('type','Cauchy',... %'FirstPK'
                         'component',-1); % -1 = von Mises, 11, 22, 33, 12, 21 etc.
         % variables for formatting
-        lineWeight              = 0.6;
+        lineWidth = 1;
+        lineWeight              = 0.6; %FIXME: ???
         border                  = 0.3;
         boundarySize            = 0.03;
         colorBarLimits          = [];
-        view = 3;
+        view = [-217.5, 30];
         makeMovie = false;
         time = 'N1';%'R';
     end
@@ -58,7 +66,7 @@ classdef plotClass < matlab.mixin.Copyable
             obj.everyNewtonStep = val;
         end
         function set.axis(obj,val)
-            assert(islogical(val),'plotAxis must be logical')
+%             assert(islogical(val),'plotAxis must be logical')
             obj.axis = val;
         end
         function set.colorData(obj,val)
@@ -92,7 +100,13 @@ classdef plotClass < matlab.mixin.Copyable
         function findXminXmax(obj,solidObject)
             if ~obj.xminxmaxset
                 for ii=1:numel(solidObject)
-                    for jj=1:solidObject(ii).dimension
+
+                    dimension = solidObject(ii).dimension;
+                    if isa(solidObject,'stringClass') 
+                        dimension = size(solidObject.qR,2);
+                    end
+
+                    for jj=1:dimension
                         % minimum and maximum
                         obj.xmin(jj) = min([obj.xmin(jj); solidObject(ii).meshObject.nodes(:,jj)]);
                         obj.xmax(jj) = max([obj.xmax(jj); solidObject(ii).meshObject.nodes(:,jj)]);

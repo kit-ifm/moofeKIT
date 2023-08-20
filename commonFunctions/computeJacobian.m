@@ -1,4 +1,4 @@
-function [J,detJ] = computeJacobian(ed, dN_xi_I, tolerance, computePostData)
+function [J,detJ] = computeJacobian(ed, dN_xi_I, tolerance, varargin)
 % COMPUTEJACOBIAN Function to compute the Jacobian determinant
 %
 % CALL [J, detJk] = computeJacobian(ed,dNxik,tolerance)
@@ -9,12 +9,21 @@ function [J,detJ] = computeJacobian(ed, dN_xi_I, tolerance, computePostData)
 %           detJ Jacobian determinant for reference configuration
 
 J = ed * dN_xi_I';          % Jacobian matrix
-detJ = det(J);              % Jacobian determinant
-if exist('computePostData')
+if size(J, 1) == size(J, 2)
+    detJ = det(J);
+elseif size(J, 2) == 1 && size(J, 1) ~= 1
+    detJ = norm(J);
+else
+    error('not implemented yet.')
+end
+
+if numel(varargin) >= 1
+    computePostData = varargin{1};
     if computePostData
         detJ = abs(det(J));              % Jacobian determinant
     end
 end
+
 % check the Jacobian determinant
 if detJ < 10 * tolerance
     error('Jacobi determinant equal or less than zero.')

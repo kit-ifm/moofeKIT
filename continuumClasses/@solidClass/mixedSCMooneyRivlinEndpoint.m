@@ -124,9 +124,13 @@ KLambdacc = kData{7, 4};
 % initialize elementEnergy
 elementEnergy.strainEnergy = 0;
 
-%% GAUSS LOOP
+% compute Jacobian
+JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I);
+% Run through all Gauss points
 for k = 1:numberOfGausspoints
-    [detJ, detJStruct, dN_X_I, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
+%     [detJ, detJStruct, dN_X_I, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
 
     % compute the values of the variables at the current Gauss point
     CN1v = reshape(extractedCN1v, 6, []) * M_k_I(k, :)';
@@ -244,6 +248,7 @@ for k = 1:numberOfGausspoints
         KLambdacc = KLambdacc - M_k_I(k, :)' * M_k_I(k, :) * detJ * gaussWeight(k);
     else
         % STRESS COMPUTATION
+        [~, detJStruct, ~, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
         SN1 = 2 * lambdaCN1;
         PN1 = FxN1 * SN1;
         stressTensor.FirstPK = PN1;

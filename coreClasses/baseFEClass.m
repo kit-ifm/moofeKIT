@@ -32,9 +32,6 @@ classdef (Abstract) baseFEClass < matlab.mixin.Copyable
         callMassMatrix
         callElements
     end
-    properties (Abstract = true)
-        dimension
-    end
     properties
         meshObject
     end

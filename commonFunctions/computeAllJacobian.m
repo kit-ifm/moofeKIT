@@ -25,6 +25,11 @@ dN_xi_I = reshape(dN_xi_k_I(:,k,:),[size(dN_xi_k_I,1),size(dN_xi_k_I,3)]);
 [JN1,detJN1] = computeJacobian(edN1,dN_xi_I,tolerance,setupObject.computePostData);
 detJStruct = struct('R',detJ,'N',detJN,'N1',detJN1);
 % derivative of the shape functions with respect to the physical coodrinate X (or x) at gauss point k
-dN_X_I = J' \ dN_xi_I;
+    if size(J,1) ~= size(J,2) %for strings
+        dN_X_I = detJ^(-1)*dN_xi_I;
+    else
+        dN_X_I = J' \ dN_xi_I;
+    end
+
 end
                  

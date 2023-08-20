@@ -11,6 +11,7 @@ classdef dofClass < matlab.mixin.Copyable
         totalNumberOfDofs = 0;
         dirichletDof
         R
+        K
         postDataObject
     end
     properties (Dependent = true)
@@ -64,7 +65,11 @@ classdef dofClass < matlab.mixin.Copyable
             for index1 = 1:obj.numberOfContinuumObjects
                 continuumObject = obj.listContinuumObjects{index1};
                 if continuumObject.callMassMatrix
-                    dataFE = massMatrixElement(continuumObject,setupObject);
+                    if continuumObject.materialObject.rho > 0
+                        dataFE = callElements(continuumObject, setupObject, 'massMatrix');
+                    else
+                        dataFE = continuumObject.storageFEObject.initializeDataFE('massMatrix');
+                    end
                     massDataFE = [massDataFE, dataFE];
                 end
             end

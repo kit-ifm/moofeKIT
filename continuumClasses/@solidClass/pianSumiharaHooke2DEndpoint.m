@@ -18,13 +18,13 @@ gaussWeight = shapeFunctionObject.gaussWeight;
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
 N_k_I = shapeFunctionObject.N_k_I;
 dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
-dN0_xi_k_I = shapeFunctionObject.dN0_xi_k_I;
+dN0_xi_I = shapeFunctionObject.dN0_xi_I;
 % nodal dofs
 qR = obj.qR;
 qN = obj.qN;
 qN1 = obj.qN1;
 % mixed FE data
-Pr = mixedFEObject.shapeFunctionObject.N_k_I;
+Pr = mixedFEObject.shapeFunctionObject.M;
 numberOfInternalDofs = size(mixedFEObject.qN1, 2);
 % material data and voigt notation
 nu = materialObject.nu;
@@ -49,7 +49,6 @@ uN1 = edN1 - edR;
 betaN1e = dofs.edAlphaN1';
 
 %jacobian element centroid
-dN0_xi_I = reshape(dN0_xi_k_I(:,1,:),[size(dN0_xi_k_I,1),size(dN0_xi_k_I,3)]);
 J0 = edR * dN0_xi_I';
 F0 = F0Matrix(dimension, J0);
 

@@ -54,14 +54,10 @@ dirichletObject.masterObject = solidObject;
 dirichletObject.timeFunction = str2func('@(t) 0');
 
 neumannObject = neumannClass(dofObject);
-neumannObject.dimension = 3;
-neumannObject.typeOfLoad = 'deadLoad';
 neumannObject.masterObject = solidObject;
-neumannObject.forceVector = [0;50;0];
-neumannObject.shapeFunctionObject.order = solidObject.shapeFunctionObject.order;
-neumannObject.shapeFunctionObject.numberOfGausspoints = 2^(solidObject.dimension-1);
-neumannObject.projectionType = 'none';
-neumannObject.timeFunction = str2func('@(t) t');
+neumannObject.loadGeometry = 'area';
+neumannObject.loadVector = [0;50;0];
+% neumannObject.timeFunction = str2func('@(t) t');
 neumannObject.meshObject.edof = edofNeumann;
 
 %% solver

@@ -62,7 +62,6 @@ for k = 1:numberOfGausspoints
     psi = mu / 2 * (trace(CN1) - dimension) + mu / beta * (detFN1^-beta - 1);
     psi_C = mu / 2 * (I - detFN1^(-beta) * CN1inv);
     psi_CC = mu / 2 * (beta / 2 * detFN1^(-beta) * (CN1invVoigt * CN1invVoigt') + detFN1^(-beta) * CN1invSym);
-
     %2.PK
     SN1 = 2 * psi_C;
     SN1Voigt = [SN1(1, 1); SN1(2, 2); SN1(1, 2)];

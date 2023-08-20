@@ -48,10 +48,12 @@ dimension = obj.dimension;
 % gauss integration and shape functions
 gaussWeight = shapeFunctionObject.gaussWeight;
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
-N = shapeFunctionObject.N;
-dNr = shapeFunctionObject.dNr;
+N_k_I = shapeFunctionObject.N_k_I;
+dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
 % nodal dofs
-qR = obj.qR;
+edR = obj.qR(edof(e, :), :).';
+edN = obj.qN(edof(e, :), :).';
+edN1 = dofs.edN1;
 % material data and voigt notation
 selectMapVoigt(mapVoigtObject, dimension, 'symmetric');
 lambda = materialObject.lambda;
@@ -64,27 +66,26 @@ DMat = [lambda + 2 * mu, lambda, lambda, 0, 0, 0; ...
     0, 0, 0, 0, 0, mu];
 I = eye(3);
 
+JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I);
+
 %% Create residual and tangent
 elementEnergy.strainEnergy = 0;
 Re = rData{1};
 Ke = kData{1, 1};
 
 % post processing stresses
-edN1 = dofs.edN1;
-J = qR(edof(e, :), 1:dimension).' * dNr';
-JN1 = edN1 * dNr';
+if computePostData
+    JNAll = computeJacobianForAllGausspoints(edN, dN_xi_k_I);
+    JN1All = computeJacobianForAllGausspoints(edN1, dN_xi_k_I);
+end
 % Run through all Gauss points
 for k = 1:numberOfGausspoints
-    index = dimension * k - (dimension - 1):dimension * k;
-    detJ = det(J(:, index).');
-    detJN1 = det(JN1(:, index).');
-    if detJ < 10 * eps
-        error('Jacobi determinant equal or less than zero.')
-    end
-    dNx = (J(:, index).') \ dNr(index, :);
-    FN1 = edN1 * dNx';
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
+
+    FN1 = edN1 * dN_X_I';
     % B-matrix
-    BN1 = BMatrix(dNx, FN1);
+    BN1 = BMatrix(dN_X_I, FN1);
     % Cauchy-Green tensor
     CN1 = FN1.' * FN1;
     % Green-Lagrange tensor
@@ -98,7 +99,7 @@ for k = 1:numberOfGausspoints
         Re = Re + 2 * BN1' * DW1_v * detJ * gaussWeight(k);
         % Tangent
         D2W1 = 1 / 4 * DMat;
-        A1 = 2 * dNx' * DW1 * dNx * detJ * gaussWeight(k);
+        A1 = 2 * dN_X_I' * DW1 * dN_X_I * detJ * gaussWeight(k);
         MAT = zeros(numberOfDOFs);
         for g = 1:dimension
             MAT(g:dimension:numberOfDOFs, g:dimension:numberOfDOFs) = A1;
@@ -107,13 +108,16 @@ for k = 1:numberOfGausspoints
         % Strain energy
         elementEnergy.strainEnergy = elementEnergy.strainEnergy + 0.5 * EN1_v' * DMat * EN1_v * detJ * gaussWeight(k);
     else
+        [~, detJN] = extractJacobianForGausspoint(JNAll, k, setupObject, dimension);
+        [~, detJN1] = extractJacobianForGausspoint(JN1All, k, setupObject, dimension);
+        detJStruct = struct('R', detJ, 'N', detJN, 'N1', detJN1);
         % stress at gausspoint
         SN1_v = DMat * EN1_v;
         SN1 = voigtToMatrix(SN1_v, 'stress');
         PN1 = FN1 * SN1;
         stressTensor.FirstPK = PN1;
         stressTensor.Cauchy = 1 / det(FN1) * PN1 * FN1';
-        array = postStressComputation(array, N, k, gaussWeight, detJ, detJN1, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
     end
 end
 if ~computePostData

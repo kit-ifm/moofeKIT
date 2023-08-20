@@ -33,63 +33,66 @@ function [rData, kData, elementEnergy, array] = displacementSCMooneyRivlinEndpoi
 % CREATOR(S)
 % Marlon Franke
 
-%% setup
+%% SETUP
 % load objects
 shapeFunctionObject = obj.shapeFunctionObject;
-storageFEObject = obj.storageFEObject;
 materialObject = obj.materialObject;
-mapVoigtObject = obj.mapVoigtObject;
-%   mixedFEObject = obj.mixedFEObject;
+mixedFEObject = obj.mixedFEObject;
 meshObject = obj.meshObject;
-% element degree of freedom tables and more
-edof = meshObject.edof;
-globalFullEdof = meshObject.globalFullEdof;
-numberOfElements = size(globalFullEdof, 1);
-numberOfDOFs = size(globalFullEdof, 2);
-dimension = obj.dimension;
-% gauss integration and shape functions
-gaussWeight = shapeFunctionObject.gaussWeight;
+
+% aquire general data
+N_k_I = shapeFunctionObject.N_k_I;
+dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
+
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
-N = shapeFunctionObject.N;
-dNr = shapeFunctionObject.dNr;
-% nodal dofs
-qR = obj.qR;
-qN1 = obj.qN1;
-% material data and voigt notation
-selectMapVoigt(mapVoigtObject, dimension, 'symmetric');
+gaussWeight = shapeFunctionObject.gaussWeight;
+
+edof = meshObject.edof(e, :);
+
+dimension = obj.dimension;
+
+% aquire material data
 a = materialObject.a;
 b = materialObject.b;
 c = materialObject.c;
 d = materialObject.d;
-I = eye(dimension);
 
-%% Create residual and tangent
-elementEnergy.strainEnergy = 0;
+% aquire the nodal values of the variables for the current element
+edR = obj.qR(edof, 1:dimension).';
+edN = obj.qN(edof, 1:dimension).';
+edN1 = dofs.edN1;
+
+% initialize residual & tangent
 RX = rData{1};
 KXX = kData{1, 1};
 
-edN1 = dofs.edN1;
-J = qR(edof(e, :), 1:dimension)' * dNr';
-JN1 = edN1 * dNr';
+% initialize elementEnergy
+elementEnergy.strainEnergy = 0;
+
+I = eye(dimension);
+numberOfDOFs = dimension*size(edof, 2);
+
+V = 0;
+
+% compute Jacobian
+JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I);
+
 % Run through all Gauss points
 for k = 1:numberOfGausspoints
-    index = dimension * k - (dimension - 1):dimension * k;
-    detJ = det(J(:, index)');
-    detJN1 = det(JN1(:, index)');
-    if detJ < 10 * eps
-        error('Jacobi determinant equal or less than zero.')
-    end
-    dNx = (J(:, index)') \ dNr(index, :);
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
+%     [detJ, detJStruct, dN_X_I, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
     % Deformation gradient
-    FN1 = edN1 * dNx';
+    FN1 = edN1 * dN_X_I';
     % B-matrix (current configuration)
-    BN1 = BMatrix(dNx, FN1);
+    BN1 = BMatrix(dN_X_I, FN1);
     % Right Cauchy-Green tensor
     CN1 = FN1' * FN1;
     % Cofactor
     GN1 = 0.5 * wedge(CN1, CN1);
     % Third invariant
     I3N1 = det(CN1);
+    JN1 = sqrt(I3N1);
     % Derivative of the strain energy function
     Sigma_C = a * I;
     Sigma_G = b * I;
@@ -97,10 +100,13 @@ for k = 1:numberOfGausspoints
     Sigma_I_I = d / (2 * I3N1^2) + c / (4 * (I3N1)^(3 / 2));
     % Second Piola Kirchhoff stress tensor
     SN1 = 2 * (Sigma_C + wedge(Sigma_G, CN1) + Sigma_I * GN1);
-    SN1_v = [SN1(1, 1); SN1(2, 2); SN1(3, 3); SN1(1, 2); SN1(2, 3); SN1(1, 3)];
+    SN1_v = matrixToVoigt(SN1, 'stress');
     if ~computePostData
         % Residual
         RX = RX + BN1' * SN1_v * detJ * gaussWeight(k);
+
+        V = V + JN1*detJ*gaussWeight(k);
+
         % Tangent
         % Derivative of wedge(Sigma_G,CN05)
         Kmat1 = secDiffOperator(Sigma_G);
@@ -111,25 +117,28 @@ for k = 1:numberOfGausspoints
         Kmat3 = Sigma_I_I * (GN1_v * GN1_v');
         % Assembly of elasticity tensor
         ELA = 4 * (Kmat1 + Kmat2 + Kmat3);
-        A1 = dNx' * SN1 * dNx * detJ * gaussWeight(k);
+        A1 = dN_X_I' * SN1 * dN_X_I * detJ * gaussWeight(k);
         MAT = zeros(numberOfDOFs);
         for g = 1:dimension
             MAT(g:dimension:numberOfDOFs, g:dimension:numberOfDOFs) = A1;
         end
         KXX = KXX + BN1' * ELA * BN1 * detJ * gaussWeight(k) + MAT;
         % Strain energy
-        elementEnergy.strainEnergy = elementEnergy.strainEnergy + (a * (trace(CN1) - 3) + b * (trace(GN1) - 3) - d * log(sqrt(I3N1)) + c / 2 * (sqrt(I3N1) - 1)^2) * detJ * gaussWeight(k);
+        W = (a * (trace(CN1) - 3) + b * (trace(GN1) - 3) - d * log(sqrt(I3N1)) + c / 2 * (sqrt(I3N1) - 1)^2);
+        elementEnergy.strainEnergy = elementEnergy.strainEnergy + W * detJ * gaussWeight(k);
     else
         % stress at gausspoint
+        [~, detJStruct, ~, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
         PN1 = FN1 * SN1;
         stressTensor.FirstPK = PN1;
         stressTensor.Cauchy = 1 / det(FN1) * PN1 * FN1';
-        array = postStressComputation(array, N, k, gaussWeight, detJ, detJN1, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
     end
 end
 if ~computePostData
     rData{1} = RX;
     kData{1, 1} = KXX;
+%     disp(V)
 end
 end
 

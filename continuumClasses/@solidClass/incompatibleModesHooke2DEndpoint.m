@@ -52,8 +52,8 @@ meshObject = obj.meshObject;
 % aquire general data
 N_k_I = shapeFunctionObject.N_k_I;
 dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
-dN0_xi_k_I = shapeFunctionObject.dN0_xi_k_I;
-BubbledN_xi_k_I = mixedFEObject.shapeFunctionObject.dN_xi_k_I;
+dN0_xi_I = shapeFunctionObject.dN0_xi_I;
+BubbledM_xi_k_I = mixedFEObject.shapeFunctionObject.dM;
 modificationTaylor = strcmpi(obj.elementDisplacementType, 'incompatibleModesTaylor');
 
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
@@ -85,7 +85,6 @@ uN1 = edN1(:) - edR(:);
 uN1eBubble = dofs.edAlphaN1.';
 
 % Jacobian matrices
-dN0_xi_I = reshape(dN0_xi_k_I(:,1,:),[size(dN0_xi_k_I,1),size(dN0_xi_k_I,3)]);
 J0 = edR * dN0_xi_I';
 detJ0 = det(J0);
 
@@ -103,16 +102,16 @@ for k = 1:numberOfGausspoints
     [detJ, detJStruct, dN_X_I, J, ~, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
 
     % bubble modes
-    BubbledN_xi_I = reshape(BubbledN_xi_k_I(:,k,:),[size(BubbledN_xi_k_I,1),size(BubbledN_xi_k_I,3)]);
+    BubbledM_xi_I = reshape(BubbledM_xi_k_I(:,k,:),[size(BubbledM_xi_k_I,1),size(BubbledM_xi_k_I,3)]);
     if modificationTaylor
-        dNxBubble = detJ0 / detJ * (J0' \ BubbledN_xi_I);
+        dMxBubble = detJ0 / detJ * (J0' \ BubbledM_xi_I);
     else
-        dNxBubble = J' \ BubbledN_xi_I;
+        dMxBubble = J' \ BubbledM_xi_I;
     end
 
     % nodal operator matrix & approximation matrix
     BCompatible = BMatrix(dN_X_I, 'mapVoigtObject', mapVoigtObject);
-    BBubble = BMatrix(dNxBubble, 'mapVoigtObject', mapVoigtObject);
+    BBubble = BMatrix(dMxBubble, 'mapVoigtObject', mapVoigtObject);
 
     if ~computePostData
         % ENERGY
@@ -128,7 +127,7 @@ for k = 1:numberOfGausspoints
         % displacement gradient and strain tensor
         U = edN1 - edR;
         gradU = U * dN_X_I';
-        gradUBubble = reshape(uN1eBubble, 2, 2) * dNxBubble';
+        gradUBubble = reshape(uN1eBubble, 2, 2) * dMxBubble';
         epsilon = zeros(3, 3);
         epsilon(1:2, 1:2) = 1 / 2 * (gradU + gradU' + gradUBubble + gradUBubble');
         switch lower(strtok(obj.materialObject.name, 'Hooke'))

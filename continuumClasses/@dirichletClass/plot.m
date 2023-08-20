@@ -21,6 +21,10 @@ switch lower(time)
         error('unknown timepoint')
 end 
 
+if isa(obj.masterObject, 'plateClass')
+    nodes = obj.masterObject.meshObject.nodes;
+end
+
 %adujust dimension of arrays if 1D: everything in y-direction is zero
 if obj.masterObject.dimension == 1 
     nodes = [nodes, zeros(size(nodes,1),1)];

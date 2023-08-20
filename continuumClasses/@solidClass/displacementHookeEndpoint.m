@@ -20,8 +20,8 @@ dimension = obj.dimension;
 % gauss integration and shape functions
 gaussWeight = shapeFunctionObject.gaussWeight;
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
-N = shapeFunctionObject.N;
-dNr = shapeFunctionObject.dNr;
+N_k_I = shapeFunctionObject.N_k_I;
+dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
 
 % nodal dofs
 qR = obj.qR;
@@ -50,8 +50,12 @@ end
 edN1 = qN1;
 edRef = qR(edof(e, :), 1:dimension)';
 uN1 = edN1 - edRef;
-J = qR(edof(e, :), 1:dimension)' * dNr';
-JN1 = qN1 * dNr';
+
+% Jacobian matrices
+JAll = computeJacobianForAllGausspoints(edRef, dN_xi_k_I);
+if computePostData
+    JN1All = computeJacobianForAllGausspoints(edN1, dN_xi_k_I);
+end
 
 % initialize energy
 elementEnergy.strainEnergy = 0;
@@ -62,14 +66,10 @@ KXX = kData{1, 1};
 
 %% Gauss loop
 for k = 1:numberOfGausspoints
-    indx = dimension * k - (dimension - 1):dimension * k;
-    detJ = det(J(:, indx)');
-    detJN1 = det(JN1(:, indx)');
-    if detJ < 10 * eps
-        error('Jacobi determinant equal or less than zero.')
-    end
-    dNx = (J(:, indx)') \ dNr(indx, :);
-    B = BMatrix(dNx, 'mapVoigtObject', mapVoigtObject);
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
+
+    B = BMatrix(dN_X_I, 'mapVoigtObject', mapVoigtObject);
     if ~computePostData
         % Residual
         RX = RX + (B' * C * B) * uN1(:) * detJ * gaussWeight(k);
@@ -78,12 +78,13 @@ for k = 1:numberOfGausspoints
         %strain energy
         elementEnergy.strainEnergy = elementEnergy.strainEnergy + 1 / 2 * (B * uN1(:))' * C * (B * uN1(:)) * detJ * gaussWeight(k);
     else
+        [~, detJN1] = extractJacobianForGausspoint(JN1All, k, setupObject, dimension);
         % stress at gausspoint
         epsilon = B * uN1(:);
         sigma_V = C * epsilon;
         sigma = voigtToMatrix(sigma_V, 'stress');
         stressTensor.Cauchy = sigma;
-        array = postStressComputation(array, N, k, gaussWeight, detJ, detJN1, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, detJN1, stressTensor, setupObject, dimension);
     end
 end
 if ~computePostData

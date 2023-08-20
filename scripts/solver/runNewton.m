@@ -1,7 +1,7 @@
 function dofObject = runNewton(setupObject,dofObject)
 %% initialization
-% initialize saveObject
-initialize(setupObject.saveObject, setupObject);
+% initialize setupObject 
+initialize(setupObject);
 % initialize continuumObjects
 dofObject.initializeObjectsShapeFunctions;
 dofObject.initializeObjectsQV;
@@ -21,10 +21,16 @@ dofObject.vN1 = dofObject.vN;
 delta = zeros(size(dofObject.qN,1),1);
 %% time loop
 DT = setupObject.timeStepSize;
+%% Plot initial configuration
+if setupObject.plotObject.plotInitialConfig
+    timeStep = 0;
+    plotScript;
+end
+
 for timeStep = 1:setupObject.totalTimeSteps
     setupObject.timeStep = timeStep;
-    fprintf('|--- time step %4.5d of %4.5d; time %4.4f ---| \n',timeStep,setupObject.totalTimeSteps,setupObject.time);
-    setupObject.time = timeStep*DT;
+    fprintf('|--- time step %4.5d of %4.5d; time %4.4f ---|\n',timeStep,setupObject.totalTimeSteps,setupObject.time);
+    setupObject.time = setupObject.time + DT;
     % update fields & objects for every timestep
     dofObject.qN = dofObject.qN1;
     dofObject.vN = dofObject.vN1;
@@ -32,14 +38,14 @@ for timeStep = 1:setupObject.totalTimeSteps
     updateTimeDependentFieldPreNewtonLoop(dofObject,'qN1',setupObject.time);
     updateHistoryField(dofObject);
     %% Newton loop
-    setupObject.newton.step = 0;
-    while setupObject.newton.step <= setupObject.newton.maximumSteps
-        setupObject.newton.step = setupObject.newton.step + 1;
+    setupObject.newton.step(timeStep) = 0;
+    while setupObject.newton.step(timeStep) <= setupObject.newton.maximumSteps
+        setupObject.newton.step(timeStep) = setupObject.newton.step(timeStep) + 1;
         dataFE = [];
         for index1 = 1:dofObject.numberOfContinuumObjects
             continuumObject = dofObject.listContinuumObjects{index1};
             if continuumObject.callElements
-                dataFEContinuumObject = callElements(continuumObject,setupObject,false);
+                dataFEContinuumObject = callElements(continuumObject, setupObject, 'residualAndTangent');
                 dataFE = [dataFE, dataFEContinuumObject];
             end
         end
@@ -48,19 +54,27 @@ for timeStep = 1:setupObject.totalTimeSteps
         dofObject.R = M*(setupObject.factorIntegrator(1)/DT^2*(dofObject.qN1 - dofObject.qN) - setupObject.factorIntegrator(2)/DT*dofObject.vN) + dofObject.R(1:dofObject.totalNumberOfDofs);
         K = sparse(vertcat(dataFE(:).indexKeI), vertcat(dataFE(:).indexKeJ), vertcat(dataFE(:).Ke),dofObject.totalNumberOfDofs,dofObject.totalNumberOfDofs);
         K = K + setupObject.factorIntegrator(1)/DT^2*M;
-        if setupObject.newton.step == 1
+        if setupObject.newton.step(timeStep) == 1
             % TODO @Marlon: documentation!
             updateTimeDependentFieldNewtonLoop(dofObject,'qN1',setupObject.time);
             dofObject.R(doSolve) = dofObject.R(doSolve) + K(doSolve,~doSolve)*(dofObject.qN1(~doSolve)-dofObject.qN(~doSolve));
             % TODO @Marlon: documentation!
         end
+        for index1 = 1:dofObject.numberOfContinuumObjects
+            continuumObject = dofObject.listContinuumObjects{index1};
+            if isa(continuumObject, 'nodalLoadClass')
+                dofObject.R = dofObject.R - continuumObject.computeNodalForceContribution(dofObject, setupObject);
+                continuumObject.computeExternalEnergyContribution(dofObject, setupObject);
+            end
+        end
         normR = norm(dofObject.R(doSolve));
-        if setupObject.newton.enforceIteration && (setupObject.newton.step == 1) && (normR < setupObject.newton.tolerance)
+        if setupObject.newton.enforceIteration && (setupObject.newton.step(timeStep) == 1) && (normR < setupObject.newton.tolerance)
             fprintf('|      iteration %2d: norm(R) = %9.5e    |\n',0,normR)
             normR = 1e5;
         end
-        fprintf('|      iteration %2d: norm(R) = %9.5e    |\n',setupObject.newton.step,normR)
-        if (setupObject.newton.step > setupObject.newton.maximumSteps || normR > setupObject.newton.maximumResiduumNorm)
+        fprintf('|      iteration %2d: norm(R) = %9.5e    |\n',setupObject.newton.step(timeStep),normR)
+        setupObject.newton.normR(timeStep,setupObject.newton.step(timeStep)) = normR;
+        if (setupObject.newton.step(timeStep) > setupObject.newton.maximumSteps || normR > setupObject.newton.maximumResiduumNorm)
             error('Newton iteration failed!');
         elseif normR < setupObject.newton.tolerance
             % converged state
@@ -79,9 +93,10 @@ for timeStep = 1:setupObject.totalTimeSteps
     update(dofObject.postDataObject,dofObject,timeStep,setupObject.time,M); 
     % plot fe body
     plotScript
+
     % save data as .mat file
-        saveDataAsMatFile(setupObject.saveObject, setupObject, dofObject, timeStep);
-    end
+    saveDataAsMatFile(setupObject.saveObject, setupObject, dofObject, timeStep);
+end
 
 % terminate saveObject
 terminate(setupObject.saveObject);
