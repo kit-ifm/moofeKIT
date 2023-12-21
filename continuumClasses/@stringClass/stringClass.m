@@ -40,23 +40,6 @@ classdef stringClass < solidSuperClass
         
     end
     methods
-%         function set.h(obj, input)
-%             assert(isnumeric(input), 'Plate thickness must be of type float!');
-%             assert(input > 0, 'Plate thickness must be larger than zero!');
-%             obj.h = input;
-%         end
-%         function value = get.h(obj)
-%             value = obj.h;
-%         end
-%         function set.theory(obj, input)
-%             assert(isstring(input), 'Input must be of type string!');
-%             if (strcmpi(input, 'mindlin') || strcmpi(input, 'kirchhoff'))
-%                 obj.theory = input;
-%                 updateNumberOfDofsPerNode(obj);
-%             else
-%                 error('This plate theory is not implemented yet!');
-%             end
-%         end
         function set.numberOfDofsPerNode(obj, input)
             assert(mod(input, 1) == 0, 'Input must be of type integer!')
             obj.numberOfDofsPerNode = input;

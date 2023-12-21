@@ -1,14 +1,14 @@
 # moofeKIT (matlab object-oriented finite element kit)
 
 ### changelog
-https://git.scc.kit.edu/ifm/moofeKIT/-/blob/master/changelog.md
+https://gitlab.kit.edu/marlon.franke/moofekit/-/blob/master/changelog.md
 - meetings are scheduled approximately every three weeks (the upcoming meeting is scheduled in the changelog)
 - the users are encouraged to merge all feature branches (**if well-engineered, useful to others and intended for the public**) to masterExperimental branch generously before the upcoming meeting 
 - masterExperimental branch will be merged to master branch
 - main changes will be logged
 - **only the master branch will be merged to master branch of public github repo** https://github.com/kit-ifm/moofeKIT
 ### git howto and workflow idea
-git howto and workflow idea is provided via https://git.scc.kit.edu/ifm/anleitungen/software/-/blob/master/git/simple_cheat_sheet.md
+git howto and workflow idea is provided via https://gitlab.kit.edu/kit/ifm/anleitungen/software/-/blob/master/git/simple_cheat_sheet.md
 
 see also https://training.github.com/downloads/github-git-cheat-sheet.pdf and https://rhoenerlebnis.de/_upl/de/_pdf-seite/git_cheatsheet_de_white.pdf
 ### best practice for clean code
@@ -20,17 +20,17 @@ see also https://training.github.com/downloads/github-git-cheat-sheet.pdf and ht
 - A function should do one thing, and only one thing (modularity)!
 - Use external toolbox https://github.com/davidvarga/MBeautifier for source code formatting. It is already included via submodule 'git submodule add https://github.com/davidvarga/MBeautifier.git externalToolboxes/MBeautifier'. In matlab the code in current editor can be 'beautified' via command 'MBeautify.formatCurrentEditorPage()'. A shortcut can be created via 'Home', 'Favorites', 'New Favorite' by adding the command 'MBeautify.formatCurrentEditorPage()'.
 ### handling issues
-- please list issues https://git.scc.kit.edu/franke/moofeKIT/-/issues
+- please list issues https://gitlab.kit.edu/marlon.franke/moofekit/-/issues
 - if the problem could be devided into small parts **use checklist** in markdown 
 - assign it (if possible) to a member
 - set due date (if possible)
 ### howto comment/manual
-a dedicated manual is not planned, all scritps/classes/functions/methods should be documented via commented help text immediately below the function definition line, see 
+a dedicated manual is not planned, all scripts/classes/functions/methods should be documented via commented help text immediately below the function definition line, see 
 https://de.mathworks.com/help/matlab/matlab_prog/add-help-for-your-program.html
 - example files
-  - script: https://git.scc.kit.edu/ifm/moofeKIT/-/blob/master/scripts/pre/LShapeElectroThermoMechanics.m
-  - class: https://git.scc.kit.edu/ifm/moofeKIT/-/blob/master/coreClasses/@solidSuperClass/solidSuperClass.m
-  - function: https://git.scc.kit.edu/ifm/moofeKIT/-/blob/master/continuumClasses/@solidClass/displacementSCSaintVenantEndpoint.m
+  - script: https://gitlab.kit.edu/marlon.franke/moofekit/-/blob/master/scripts/pre/LShapeElectroThermoMechanics.m
+  - class: https://gitlab.kit.edu/marlon.franke/moofekit/-/blob/master/coreClasses/@solidSuperClass/solidSuperClass.m
+  - function: https://gitlab.kit.edu/marlon.franke/moofekit/-/blob/master/continuumClasses/@solidClass/displacementSCSaintVenantEndpoint.m
 - useful matlab code
   - for help of a function/class type _>> help function-name_
                                    or _>> doc function-name_
@@ -48,4 +48,4 @@ matlab specific object-oriented programming can be found at https://de.mathworks
 
 for a simple matlab example https://de.mathworks.com/company/newsletters/articles/introduction-to-object-oriented-programming-in-matlab.html might be helpful
 ### gitlab runner for continuous integration
-a short manual for gitlab runner for continous integration (CI) with testing code in matlab can be found at https://git.scc.kit.edu/franke/ubuntuinstallationmitarbeiterrechnerifm/-/blob/master/gitlabRunner.txt
+a short manual for gitlab runner for continous integration (CI) with testing code in matlab can be found at https://gitlab.kit.edu/marlon.franke/ubuntuinstallationmitarbeiterrechnerifm/-/blob/master/gitlabRunner.txt?ref_type=heads

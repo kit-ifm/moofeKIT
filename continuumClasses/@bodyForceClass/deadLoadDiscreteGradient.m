@@ -10,7 +10,7 @@ dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
 if isa(obj.masterObject, 'stringClass') 
     dimension = size(obj.masterObject.qR,2);
 else
-    dimension = 1;
+    dimension = obj.masterObject.dimension;;
 end
 edof = obj.masterObject.meshObject.edof;
 DT = setupObject.timeStepSize;

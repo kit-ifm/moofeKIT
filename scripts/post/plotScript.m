@@ -54,7 +54,7 @@ if plotObject.flag
                 end
                 % boundarys 2D
                 if isa(dofObject.listContinuumObjects{index1},'dirichletClass') || isa(dofObject.listContinuumObjects{index1},'neumannClass')
-                    if dofObject.listContinuumObjects{index1}.masterObject.dimension == 2
+                    if dofObject.listContinuumObjects{index1}.masterObject.dimension == 2 || size(dofObject.listContinuumObjects{index1}.masterObject.qR,2) == 2
                         plot(dofObject.listContinuumObjects{index1}, setupObject);
                     end
                 end
@@ -69,7 +69,7 @@ if plotObject.flag
             saveName = strcat(saveName,'Colorbar');
         end
 
-        axis([-4    10    -4    14])
+      %  axis([-4    10    -4    14])
 
 % % % % % % % % % % % % % % % %         
         axis off

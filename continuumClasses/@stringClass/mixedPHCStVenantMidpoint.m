@@ -78,18 +78,7 @@ CN1 = dofs.edAlphaN1;
 CN05 = 1/2 *(CN + CN1);
 
 % material data
-lambda = materialObject.lambda;
-mu = materialObject.mu;
-
-if dimension == 1
-    if isfield(materialObject, 'E')
-        EA = materialObject.E;
-    else
-        EA = mu * (3 * lambda + 2 * mu) / (lambda + mu);
-    end
-else
-    error('Wrong dimension for this elementroutine. (only dim=1)')
-end
+EA = materialObject.E;
 
 selectMapVoigt(mapVoigtObject, dimension, 'symmetric');
 

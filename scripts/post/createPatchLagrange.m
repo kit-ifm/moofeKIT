@@ -112,9 +112,12 @@ switch element
         end
         patchFlag = false;
     case 'string'
+        color_scheme = {'#56B4E9', '#228833', '#4477AA', '#CCBB44', '#66CCEE', '#AA3377', '#BBBBBB'};
         numberOfElements = size(edof, 1);
         numberOfElementNodes = size(edof, 2);
-        edgeColor = 'black';
+        %edgeColor = 'black';
+        edgeColor = color_scheme{1};
+        mycolor = color_scheme{1};
         faceStyle = 'none';
         % plot line
         x = zeros(numberOfElements, numberOfElementNodes);
@@ -125,7 +128,7 @@ switch element
         c(:) = 1;
         if size(ed,2) == 3
             z = ed(edof+2*(numberOfElements+1));
-            patch(x', y', z', 'black', 'edgecolor', 'black', 'linewidth', 2*setupObject.plotObject.lineWeight, 'facecolor', faceStyle, 'facealpha', 0.9);
+            patch(x', y', z','edgecolor', mycolor, 'linewidth', 2*setupObject.plotObject.lineWeight, 'facecolor', faceStyle, 'facealpha', 0.9);
         else
             patch(x', y', c', 'edgecolor', edgeColor, 'linewidth', 2*setupObject.plotObject.lineWeight, 'facecolor', faceStyle, 'facealpha', 0.9);
         end
@@ -139,7 +142,7 @@ switch element
         cOutsideNodes(:) = 1;
         if size(ed,2) == 3
             zOutsideNodes = ed(edof(:, 1:2)+2*(numberOfElements+1));
-            patch(xOutsideNodes', yOutsideNodes', zOutsideNodes', 'black', 'edgecolor', 'black', 'marker', '.', 'markersize', 15, 'facecolor', faceStyle, 'facealpha', 0.9, 'LineStyle', 'none');
+            patch(xOutsideNodes', yOutsideNodes', zOutsideNodes', 'edgecolor', mycolor, 'marker', '.', 'markersize', 15, 'facecolor', faceStyle, 'facealpha', 0.9, 'LineStyle', 'none');
         else
             patch(xOutsideNodes', yOutsideNodes', cOutsideNodes', 'edgecolor', edgeColor, 'marker', '.', 'markersize', 15, 'facecolor', faceStyle, 'facealpha', 0.9, 'LineStyle', 'none');
         end

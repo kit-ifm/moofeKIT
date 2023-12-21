@@ -1,6 +1,7 @@
 classdef mixedFEClass < matlab.mixin.Copyable
     properties
         condensation = false;
+        qR = [];
         qN = [];
         qN1 = [];
         globalEdof = [];
@@ -146,6 +147,12 @@ classdef mixedFEClass < matlab.mixin.Copyable
                     obj.numberOfFields = 1;
                     obj.dofsPerField{1} = 1;
                     obj.numberOfDofs = 1; %extended strain variables
+                    numberOfNodes = 1; % discontinuous ansatz constant elementwise
+                case {'mixedPHViscoPT'}
+                    obj.numberOfFields = 2;
+                    obj.dofsPerField{1} = 1;
+                    obj.dofsPerField{2} = 1;
+                    obj.numberOfDofs = 2; %extended strain variables and elastic strain
                     numberOfNodes = 1; % discontinuous ansatz constant elementwise
 
                 otherwise
@@ -429,21 +436,37 @@ classdef mixedFEClass < matlab.mixin.Copyable
                 elseif strcmp(continuumObject.elementDisplacementType, 'mixedPH')
 
                     if strcmp(continuumObject.elementNameAdditionalSpecification,'C')
-
-                         obj.qN = ones(numberOfElements,obj.numberOfDofs);
+                         
+                         if isempty(obj.qR) %no initial values for mixed quantity specified
+                            obj.qN = ones(numberOfElements,obj.numberOfDofs);
+                         else
+                            obj.qN = obj.qR;
+                         end
 
                     elseif strcmp(continuumObject.elementNameAdditionalSpecification,'E')
 
                          obj.qN = zeros(numberOfElements,obj.numberOfDofs);
 
                     end
+
+                elseif strcmp(continuumObject.elementDisplacementType, 'mixedPHViscoPT')
+                
+                    if strcmp(continuumObject.elementNameAdditionalSpecification,'C')
+
+                        if isempty(obj.qR) %no reference values for mixed quantity specified
+                                obj.qN = ones(numberOfElements,obj.numberOfDofs);
+                        else
+                                obj.qN = obj.qR;
+                        end
+                    end
                 end
             end
+            
             obj.qN1 = obj.qN;
         end
         function updateGlobalField(obj,continuumObject,dofObject)
             % update qN for mixed elements without condensation
-            if contains(continuumObject.elementDisplacementType, 'mixedSC')
+            if contains(continuumObject.elementDisplacementType, 'mixed')
                 if ~obj.condensation
                     numberOfElements = size(continuumObject.meshObject.globalFullEdof, 1);
                     numberOfDisplacementDofs = dofObject.totalNumberOfDofs - numberOfElements*obj.numberOfDofs(1);

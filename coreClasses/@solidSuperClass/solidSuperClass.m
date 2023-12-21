@@ -223,15 +223,7 @@ classdef solidSuperClass < baseFEClass
                 end
             end
             updateGlobalField(obj.mixedFEObject,obj,dofObject);
-            % update qN for mixed elements without condensation
-            % if contains(obj.elementDisplacementType, 'mixed')
-            %     if ~obj.mixedFEObject.condensation
-            %         numberOfElements = size(obj.meshObject.globalFullEdof, 1);
-            %         numberOfDisplacementDofs = dofObject.totalNumberOfDofs - numberOfElements*obj.mixedFEObject.numberOfDofs(1);
-            %         internalDofs = obj.mixedFEObject.qN';
-            %         dofObject.qN = dofObject.qN + [zeros(numberOfDisplacementDofs,1); internalDofs(:)];
-            %     end
-            % end
+
         end
         function updateContinuumFieldPreNewtonLoop(obj,dofObject,fieldNameCell)
         % method                    updateContinuumFieldPreNewtonLoop

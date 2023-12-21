@@ -1,14 +1,14 @@
-%% Elastic string
+%% 3D Elastic string
 %
 % based on: elastic_string.m
 %
 % problem: hyperelastic or linear elastic string, fixed on one end, time-dependent force on the other
-% spatial discretization: linear Lagrange shapefunction, disp.-based
-%                         formulation
+% spatial discretization: linear Lagrange shapefunction for disp
+%                         discont. constant ansatz for strain, 
+%                         mixed formulation
 % time discretization: midpoint rule or discrete gradient
 %
 % user: Philipp Kinon
-% date: March 02, 2023
 
 %% Main parameters
 totalTime = 1;

@@ -2,13 +2,14 @@
 %
 % based on: oneDimensionalContinuum.m
 %
-% problem: hyperelastic or linear elastic rod, fixed on one end, time-dependent force on the other
-% spatial discretization: linear Lagrange shapefunction, disp.-based
-%                         formulation
+% problem: hyperelastic or linear elastic rod, fixed on one end, 
+%          time-dependent force on the other
+% spatial discretization: linear Lagrange shapefunction for disp
+%                         discont. constant ansatz for strain, 
+%                         mixed formulation
 % time discretization: midpoint rule or discrete gradient
 %
 % user: PK
-% date: February 28, 2023
 
 %% Setup
 setupObject = setupClass;
@@ -28,7 +29,9 @@ solidObject = solidClass(dofObject);
 solidObject.materialObject.name = 'Hooke';
 %solidObject.materialObject.name = 'Hyperelastic';
 %solidObject.elementDisplacementType = 'displacement';
-solidObject.elementDisplacementType = 'mixedPHE'; %%pH Formulation with Green-Lagrangian strains
+solidObject.elementDisplacementType = 'mixedPH'; %%pH Formulation with Green-Lagrangian strains
+solidObject.elementNameAdditionalSpecification = 'E';
+
 E = 300000;
 nu = 3e-01;
 solidObject.materialObject.E = E;
@@ -60,18 +63,14 @@ dirichletObject.nodeList = find(solidObject.meshObject.nodes(:,1)==0);
 dirichletObject.nodalDof = 1;
 dirichletObject.masterObject = solidObject; %% TO Do: use a term which is not racist
 dirichletObject.timeFunction = str2func('@(t,X) 0*X');
-dirichletObject.dimension = 1;
 
-% Neumann BC (forced at x=l)
-neumannObject = neumannClass(dofObject);
-neumannObject.typeOfLoad = 'deadLoad';
-neumannObject.masterObject = solidObject; %% To Do: see above
-neumannObject.projectionType = 'none';
-neumannObject.forceVector = 10000;
+% neumann boundary conditions
+nodalLoadObject = nodalLoadClass(dofObject);
+nodalLoadObject.masterObject = solidObject;
+nodalLoadObject.loadVector = 10000;
+nodalLoadObject.timeFunction = str2func('@(t)  sin(pi/2 * t).*(t<=1+1e-12)');
+nodalLoadObject.nodeList= size(solidObject.meshObject.nodes,1);
 loadingTime = 1; % Time until loading happens
-neumannObject.timeFunction = str2func('@(t)  sin(pi/2 * t).*(t<=1+1e-12)');
-neumannObject.meshObject.edof = edofNeumann;
-neumannObject.dimension = 1;
 
 %% Solver
 dofObject = runNewton(setupObject,dofObject);
