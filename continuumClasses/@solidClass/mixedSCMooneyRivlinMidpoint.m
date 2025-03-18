@@ -270,7 +270,6 @@ for k = 1:numberOfGausspoints
         KLambdacc = KLambdacc - 1 / 2 * M_k_I(k, :)' * M_k_I(k, :) * detJ * gaussWeight(k);
     else
         % STRESS COMPUTATION
-        [~, detJStruct, ~, ~] = computeAllJacobian(edRef, edN, edN1, dN_xi_k_I, k, setupObject);
         SN1 = 2 * lambdaCN1;
         PN1 = FxN1 * SN1;
         stressTensor.FirstPK = PN1;

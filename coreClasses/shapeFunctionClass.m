@@ -105,7 +105,7 @@ classdef shapeFunctionClass < matlab.mixin.Copyable
                     dM_xi_k_I(2,:,2) = -2*obj.gaussPoint(2,:);
                     obj.M = M_k_I;
                     obj.dM = dM_xi_k_I;
-                case {'eas', 'easSC', 'easPetrovGalerkin'}
+                case {'eas', 'easSC'}
                     [obj.M, ~] = computeEASAnsatzFunctions(continuumObject, obj.dimension, mixedFEObject.typeShapeFunctionData, obj.numberOfGausspoints, obj.gaussPoint);
             end
         end

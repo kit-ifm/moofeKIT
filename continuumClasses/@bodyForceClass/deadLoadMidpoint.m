@@ -7,16 +7,22 @@ numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
 N_k_I = shapeFunctionObject.N_k_I;
 dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
 
-if isa(obj.masterObject, 'stringClass') 
-    dimension = size(obj.masterObject.qR,2);
+if isa(obj.masterObject, 'stringClass') || isa(obj.masterObject, 'beamClass')
+    dimension = size(obj.masterObject.meshObject.nodes,2);
 else
-    dimension = obj.masterObject.dimension;;
+    dimension = obj.masterObject.dimension;
 end
 edof = obj.masterObject.meshObject.edof;
 DT = setupObject.timeStepSize;
 timeFunction = obj.timeFunction(obj.time- 0.5*DT);
 loadFunction = obj.loadFunction;
-edR = obj.masterObject.qR(edof(e,:), 1:dimension)';
+
+if isa(obj.masterObject, 'beamClass')
+    edR = obj.masterObject.meshObject.nodes(edof(e,:), 1:dimension)';
+else
+    edR = obj.masterObject.qR(edof(e,:), 1:dimension)';
+end
+
 edN = obj.masterObject.qN(edof(e,:), 1:dimension)';
 edN1 = obj.masterObject.qN1(edof(e,:), 1:dimension)';
 edN05 = 1/2*(edN+ edN1);
@@ -34,7 +40,12 @@ for k = 1:numberOfGausspoints
         B0 = loadFunction;
     end
     %residual
-    rData{1} = rData{1} - timeFunction*kron(N_k_I(k,:),eye(dimension))'*B0*detJ*gaussWeight(k);
+    if isa(obj.masterObject, 'beamClass')
+        rData{1} = rData{1} - timeFunction*kron(N_k_I(k,:),eye(obj.dimension))'*B0*detJ*gaussWeight(k);
+    else
+        rData{1} = rData{1} - timeFunction*kron(N_k_I(k,:),eye(dimension))'*B0*detJ*gaussWeight(k);
+    end
+    
     elementEnergy.externalEnergy = elementEnergy.externalEnergy - xh'*B0*detJ*gaussWeight(k);
 end
 end

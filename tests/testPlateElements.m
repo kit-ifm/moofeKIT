@@ -7,7 +7,15 @@ disp('=======================================');
 elementsToTest = {'displacementHookeEndpoint', ...
     'displacementHookeEndpointQ8', ...
     'displacementHookeEndpointQ9', ...
-    'displacementHughesTezduyarHookeEndpoint'};
+    'displacementHughesTezduyarHookeEndpoint', ...
+    'displacementBatheDvorkinHookeEndpoint', ...
+    'easSimoRifaiHookeEndpoint', ...
+    'easCesarDeSaHookeEndpoint', ...
+    'selectiveReducedIntegrationHookeEndpoint', ...
+    'displacementPetrovGalerkinHookeEndpoint', ...
+    'displacementPetrovGalerkinHookeEndpointQ8', ...
+    'displacementPetrovGalerkinHookeEndpointQ9', ...
+    'displacementPartialPetrovGalerkinBatheDvorkinHookeEndpoint'};
 
 for ii = 1:size(elementsToTest, 2)
     displacementType = 'displacement';
@@ -15,6 +23,7 @@ for ii = 1:size(elementsToTest, 2)
     order = 1;
     serendipity = false;
     elementNameAdditionalSpecification = '';
+    condensation = false;
     switch elementsToTest{ii}
         case 'displacementHookeEndpoint'
             correctSolution = 0.37301;
@@ -26,11 +35,38 @@ for ii = 1:size(elementsToTest, 2)
             order = 2;
             correctSolution = 57.2402;
         case 'displacementHughesTezduyarHookeEndpoint'
-            elementNameAdditionalSpecification = 'HughesTezduyar';
+            elementNameAdditionalSpecification = 'HughesTezduyar1981';
             correctSolution = 57.0195;
         case 'displacementBatheDvorkinHookeEndpoint'
-            elementNameAdditionalSpecification = 'BatheDvorkin';
+            elementNameAdditionalSpecification = 'BatheDvorkin1985';
             correctSolution = 56.9754;
+        case 'easSimoRifaiHookeEndpoint'
+            displacementType = 'eas';
+            elementNameAdditionalSpecification = 'SimoRifai1990';
+            correctSolution = 6.8861;
+        case 'easCesarDeSaHookeEndpoint'
+            displacementType = 'eas';
+            elementNameAdditionalSpecification = 'CesarDeSaEtAl2002';
+            correctSolution = 1.8473;
+        case 'selectiveReducedIntegrationHookeEndpoint'
+            displacementType = 'selectiveReducedIntegration';
+            condensation = true;
+            correctSolution = 27.3047;
+        case 'displacementPetrovGalerkinHookeEndpoint'
+            elementNameAdditionalSpecification = 'PetrovGalerkin';
+            correctSolution = 0.52953;
+        case 'displacementPetrovGalerkinHookeEndpointQ8'
+            order = 2;
+            serendipity = true;
+            elementNameAdditionalSpecification = 'PetrovGalerkin';
+            correctSolution = 56.8283;
+        case 'displacementPetrovGalerkinHookeEndpointQ9'
+            order = 2;
+            elementNameAdditionalSpecification = 'PetrovGalerkin';
+            correctSolution = 63.1941;
+        case 'displacementPartialPetrovGalerkinBatheDvorkinHookeEndpoint'
+            elementNameAdditionalSpecification = 'PartialPetrovGalerkinBatheDvorkin';
+            correctSolution = 60.5659;
         otherwise
             warning(['Element ', elementsToTest{ii}, ' not implemented!'])
     end
@@ -65,6 +101,9 @@ for ii = 1:size(elementsToTest, 2)
     plateObject.dimension = 2;
     plateObject.shapeFunctionObject.order = order;
     plateObject.shapeFunctionObject.numberOfGausspoints = (order + 1)^2;
+
+    plateObject.mixedFEObject.typeShapeFunctionData = 4;
+    plateObject.mixedFEObject.condensation = condensation;
 
     % Dirichlet boundary
     boundary1 = dirichletClass(dofObject);

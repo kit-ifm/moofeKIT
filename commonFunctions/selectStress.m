@@ -7,7 +7,17 @@ component = setupObject.plotObject.stress.component;
 type = setupObject.plotObject.stress.type;
 stress = stressTensor.(type);
 if dimension == 1
-    out = stress;
+    if isempty(component)
+        out = stress;
+    elseif component == 1
+        out = stress(1);
+    elseif component == 2
+        out = stress(2);
+    elseif component == 3
+        out = stress(3);
+    else
+        error("please select valid stress component for postprocessing!")
+    end
 elseif dimension == 2
     assert(ismember(component, [-1,11,12,21,22]), 'Third components are only in 3D availible')
     if component == -1 % von Mises stress
@@ -44,6 +54,10 @@ elseif dimension == 3
         out = stress(2,3);
     elseif component == 32
         out = stress(3,2);
+    elseif strcmpi(component, 'maxPrincipalStress')
+        out = max(eig(stress));
+    elseif strcmpi(component, 'minPrincipalStress')
+        out = min(eig(stress));
     end
 end
 end

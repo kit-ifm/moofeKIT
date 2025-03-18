@@ -45,7 +45,6 @@ else
         0, 0, 0, 0, 0, mu];
 end
 
-
 %% Create residual and tangent
 elementEnergy.strainEnergy = 0;
 
@@ -59,7 +58,7 @@ uN = edN - edR;
 uN05 = 1 / 2 * (uN1 + uN);
 % Run through all Gauss points
 for k = 1:numberOfGausspoints
-    [detJ, detJStruct, dN_X_I, ~, ~, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
+    [detJ, detJStruct, dN_X_I, ~, ~, ~] = computeAllJacobian(edR, edN, edN1, dN_xi_k_I, k, setupObject);
     B = BMatrix(dN_X_I, 'mapVoigtObject', mapVoigtObject);
     if ~computePostData
         Re = Re + (B' * C * B) * uN05(:) * detJ * gaussWeight(k);
@@ -67,11 +66,11 @@ for k = 1:numberOfGausspoints
         elementEnergy.strainEnergy = elementEnergy.strainEnergy + 1 / 2 * (B * uN1(:))' * C * (B * uN1(:)) * detJ * gaussWeight(k);
     else
         % stress at gausspoint
-        epsilon = B*uN05(:);
-        sigma_V = C*epsilon;
+        epsilon = B * uN05(:);
+        sigma_V = C * epsilon;
         sigma = voigtToMatrix(sigma_V, 'stress');
         stressTensor.Cauchy = sigma;
-        array = postStressComputation(array,N_k_I,k,gaussWeight,detJStruct,stressTensor,setupObject,dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end
 end
 if ~computePostData

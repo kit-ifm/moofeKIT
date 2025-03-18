@@ -17,6 +17,7 @@ end
 if isa(continuumObject, 'solidSuperClass')
     elementDisplacementType = continuumObject.elementDisplacementType;
     elementMaterialName = continuumObject.materialObject.name;
+    elementNameAdditionalSpecification = continuumObject.elementNameAdditionalSpecification;
     if continuumObject.dimension == 2
         switch continuumObject.elementDisplacementType
             case {'incompatibleModesWilson', 'incompatibleModesTaylor'}
@@ -25,9 +26,16 @@ if isa(continuumObject, 'solidSuperClass')
         switch continuumObject.materialObject.name
             case {'HookeESZ', 'HookeEVZ'}
                 elementMaterialName = 'Hooke2D';
+            case {'SaintVenantESZ', 'SaintVenantEVZ'}
+                elementMaterialName = 'SaintVenant2D';
+            case {'NeoHookeESZ', 'NeoHookeEVZ'}
+                elementMaterialName = 'NeoHooke2D';
         end
     end
-    elementName = strcat(elementDisplacementType, continuumObject.elementNameAdditionalSpecification, elementMaterialName, setupObject.integrator);
+    if isa(continuumObject, 'beamClass')
+        elementNameAdditionalSpecification = strcat(elementNameAdditionalSpecification, continuumObject.theory);
+    end
+    elementName = strcat(elementDisplacementType, elementNameAdditionalSpecification, elementMaterialName, setupObject.integrator);
 
 elseif isa(continuumObject, 'neumannClass')
     elementName = continuumObject.loadType;
@@ -57,7 +65,7 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
         numericalTangentObject = continuumObject.numericalTangentObject;
 
         globalEdofContinuumObject = meshObject.globalFullEdof;
-        if isa(continuumObject, 'plateClass') || isa(continuumObject, 'stringClass')
+        if isa(continuumObject, 'plateClass') || isa(continuumObject, 'stringClass') || isa(continuumObject, 'beamClass')
             numberOfPrimaryDofsPerNode = continuumObject.numberOfDofsPerNode;
         else
             numberOfPrimaryDofsPerNode = dimension;
@@ -65,19 +73,26 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
         
         numberOfAdditionalNonMixedFields = continuumObject.additionalFields;
         numberOfMixedFields = mixedFEObject.numberOfFields;
-        numberOfDofsPerAdditionalNonMixedField = numberOfNodes;
         dofsPerMixedField = mixedFEObject.dofsPerField;
         if ~isempty(dofsPerMixedField)
             temp = vertcat(dofsPerMixedField{:});
             dofsPerMixedField = temp(:,1);
+        else
+            dofsPerMixedField = [];
+        end
+
+        if ~isempty(continuumObject.dofsPerAdditionalField)
+            numberOfAdditionalDofs = continuumObject.dofsPerAdditionalField * numberOfNodes;
+        else
+            numberOfAdditionalDofs = [];
         end
 
     elseif isa(continuumObject, 'neumannClass')
         globalEdofContinuumObject = continuumObject.globalEdof;
-        numberOfPrimaryDofsPerNode = size(continuumObject.masterObject.qR, 2) - continuumObject.masterObject.additionalFields;
+        numberOfAdditionalDofsPerNode = sum(continuumObject.masterObject.dofsPerAdditionalField);
+        numberOfPrimaryDofsPerNode = size(continuumObject.masterObject.qR, 2) - numberOfAdditionalDofsPerNode;
         numberOfAdditionalNonMixedFields = 0;
         numberOfMixedFields = 0;
-        numberOfDofsPerAdditionalNonMixedField = 0;
         dofsPerMixedField = 0;
         dimension = 0;
         numberOfDofsNeumann = size(globalEdofContinuumObject, 2);
@@ -87,7 +102,6 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
         numberOfPrimaryDofsPerNode = 0;
         numberOfAdditionalNonMixedFields = 0;
         numberOfMixedFields = 0;
-        numberOfDofsPerAdditionalNonMixedField = 0;
         dofsPerMixedField = 0;
         numberOfDofsBodyForce = dimension * size(meshObject.edof, 2);        
     end
@@ -101,8 +115,7 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
 
     % save dofs per field
     if isa(continuumObject, 'solidSuperClass')
-        dofsData = [numberOfPrimaryDofs; repmat({numberOfDofsPerAdditionalNonMixedField}, numberOfAdditionalNonMixedFields, 1); dofsPerMixedField];
-        dofsData = cell2mat(dofsData);
+        dofsData = [numberOfPrimaryDofs; numberOfAdditionalDofs; dofsPerMixedField];
     elseif isa(continuumObject, 'neumannClass')
         dofsData = numberOfDofsNeumann;
     elseif isa(continuumObject, 'bodyForceClass')
@@ -140,11 +153,13 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
         if isa(continuumObject, 'solidSuperClass')
             dofs.edN1 = continuumObject.qN1(edof(e, :), 1:numberOfPrimaryDofsPerNode)';
             if isa(continuumObject, 'beamClass')
-                dofs.phiN1 = continuumObject.qN1(edof(e, :), dimension+1)';
+                dofs.phiN1 = continuumObject.qN1(edof(e, :), numberOfPrimaryDofsPerNode+1)'; %dimension+1
             elseif isa(continuumObject, 'solidElectroClass')
                 dofs.phiN1 = continuumObject.qN1(edof(e, :), dimension+1)';
             elseif isa(continuumObject, 'solidThermoClass')
                 dofs.thetaN1 = continuumObject.qN1(edof(e, :), dimension+1)';
+            elseif isa(continuumObject, 'solidVelocityClass')
+                dofs.vN1 = continuumObject.qN1(edof(e, :), dimension+1:end)';
             elseif isa(continuumObject, 'solidElectroThermoClass')
                 dofs.phiN1 = continuumObject.qN1(edof(e, :), dimension+1)';
                 dofs.thetaN1 = continuumObject.qN1(edof(e, :), dimension+2)';
@@ -163,7 +178,12 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
             stressTensor = struct();
         end
         if strcmp(requiredData, 'massMatrix')
-            array = massMatrixElement(continuumObject, setupObject, e);
+            if isa(continuumObject,'beamClass')
+                array = beamMassMatrixElement(continuumObject, setupObject, e);
+            else
+                array = massMatrixElement(continuumObject, setupObject, e);
+            end
+            
         else
             [rData, kData, elementEnergy, array] = feval(elementName, continuumObject, setupObject, computePostData, e, rDataInitial, kDataInitial, dofs, array, stressTensor, false);
         end

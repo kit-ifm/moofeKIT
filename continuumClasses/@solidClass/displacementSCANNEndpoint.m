@@ -208,11 +208,10 @@ for k = 1:numberOfGausspoints
 %         elementEnergy.strainEnergy = elementEnergy.strainEnergy + (a * (trace(CN1) - 3) + b * (trace(GN1) - 3) - d * log(sqrt(J)) + c / 2 * (sqrt(J) - 1)^2) * detJ * gaussWeight(k);
     else
         % stress at gausspoint
-        [~, detJStruct, ~, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
         PN1 = FN1 * SN1;
         stressTensor.FirstPK = PN1;
         stressTensor.Cauchy = 1 / det(FN1) * PN1 * FN1';
-        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end
 end
 if ~computePostData

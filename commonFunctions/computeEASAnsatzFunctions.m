@@ -18,20 +18,66 @@ function [M, dM_xi] = computeEASAnsatzFunctions(continuumObject, dimension, orde
 xi = gaussPoints(1, :);
 eta = gaussPoints(2, :);
 
-if isa(continuumObject, 'plateClass') && contains(continuumObject.elementNameAdditionalSpecification, 'SimoRifai', IgnoreCase = true)
+if isa(continuumObject, 'plateClass') && ~contains(continuumObject.elementNameAdditionalSpecification, 'AndelfingerRamm', IgnoreCase = true)
     M = zeros(2*numberOfGausspoints, orderAnsatzFunction);
     dM_xi = [];
 
     stepSize = 2;
-
-    if orderAnsatzFunction == 4
-        M(1:stepSize:end, 1) = xi;
-        M(2:stepSize:end, 2) = eta;
-        M(1:stepSize:end, 3) = xi .* eta;
-        M(2:stepSize:end, 4) = xi .* eta;
-    else
-        error('Ansatz function not implemented!');
+    if contains(continuumObject.elementNameAdditionalSpecification, 'SimoRifai', IgnoreCase = true)
+        if orderAnsatzFunction == 4
+            M(1:stepSize:end, 1) = xi;
+            M(2:stepSize:end, 2) = eta;
+            M(1:stepSize:end, 3) = xi .* eta;
+            M(2:stepSize:end, 4) = xi .* eta;
+        elseif orderAnsatzFunction == 6
+            M(1:stepSize:end, 1) = xi;
+            M(2:stepSize:end, 2) = eta;
+            M(1:stepSize:end, 3) = eta;
+            M(2:stepSize:end, 4) = xi;
+            M(1:stepSize:end, 5) = xi .* eta;
+            M(2:stepSize:end, 6) = xi .* eta;
+        else
+            error('Ansatz function not implemented!');
+        end
+    elseif contains(continuumObject.elementNameAdditionalSpecification, 'CesarDeSa', IgnoreCase = true)
+        if orderAnsatzFunction == 4
+            M(1:stepSize:end, 1) = 2*eta.*(xi.^2 - 1);
+            M(2:stepSize:end, 2) = 2*xi.*(eta.^2 - 1);
+            M(1:stepSize:end, 3) = 2*xi.*(eta.^2 - 1);
+            M(2:stepSize:end, 4) = 2*eta.*(xi.^2 - 1);
+        elseif orderAnsatzFunction == 6
+            M(1:stepSize:end, 1) = 2*eta.*(xi.^2 - 1);
+            M(2:stepSize:end, 2) = 2*xi.*(eta.^2 - 1);
+            M(1:stepSize:end, 3) = 2*xi.*(eta.^2 - 1);
+            M(2:stepSize:end, 4) = 2*eta.*(xi.^2 - 1);
+            M(1:stepSize:end, 5) = 4*eta.*xi.*(eta.^2 - 1).*(xi.^2 - 1);
+            M(2:stepSize:end, 6) = 4*eta.*xi.*(eta.^2 - 1).*(xi.^2 - 1);
+        else
+            error('Ansatz function not implemented!');
+        end
+    elseif contains(continuumObject.elementNameAdditionalSpecification, 'AndelfingerRamm', IgnoreCase = true)
+        M = zeros(3*numberOfGausspoints, orderAnsatzFunction);
+        stepSize = 3;
+        if orderAnsatzFunction == 4
+            M(1:stepSize:end, 1) = xi;
+            M(2:stepSize:end, 2) = eta;
+            M(3:stepSize:end, 3) = xi;
+            M(3:stepSize:end, 4) = eta;
+        elseif orderAnsatzFunction == 7
+            M(1:stepSize:end, 1) = xi;
+            M(2:stepSize:end, 2) = eta;
+            M(3:stepSize:end, 3) = xi;
+            M(3:stepSize:end, 4) = eta;
+            M(1:stepSize:end, 5) = xi .* eta;
+            M(2:stepSize:end, 6) = xi .* eta;
+            M(3:stepSize:end, 7) = xi .* eta;
+        else
+            error('Ansatz function not implemented!');
+        end
     end
+elseif isa(continuumObject, 'axisymmetricSolidClass')
+    M = zeros((dimension^2 + dimension)/2*numberOfGausspoints, orderAnsatzFunction);
+    dM_xi = [];
 else
     M = zeros((dimension^2 + dimension)/2*numberOfGausspoints, orderAnsatzFunction);
     dM_xi = [];

@@ -100,6 +100,11 @@ function Q = computeQMatrix(continuumObject, evaluationPoints, numberOfNodes, di
 % Q Matrix => derivative of the P Matrix
 numberOfEvaluationPoints = size(evaluationPoints, 2);
 Q = zeros(dimension*numberOfEvaluationPoints, numberOfNodes);
+
+if isa(evaluationPoints, 'sym')
+    Q = sym(Q);
+end
+
 xPoints = evaluationPoints(1, :).';
 if dimension >= 2
     yPoints = evaluationPoints(2, :).';

@@ -271,14 +271,14 @@ for k = 1:numberOfGausspoints
         if ~flagNumericalTangent
             discreteGradientThreshold = 1e-16; % FIXME: include into solidObject
             discreteGradientCondition_T = (normDeltaT > discreteGradientThreshold);
-%             discreteGradientCondition_D = (normDeltaD > discreteGradientThreshold);
-            discreteGradientCondition_D = setupObject.newton.step > 1;
+            discreteGradientCondition_D = (normDeltaD > discreteGradientThreshold);
+            % discreteGradientCondition_D = setupObject.newton.step(setupObject.timeStep) > 1;
             discreteGradientCondition_C = (normDeltaC > discreteGradientThreshold);
             discreteGradientCondition_G = (normDeltaG > discreteGradientThreshold);
             discreteGradientCondition_c = (normDeltac > discreteGradientThreshold);
-            if (setupObject.newton.step > 1) && (~discreteGradientCondition_T || ~discreteGradientCondition_D || ~discreteGradientCondition_C || ~discreteGradientCondition_G || ~discreteGradientCondition_c) 
-                disp(1)
-            end
+            % if (setupObject.newton.step(setupObject.timeStep) > 1) && (~discreteGradientCondition_T || ~discreteGradientCondition_D || ~discreteGradientCondition_C || ~discreteGradientCondition_G || ~discreteGradientCondition_c) 
+                % disp(1)
+            % end
         else
             discreteGradientCondition_T = flagDiscreteGradient(k, 1);
             discreteGradientCondition_D = flagDiscreteGradient(k, 2);
@@ -598,7 +598,7 @@ for k = 1:numberOfGausspoints
         stressTensor.FirstPK = PN1;
         stressTensor.Cauchy = 1 / det(FxN1) * PN1 * FxN1';
         stressTensor.D = DN1;
-        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end
 end
 if ~computePostData

@@ -25,8 +25,9 @@ classdef solidSuperClass < baseFEClass
 % CREATOR(S) 
 % Marlon Franke
 
-    properties (Abstract = true, Constant = true)
+    properties (Abstract = true)
         additionalFields
+        dofsPerAdditionalField
     end
     properties (Constant)
         callMassMatrix = true;
@@ -42,7 +43,7 @@ classdef solidSuperClass < baseFEClass
         %flagNumericalTangent = [false;...   % compute element with numerical tangent
         %                        false];     % show difference of numerical and analytical tangent
         % post
-        plotData = struct('handleMesh',[],'handlePatch',[],'surfElements',[],'surfElementsKey',[],'N',[],'GeoData',[],'nodalColordata',[]);
+        plotData = struct('handleMesh',[],'handlePatch',[],'surfElements',[],'surfElementsKey',[],'N',[],'GeoData',[],'nodalColorData',[]);
         L = [];
         % solver
         vN
@@ -94,20 +95,24 @@ classdef solidSuperClass < baseFEClass
     end
     methods
         function out = get.J(obj)                          % Get method for the angular momentum.
-            out = 0;
-            if size(obj.qN1,2) == 0 || size(obj.L,2) == 0
-                if obj.dimension == 2
-                    out = 0;
-                elseif obj.dimension == 3
-                    out = [0 0 0]';
-                end
+            if isa(obj,"beamClass")
+                out = obj.getAngularMomentum;
             else
-                if obj.dimension == 2
-                    out = sum(obj.qN1(:,1).*obj.L(:,2) - obj.qN1(:,2).*obj.L(:,1));
-                elseif obj.dimension == 3
-                    out = [ sum(obj.qN1(:,2).*obj.L(:,3) - obj.qN1(:,3).*obj.L(:,2)),...
-                            sum(obj.qN1(:,3).*obj.L(:,1) - obj.qN1(:,1).*obj.L(:,3)),...
-                            sum(obj.qN1(:,1).*obj.L(:,2) - obj.qN1(:,2).*obj.L(:,1))];
+                out = 0;
+                if size(obj.qN1,2) == 0 || size(obj.L,2) == 0
+                    if obj.dimension == 2
+                        out = 0;
+                    elseif obj.dimension == 3
+                        out = [0 0 0]';
+                    end
+                else
+                    if obj.dimension == 2
+                        out = sum(obj.qN1(:,1).*obj.L(:,2) - obj.qN1(:,2).*obj.L(:,1));
+                    elseif obj.dimension == 3
+                        out = [ sum(obj.qN1(:,2).*obj.L(:,3) - obj.qN1(:,3).*obj.L(:,2)),...
+                                sum(obj.qN1(:,3).*obj.L(:,1) - obj.qN1(:,1).*obj.L(:,3)),...
+                                sum(obj.qN1(:,1).*obj.L(:,2) - obj.qN1(:,2).*obj.L(:,1))];
+                    end
                 end
             end
         end
@@ -169,11 +174,23 @@ classdef solidSuperClass < baseFEClass
 
             % compute shape functions
             obj.shapeFunctionObject.computeShapeFunction(obj.dimension, numberOfNodes, obj.elementGeometryType);
+            if isprop(obj,'selectiveReducedShapeFunctionObject')
+                if isempty(obj.selectiveReducedShapeFunctionObject.order) 
+                    obj.selectiveReducedShapeFunctionObject.order = obj.shapeFunctionObject.order;
+                end
+                if isempty(obj.selectiveReducedShapeFunctionObject.numberOfGausspoints)
+                    obj.selectiveReducedShapeFunctionObject.numberOfGausspoints = obj.shapeFunctionObject.numberOfGausspoints;
+                end
+
+                obj.selectiveReducedShapeFunctionObject.computeShapeFunction(obj.dimension, numberOfNodes, obj.elementGeometryType);
+                
+            end
         end
         function initializeGlobalDofs(obj,dofObject)
         % method                    initializeGlobalDofs
         % mandatory implementation  inherited abstract method from baseFEClass
-            numberOfDofPerNode = size(obj.meshObject.nodes,2);
+            %numberOfDofPerNode = size(obj.meshObject.nodes,2);
+            numberOfDofPerNode = size(obj.qR,2);
             edof = obj.meshObject.edof;
             numberOfNodes = size(obj.meshObject.nodes,1);
             numberOfElements = size(edof,1);
@@ -186,7 +203,7 @@ classdef solidSuperClass < baseFEClass
             obj.meshObject.globalFullEdof = globalFullEdof;
             obj.meshObject.globalNodesDof = globalNodesDof;
             dofObject.totalNumberOfDofs = dofObject.totalNumberOfDofs + numberOfNodes*numberOfDofPerNode;
-            if ~contains(obj.elementDisplacementType,{'displacement', 'thermo', 'beam'})
+            if ~contains(obj.elementDisplacementType,{'displacement', 'thermo'})
                 obj.mixedFEObject.initializeMixedElements(dofObject,obj);
                 obj.meshObject.globalFullEdof = [obj.meshObject.globalFullEdof, obj.mixedFEObject.globalEdof];
             end

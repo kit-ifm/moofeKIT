@@ -9,9 +9,10 @@ materialObject = obj.materialObject;
 % element degree of freedom tables and more
 edof = meshObject.edof;
 globalFullEdof = meshObject.globalFullEdof;
-dimension = obj.dimension;
 if isa(obj,'stringClass')
     dimension = obj.numberOfDofsPerNode;
+else
+    dimension = obj.dimension;
 end
 additionalFields = obj.additionalFields;
 % gauss integration and shape functions
@@ -42,6 +43,7 @@ for k = 1:numberOfGausspoints
     for l = 1:dimension
         MAT(l:dimension+additionalFields:sizeN, l:dimension+additionalFields:sizeN) = A1;
     end
+    
     Me = Me + MAT * detJ * gaussWeight(k);
 end
 array.Me = Me;

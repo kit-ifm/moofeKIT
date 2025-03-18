@@ -2,12 +2,11 @@ function [rData, kData, elementEnergy, array] = displacementHookeEndpoint(obj, s
 % DISPLACEMENTHOOKEENDPOINT Element routine of class plateClass.
 %
 % FORMULATION
-% This is a 'displacement'-based finite element routine covering linear
-% mechanical processes employing a homogenous, linear-elastic, isotropic
-% 'Hooke' material model (linear geometric and linear material/
-% stress-strain relation).
-% The routine is suitable for static and dynamic simulations where for the
-% latter the backward Euler integration scheme is used ('Endpoint').
+% This is the classical irreducible Bubnov-Galerkin plate element
+% employing the standard lagrangian shape functions.
+% This formulation is only suitable for research, as it suffers strongly
+% from transverse shear locking.
+% Only suitable for materially and geometrically linear simulations.
 %
 % CALL
 % displacementHookeEndpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, stressTensor, flagNumericalTangent)
@@ -122,12 +121,14 @@ for k = 1:numberOfGausspoints
 
         KXX = KXX + Kb + Ks;
     else
-        % stress computation -> TODO
-%         epsilon = B * uN1(:);
-%         sigma_V = C * epsilon;
-%         sigma = voigtToMatrix(sigma_V, 'stress');
-%         stressTensor.Cauchy = sigma;
-%         array = postStressComputation(array, N, k, gaussWeight, detJ, detJN1, stressTensor, setupObject, dimension);
+        % stress at gausspoint
+        kappa = Bb * qN1(:);
+        gamma = Bs * qN1(:);
+
+        m = Eb * kappa;
+        q = Es * gamma;
+        stressTensor.Cauchy = [m(1), m(3), q(1); m(3), m(2), q(2); q(1), q(2), 0];
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension+1);
     end
 end
 

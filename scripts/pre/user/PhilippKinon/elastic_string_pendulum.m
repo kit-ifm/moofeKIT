@@ -4,7 +4,7 @@
 %
 % problem: hyperelastic or linear elastic string, fixed on one end, time-dependent force on the other
 % spatial discretization: linear Lagrange shapefunction for disp
-%                         discont. constant ansatz for strain, 
+%                         discont. constant ansatz for strain,
 %                         mixed formulation
 % time discretization: midpoint rule or discrete gradient
 %
@@ -42,7 +42,7 @@ setupObject.plotObject.stress.component = 1;
 setupObject.plotObject.view = [0,90];
 setupObject.plotObject.setXminXmax([-1;-2;0],[1;0;0]);
 setupObject.newton.tolerance = newtonTolerance;
-setupObject.integrator = integrator; 
+setupObject.integrator = integrator;
 dofObject = dofClass;   % required object for dof and object handling
 
 %% Continuum object
@@ -52,19 +52,20 @@ stringObject.elementNameAdditionalSpecification = 'C';
 
 % Material
 stringObject.materialObject.name = material;
-stringObject.materialObject.E = EA;
-stringObject.materialObject.rho = rhoA; 
+stringObject.materialObject.EA = EA;
+stringObject.materialObject.rho = rhoA;
 stringObject.numericalTangentObject.computeNumericalTangent = false;
 stringObject.numericalTangentObject.showDifferences = false;
 
 %% Spatial discretiaztion
+startpoint = [0,0];
 endpoint = [sqrt(2)/2,-sqrt(2)/2];
 length = norm(endpoint);
 order  = 1;
 number_of_gausspoints = 2;
 
 % Mesh
-[stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,endpoint);
+[stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,startpoint,endpoint);
 
 % Shapefunctions
 stringObject.dimension = 1;
@@ -82,7 +83,7 @@ dirichletObject.masterObject = stringObject; %% TO Do: use a term which is not r
 nodalLoadObject = nodalLoadClass(dofObject);
 nodalLoadObject.masterObject = stringObject;
 nodalLoadObject.loadVector = rhoA*[1; 1];
-nodalLoadObject.timeFunction = str2func('@(t) sin(pi*t/0.2).*(t<=0.2+1e-12)'); 
+nodalLoadObject.timeFunction = str2func('@(t) sin(pi*t/0.2).*(t<=0.2+1e-12)');
 nodalLoadObject.nodeList= size(stringObject.meshObject.nodes,1);
 
 %Bodyforce
@@ -102,7 +103,7 @@ dofObject = runNewton(setupObject,dofObject);
 %% Postprocessing
 
 if postprocess
-
+    
     % Plot the problem
     %plot(solidObject,setupObject)
     
@@ -122,17 +123,17 @@ if postprocess
     plot(time, kineticEnergy, time, potentialEnergy, time, kineticEnergy+potentialEnergy)
     legend('T', 'V', 'H');
     matlab2tikz('height', '\figH', 'width', '\figW', 'filename', [exportFolder, 'energy', '.tikz'], 'showInfo', false, 'floatformat', '%.7g')
-
+    
     % Plot increment
     figure()
     energyIncrement = zeros(setupObject.totalTimeSteps,1);
     
     for i = 1:setupObject.totalTimeSteps
-        energyIncrement(i) = abs((kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i))); 
+        energyIncrement(i) = abs((kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i)));
     end
     plot(time(1:end-1),energyIncrement)
     legend('Energy increment');
     matlab2tikz('height', '\figH', 'width', '\figW', 'filename', [exportFolder, 'Hdiff', '.tikz'], 'showInfo', false, 'floatformat', '%.4g')
-
+    
 end
 

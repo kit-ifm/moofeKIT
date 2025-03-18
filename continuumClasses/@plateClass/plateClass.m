@@ -1,6 +1,7 @@
 classdef plateClass < solidSuperClass
-    properties (Constant = true)
+    properties
         additionalFields = 0;
+        dofsPerAdditionalField = [];
     end
     properties
         theory = 'mindlin'  % plate theory: 'mindlin' or 'kirchhoff'

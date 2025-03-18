@@ -8,6 +8,7 @@ classdef neumannClass < baseFEClass
         shapeFunctionObject
         masterObject % object of solidSuperClass
         loadVector % load vector (defined in the global coordinate system)
+        loadVectorFunction = @(XYZ) 0; % load vector as a function of the global coordinates (can be used alternatively to constant 'loadVector')
         loadGeometry % 'line' or 'area'
         loadType = 'deadLoad'; % 'deadLoad' or 'followerLoad'
         loadPhysics = 'mechanical'; % 'mechanical', 'thermal', 'electrical', tbc
@@ -59,7 +60,8 @@ classdef neumannClass < baseFEClass
         end
         function initializeGlobalDofs(obj, dofObject)
             edof = obj.meshObject.edof;
-            displacementDofsPerNode = size(obj.masterObject.qR, 2) - obj.masterObject.additionalFields;
+            numberOfAdditionalDofsPerNode = sum(obj.masterObject.dofsPerAdditionalField);
+            displacementDofsPerNode = size(obj.masterObject.qR, 2) - numberOfAdditionalDofsPerNode;
             numberOfNodesPerElement = size(edof, 2);
             if strcmp(obj.loadPhysics, 'mechanical')
                 numberOfDofsPerElement = numberOfNodesPerElement * displacementDofsPerNode;
@@ -142,6 +144,11 @@ classdef neumannClass < baseFEClass
             obj.loadVector = value;
         end
 
+        function set.loadVectorFunction(obj, value)
+            assert(isa(value,'function_handle'), 'loadVectorFunction must be of type function_handle');
+            obj.loadVectorFunction = value;
+        end
+
         function set.loadGeometry(obj, value)
             assert(ischar(value), 'loadGeometry must be of type string!')
             value = lower(value);
@@ -194,8 +201,8 @@ classdef neumannClass < baseFEClass
             obj.masterNodes = unique(obj.meshObject.edof');
         end
 
-        function updateNodalForces(obj)
-            R = full(sparse(vertcat(obj.storageFEObject.dataFE(:).indexReI), 1, vertcat(obj.storageFEObject.dataFE(:).Re), max(vertcat(obj.storageFEObject.dataFE(:).indexReI)), 1));
+        function updateNodalForces(obj, dofObject)
+            R = full(sparse(vertcat(obj.storageFEObject.dataFE(:).indexReI), 1, vertcat(obj.storageFEObject.dataFE(:).Re), dofObject.totalNumberOfDofs, 1));
             obj.nodalForces(:, :) = -R(obj.masterObject.meshObject.globalNodesDof(obj.masterNodes, :));
         end
 
@@ -209,10 +216,23 @@ classdef neumannClass < baseFEClass
 
             % load vector
             if strcmp(obj.loadPhysics, 'mechanical')
-                displacementDofsPerNode = size(obj.masterObject.qR, 2) - obj.masterObject.additionalFields;
-                assert(size(obj.loadVector, 1) == displacementDofsPerNode, ['loadVector must be of size "', num2str(displacementDofsPerNode), ' x 1"']);
+                numberOfAdditionalDofsPerNode = sum(obj.masterObject.dofsPerAdditionalField);
+                displacementDofsPerNode = size(obj.masterObject.qR, 2) - numberOfAdditionalDofsPerNode;
+                if ~isempty(obj.loadVector)
+                    % check loadVector
+                    assert(size(obj.loadVector, 1) == displacementDofsPerNode, ['loadVector must be of size "', num2str(displacementDofsPerNode), ' x 1"']);
+                else
+                    % check loadVectorFunction
+                    assert(size(obj.loadVectorFunction([1;1;1]), 1) == displacementDofsPerNode, ['loadVectorFunction must be of size "', num2str(displacementDofsPerNode), ' x 1"']);
+                end
             elseif any(strcmp(obj.loadPhysics, {'thermal', 'electrical'}))
-                assert(size(obj.loadVector, 1) == 1, 'loadVector must be of size "1 x 1"');
+                if ~isempty(obj.loadVector)
+                    % check loadVector
+                    assert(size(obj.loadVector, 1) == 1, 'loadVector must be of size "1 x 1"');
+                else
+                    % check loadVectorFunction
+                    assert(size(obj.loadVectorFunction([1;1;1]), 1) == 1, 'loadVectorFunction must be of size "1 x 1"');
+                end
             else
                 error('Not implemented yet!');
             end

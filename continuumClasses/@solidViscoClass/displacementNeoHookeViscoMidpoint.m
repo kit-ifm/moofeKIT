@@ -62,6 +62,7 @@ V2 = 1 / (dimension^2 * vVol) - 1 / (2 * dimension * vDev);
 
 %% initialize residual and tangent (global)
 elementEnergy.internalEnergy = 0;
+elementEnergy.viscousEnergy = 0;
 elementEnergy.deltaU = 0;
 
 RG = rData{1}; % G = global = Residual for external (displacement) dofs
@@ -241,7 +242,8 @@ for k = 1:numberOfGausspoints
                 psiComN = mu / 2 * (trace(CxN) - dimension - 2 * log(JN)) + psiVolComN;
                 psiVisN1 = muVisco / 2 * (trace(LambdaN1) - dimension - 2 * log(JViscoN1)) + psiVolVisN1;
                 psiVisN = muVisco / 2 * (trace(LambdaN) - dimension - 2 * log(JViscoN)) + psiVolVisN;
-                elementEnergy.internalEnergy = elementEnergy.internalEnergy + (psiComN1 + psiVisN1) * detJ * gaussWeight(k);
+                elementEnergy.internalEnergy = elementEnergy.internalEnergy + psiComN1 * detJ * gaussWeight(k);
+                elementEnergy.viscousEnergy = elementEnergy.viscousEnergy + psiVisN1 * detJ * gaussWeight(k);
                 elementEnergy.deltaU = elementEnergy.deltaU + (psiComN1 - psiComN + psiVisN1 - psiVisN) * gaussWeight(k);
             elseif (ii > 0 && ii <= dimR) % case 0 < ii <= dimR: compute column of KGG & KGL (numerically)
                 RGimag = BN05.' * SN05V;
@@ -266,7 +268,7 @@ for k = 1:numberOfGausspoints
         sigma_V = C * epsilon;
         sigma = voigtToMatrix(sigma_V, 'stress');
         stressTensor.Cauchy = sigma;
-        array = postStressComputation(array, N, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end
 end
 if ~computePostData

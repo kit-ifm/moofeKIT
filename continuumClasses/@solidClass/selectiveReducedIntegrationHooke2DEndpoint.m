@@ -98,7 +98,7 @@ for integrationType = 1:2
                 %stresses
                 sigmaN1 = lambda * trace(epsilon) * eye(3) + 2 * mu * epsilon;
                 stressTensor.Cauchy = sigmaN1;
-                array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+                array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
             end
         end
         if ~computePostData

@@ -54,7 +54,6 @@ zw = [kron(ones(nnoY,1),nodesXDir), kron(nodesYDir,ones(nnoX,1))]; %nodes 2D
 NODES = [kron(ones(nnoZ,1),zw), kron(nodesZDir,ones(size(zw,1),1))];
 
 %% EDOF
-%e.dof 2D
 if order == 1
     edof2D = meshEdofRectangle(1, nelX, nelY, order);
 

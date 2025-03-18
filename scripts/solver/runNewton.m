@@ -1,6 +1,6 @@
 function dofObject = runNewton(setupObject,dofObject)
 %% initialization
-% initialize setupObject 
+% initialize setupObject
 initialize(setupObject);
 % initialize continuumObjects
 dofObject.initializeObjectsShapeFunctions;
@@ -42,22 +42,44 @@ for timeStep = 1:setupObject.totalTimeSteps
     while setupObject.newton.step(timeStep) <= setupObject.newton.maximumSteps
         setupObject.newton.step(timeStep) = setupObject.newton.step(timeStep) + 1;
         dataFE = [];
+        dataFESolid = [];
+        dataFEOthers = [];
+        
         for index1 = 1:dofObject.numberOfContinuumObjects
             continuumObject = dofObject.listContinuumObjects{index1};
             if continuumObject.callElements
                 dataFEContinuumObject = callElements(continuumObject, setupObject, 'residualAndTangent');
-                dataFE = [dataFE, dataFEContinuumObject];
+                
+                if isa(continuumObject,"solidSuperClass")
+                    dataFESolid = [dataFESolid, dataFEContinuumObject];
+                else
+                    dataFEOthers = [dataFEOthers, dataFEContinuumObject];
+                end
             end
         end
+        
+        
+        % include potential constraints between different solidObjects
+        if dofObject.isConstrained
+            for index = 1:numel(dofObject.constraintObjectList)
+                [dataFESolid, doSolve] = dofObject.constraintObjectList{index}.implementConstraints(dataFESolid,doSolve);
+                if ~isempty(dataFEOthers)
+                    [dataFEOthers, doSolve] = dofObject.constraintObjectList{index}.implementConstraints(dataFEOthers,doSolve);
+                end
+            end
+        end
+        
+        dataFE = [dataFESolid, dataFEOthers];
+        
         % assembly via sparse command, for more details see https://arxiv.org/pdf/1305.3122.pdf
         dofObject.R = sparse(vertcat(dataFE(:).indexReI),1,vertcat(dataFE(:).Re),dofObject.totalNumberOfDofs,1);
         dofObject.R = M*(setupObject.factorIntegrator(1)/DT^2*(dofObject.qN1 - dofObject.qN) - setupObject.factorIntegrator(2)/DT*dofObject.vN) + dofObject.R(1:dofObject.totalNumberOfDofs);
-        K = sparse(vertcat(dataFE(:).indexKeI), vertcat(dataFE(:).indexKeJ), vertcat(dataFE(:).Ke),dofObject.totalNumberOfDofs,dofObject.totalNumberOfDofs);
-        K = K + setupObject.factorIntegrator(1)/DT^2*M;
+        dofObject.K = sparse(vertcat(dataFE(:).indexKeI), vertcat(dataFE(:).indexKeJ), vertcat(dataFE(:).Ke),dofObject.totalNumberOfDofs,dofObject.totalNumberOfDofs);
+        dofObject.K = dofObject.K + setupObject.factorIntegrator(1)/DT^2*M;
         if setupObject.newton.step(timeStep) == 1
             % TODO @Marlon: documentation!
             updateTimeDependentFieldNewtonLoop(dofObject,'qN1',setupObject.time);
-            dofObject.R(doSolve) = dofObject.R(doSolve) + K(doSolve,~doSolve)*(dofObject.qN1(~doSolve)-dofObject.qN(~doSolve));
+            dofObject.R(doSolve) = dofObject.R(doSolve) + dofObject.K(doSolve,~doSolve)*(dofObject.qN1(~doSolve)-dofObject.qN(~doSolve));
             % TODO @Marlon: documentation!
         end
         for index1 = 1:dofObject.numberOfContinuumObjects
@@ -81,19 +103,28 @@ for timeStep = 1:setupObject.totalTimeSteps
             break;
         else
             % direct solver
-            delta(doSolve) = -solverLinearSystem(setupObject, K(doSolve,doSolve), dofObject.R(doSolve));
+            delta(doSolve) = -solverLinearSystem(setupObject, dofObject.K(doSolve,doSolve), dofObject.R(doSolve));
             dofObject.qN1(doSolve) = dofObject.qN1(doSolve) + delta(doSolve);
+            
+            % Update DOF which have been eliminated due to constraints% include potential constraints between different solidObjects
+            if dofObject.isConstrained
+                for index = 1:numel(dofObject.constraintObjectList)
+                    dofObject.constraintObjectList{index}.updateConstrainedDOF;
+                end
+            end
+            
             % update objects for every Newton iteration
             updateObjectsContinuumFieldNewtonLoop(dofObject,setupObject,delta,'qN1')
         end
     end
     dofObject.vN1 = setupObject.factorIntegrator(1)/DT*(dofObject.qN1 - dofObject.qN) - setupObject.factorIntegrator(3)*dofObject.vN;
     updateObjectsContinuumFieldPostNewtonLoop(dofObject,setupObject,'vN1');
+    dofObject.computeHistoryFieldPostNewtonLoop(setupObject);
     % store momentum maps and kinetic energy
-    update(dofObject.postDataObject,dofObject,timeStep,setupObject.time,M); 
+    update(dofObject.postDataObject,dofObject,timeStep,setupObject.time,M);
     % plot fe body
     plotScript
-
+    
     % save data as .mat file
     saveDataAsMatFile(setupObject.saveObject, setupObject, dofObject, timeStep);
 end

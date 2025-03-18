@@ -75,7 +75,7 @@ if boundaryType == 1
 elseif boundaryType == 2
     lager = dirichletObjectY.qN1;
 end
-updateNodalForces(neumannObject);
+updateNodalForces(neumannObject, dofObject);
 nodalForces = neumannObject.nodalForces;
 fprintf('\n')
 fprintf('Gesamtlast:            F = %4.4f\n', abs(sum(nodalForces(:, 2))))

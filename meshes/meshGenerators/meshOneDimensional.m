@@ -21,7 +21,7 @@ assert(mod(numberOfElementsX, 1) == 0 & numberOfElementsX > 0, 'numberOfElements
 assert(mod(order, 1) == 0, 'order must be an integer!')
 
 %% compute nodes
-nodes = (-lengthX / 2:lengthX / (numberOfElementsX * order):lengthX / 2)';
+nodes = linspace(-lengthX/2, lengthX/2, numberOfElementsX*order+1).';
 
 %% compute edof
 edof = zeros(numberOfElementsX, order+1);

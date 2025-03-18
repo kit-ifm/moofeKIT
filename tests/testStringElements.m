@@ -29,14 +29,7 @@ for ii = 1:size(testCases, 2)
         setupObject.saveObject.saveData = false;
         setupObject.totalTime = totalTime;
         setupObject.totalTimeSteps = totalTime/timeStepSize;
-        setupObject.plotObject.flag = true;
-        setupObject.plotObject.steps = 0.2/timeStepSize;
-        setupObject.plotObject.keepFormerPlots = true;
-        setupObject.plotObject.plotInitialConfig = true;
-        setupObject.plotObject.postPlotType = 'disp';
-        setupObject.plotObject.stress.component = 1;
-        setupObject.plotObject.view = [0,90];
-        setupObject.plotObject.setXminXmax([-1;-2;0],[1;0;0]);
+        setupObject.plotObject.flag = false;
         setupObject.newton.tolerance = newtonTolerance;
         setupObject.integrator = integrator; 
         dofObject = dofClass;   
@@ -60,7 +53,7 @@ for ii = 1:size(testCases, 2)
         number_of_gausspoints = 2;
         
         % Mesh
-        [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,endpoint);
+        [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,[0;0],endpoint);
         
         % Shapefunctions
         stringObject.dimension = 1;
@@ -114,14 +107,7 @@ for ii = 1:size(testCases, 2)
         setupObject.saveObject.saveData = false;
         setupObject.totalTime = totalTime;
         setupObject.totalTimeSteps = totalTime/timeStepSize;
-        setupObject.plotObject.flag = true;
-        setupObject.plotObject.steps = setupObject.totalTimeSteps;
-        setupObject.plotObject.keepFormerPlots = false;
-        setupObject.plotObject.plotInitialConfig = true;
-        setupObject.plotObject.postPlotType = 'disp';
-        setupObject.plotObject.stress.component = 1;
-        setupObject.plotObject.view = [0,90];
-        setupObject.plotObject.setXminXmax([-0.1;-2;0],[2;0;0]);
+        setupObject.plotObject.flag = false;
         setupObject.newton.tolerance = newtonTolerance;
         setupObject.integrator = integrator; 
         dofObject = dofClass;
@@ -146,7 +132,7 @@ for ii = 1:size(testCases, 2)
         number_of_gausspoints = 2;
         
         % Mesh
-        [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,endpoint);
+        [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,[0;0],endpoint);
         
         % Specify mixed quantities different from 1 (required for static case)
         dofObject.listContinuumObjects{1}.mixedFEObject.qR = 1.5*ones(numberOfElementsOfCrime,1);
@@ -196,14 +182,7 @@ for ii = 1:size(testCases, 2)
         setupObject.saveObject.saveData = false;
         setupObject.totalTime = totalTime;
         setupObject.totalTimeSteps = totalTime/timeStepSize;
-        setupObject.plotObject.flag = true;
-        setupObject.plotObject.steps = 0.2/timeStepSize;
-        setupObject.plotObject.keepFormerPlots = true;
-        setupObject.plotObject.plotInitialConfig = true;
-        setupObject.plotObject.postPlotType = 'disp';
-        setupObject.plotObject.stress.component = 1;
-        setupObject.plotObject.view = [0,90];
-        setupObject.plotObject.setXminXmax([-1;-2;0],[1;0;0]);
+        setupObject.plotObject.flag = false;
         setupObject.newton.tolerance = newtonTolerance;
         setupObject.integrator = integrator; 
         dofObject = dofClass;
@@ -228,7 +207,7 @@ for ii = 1:size(testCases, 2)
         number_of_gausspoints = 2;
         
         % Mesh
-        [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,endpoint);
+        [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,[0;0],endpoint);
         
         % Shapefunctions
         stringObject.dimension = 1;

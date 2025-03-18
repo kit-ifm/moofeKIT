@@ -61,13 +61,14 @@ if new_calculation
     stringObject.numericalTangentObject.showDifferences = false;
     
     %% Spatial discretiaztion
+    startpoint = [0,0];
     endpoint = [0,-1];
     length = norm(endpoint);
     order  = 1;
     number_of_gausspoints = 2;
     
     % Mesh
-    [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,endpoint);
+    [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,startpoint,endpoint);
     stringObject.qN = nodesEquilibrium;
     dofObject.listContinuumObjects{1}.mixedFEObject.qR = mixedEquilibrium;
 

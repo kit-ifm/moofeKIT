@@ -81,6 +81,7 @@ alphaN1e = dofs.edAlphaN1.';
 uN1 = edN1(:) - edR(:);
 
 % compute Jacobian matrices
+JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I);
 J0 = edR * dN0_xi_I';
 detJ0 = det(J0);
 
@@ -98,16 +99,19 @@ elementEnergy.strainEnergy = 0;
 
 %% GAUSS LOOP
 for k = 1:numberOfGausspoints
-    [detJ, detJStruct, dN_X_I, ~, ~, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
 
     % shape functions for the enhanced part of the strain field
     indx2 = 3 * (k - 1) + 1:3 * k;
     Er = EAll(indx2, :);
-%     E_I = E_k_I(k,:);
 
     % nodal operator matrix & approximation matrix
     B = BMatrix(dN_X_I);
     G = detJ0 / detJ * (F0' \ Er);
+
+    % strain tensor
+    epsilonVoigt = B * uN1 + G * alphaN1e;
 
     if ~computePostData
         % TANGENT
@@ -117,25 +121,10 @@ for k = 1:numberOfGausspoints
         KAA = KAA + (G' * C * G) * detJ * gaussWeight(k);
     else
         % STRESS COMPUTATION
-        %displacement gradient and strain tensor
-        gradU = (edN1 - edR) * dN_X_I';
-        epsilonEnh_v = detJ0 / detJ * (F0' \ Er) * alphaN1e;
-        epsilon = zeros(3, 3);
-        epsilon(1:2, 1:2) = 1 / 2 * (gradU + gradU') + epsilonEnh_v([1, 3; 3, 2]);
-        switch lower(strtok(obj.materialObject.name, 'Hooke'))
-            case 'esz'
-                epsilon(3, 3) = -nu / (1 - nu) * (trace(epsilon)); %ESZ
-            case 'evz'
-                epsilon(3, 3) = 0; %EVZ
-            otherwise
-                error('not implemented')
-        end
-        %stresses
-        mu = E / (2 * (1 + nu));
-        lambda = E * nu / ((1 + nu) * (1 - 2 * nu));
-        sigmaN1 = lambda * trace(epsilon) * eye(3) + 2 * mu * epsilon;
-        stressTensor.Cauchy = sigmaN1;
-        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        sigmaVoigt = C * epsilonVoigt;
+        sigma = voigtToMatrix(sigmaVoigt, 'stress');
+        stressTensor.Cauchy = sigma;
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end
 end
 

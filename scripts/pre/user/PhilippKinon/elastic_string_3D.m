@@ -4,7 +4,7 @@
 %
 % problem: hyperelastic or linear elastic string, fixed on one end, time-dependent force on the other
 % spatial discretization: linear Lagrange shapefunction for disp
-%                         discont. constant ansatz for strain, 
+%                         discont. constant ansatz for strain,
 %                         mixed formulation
 % time discretization: midpoint rule or discrete gradient
 %
@@ -40,7 +40,7 @@ setupObject.plotObject.stress.component = 1;
 setupObject.plotObject.view = [30,30];
 setupObject.plotObject.setXminXmax([-1;-1;-1],[1;1;0]);
 setupObject.newton.tolerance = newtonTolerance;
-setupObject.integrator = integrator; 
+setupObject.integrator = integrator;
 dofObject = dofClass; % required object for dof and object handling
 
 %% Continuum object
@@ -50,22 +50,23 @@ stringObject.elementNameAdditionalSpecification = 'C';
 
 % Material
 stringObject.materialObject.name = material;
-stringObject.materialObject.E = EA;
+stringObject.materialObject.EA = EA;
 stringObject.materialObject.nu = nu;
 stringObject.materialObject.lambda = EA*nu/((1+nu)*(1-2*nu));                 % Lame parameter
 stringObject.materialObject.mu = EA/(2*(1+nu));
-stringObject.materialObject.rho = rhoA; 
+stringObject.materialObject.rho = rhoA;
 stringObject.numericalTangentObject.computeNumericalTangent = true;
 stringObject.numericalTangentObject.showDifferences = false;
 
 %% Spatial discretiaztion
+startpoint = [0,0,0];
 endpoint = [sqrt(3)/3,sqrt(3)/3,-sqrt(3)/3];
 length = norm(endpoint);
 order  = 1;
 number_of_gausspoints = 2;
 
 % Mesh
-[stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,endpoint);
+[stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,startpoint,endpoint);
 
 % Shapefunctions
 stringObject.dimension = 1;
@@ -96,7 +97,7 @@ dofObject = runNewton(setupObject,dofObject);
 %% Postprocessing
 
 if postprocess
-
+    
     % Plot the problem
     plot(stringObject,setupObject)
     
@@ -121,10 +122,10 @@ if postprocess
     energyIncrement = zeros(setupObject.totalTimeSteps,1);
     
     for i = 1:setupObject.totalTimeSteps
-        energyIncrement(i) = (kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i)); 
+        energyIncrement(i) = (kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i));
     end
     
     plot(time(1:end-1),energyIncrement)
     legend('Energy increment');
-
+    
 end

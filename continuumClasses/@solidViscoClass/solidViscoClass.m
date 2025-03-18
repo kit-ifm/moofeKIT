@@ -15,8 +15,9 @@ classdef solidViscoClass < solidSuperClass
         epsilon % should not be property of class?
         totalTimeSteps % already defined in setupObject?
     end
-    properties (Constant = true)
+    properties
         additionalFields = 0;
+        dofsPerAdditionalField = [];
     end
     methods
 

@@ -36,7 +36,7 @@ classdef mixedFEClass < matlab.mixin.Copyable
                     obj.dofsPerField{1} = 4;
                     obj.numberOfDofs = 4;
                     computeShapeFunctions = false;
-                case {'eas', 'easSC', 'easPetrovGalerkin'}
+                case {'eas', 'easSC', 'incompatibleModes'}
                     obj.numberOfFields = 1;
                     obj.dofsPerField{1} = obj.typeShapeFunctionData;
                     obj.numberOfDofs = obj.typeShapeFunctionData;
@@ -148,13 +148,24 @@ classdef mixedFEClass < matlab.mixin.Copyable
                     obj.dofsPerField{1} = 1;
                     obj.numberOfDofs = 1; %extended strain variables
                     numberOfNodes = 1; % discontinuous ansatz constant elementwise
+                    if isa(continuumObject,'beamClass')
+                        obj.numberOfFields = 2;
+                        if strcmpi(continuumObject.theory,'GeometricallyExact')
+                            obj.dofsPerField{1} = 2;
+                            obj.numberOfDofs = 3; % extended strain variables (elongation, shear deformation and curvature)
+                        else
+                            obj.dofsPerField{1} = 1;
+                            obj.numberOfDofs = 2; % extended strain variables (shear deformation and curvature)
+                        end
+                        obj.dofsPerField{2} = 1;
+                        numberOfNodes = 1; % discontinuous ansatz constant elementwise
+                    end
                 case {'mixedPHViscoPT'}
                     obj.numberOfFields = 2;
                     obj.dofsPerField{1} = 1;
                     obj.dofsPerField{2} = 1;
                     obj.numberOfDofs = 2; %extended strain variables and elastic strain
-                    numberOfNodes = 1; % discontinuous ansatz constant elementwise
-
+                    numberOfNodes = 1; % discontinuous ansatz constant elementwise 
                 otherwise
                     error('elementDisplacementType not implemented')
             end
@@ -447,6 +458,14 @@ classdef mixedFEClass < matlab.mixin.Copyable
 
                          obj.qN = zeros(numberOfElements,obj.numberOfDofs);
 
+                    else
+
+                        if isempty(obj.qR) %no initial values for mixed quantity specified
+                            obj.qN = zeros(numberOfElements,obj.numberOfDofs);
+                        else
+                            obj.qN = obj.qR;
+                        end
+
                     end
 
                 elseif strcmp(continuumObject.elementDisplacementType, 'mixedPHViscoPT')
@@ -465,8 +484,10 @@ classdef mixedFEClass < matlab.mixin.Copyable
             obj.qN1 = obj.qN;
         end
         function updateGlobalField(obj,continuumObject,dofObject)
-            % update qN for mixed elements without condensation
+            % for preinitialization of internalDofs/mixedFields without condensation for dofObject.qN array
             if contains(continuumObject.elementDisplacementType, 'mixed')
+            % if ~contains(continuumObject.elementDisplacementType, 'displacement')
+            % does not work for all other mixed elements i.e. for Q1Theta1P1discont
                 if ~obj.condensation
                     numberOfElements = size(continuumObject.meshObject.globalFullEdof, 1);
                     numberOfDisplacementDofs = dofObject.totalNumberOfDofs - numberOfElements*obj.numberOfDofs(1);

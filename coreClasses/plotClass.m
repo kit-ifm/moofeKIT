@@ -31,6 +31,8 @@ classdef plotClass < matlab.mixin.Copyable
         view = [-217.5, 30];
         makeMovie = false;
         time = 'N1';%'R';
+        showGrid = false;
+        colorscheme = 'jet';
     end
     properties (SetAccess = private) %these properties are calculated
         xmin = zeros(3,1);

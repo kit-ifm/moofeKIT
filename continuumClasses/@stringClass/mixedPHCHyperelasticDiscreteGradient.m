@@ -130,11 +130,10 @@ for k = 1:numberOfGausspoints
 
     else
         % stress at gausspoint
-        [~, detJStruct, ~, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
         SN1_V = 2*getStrainEnergyDerivative(EA,CN1);
         SN1 = voigtToMatrix(SN1_V, 'stress');
         stressTensor.Cauchy = SN1;
-        array = postStressComputation(array,N_k_I,k,gaussWeight,detJStruct,stressTensor,setupObject,dimension);
+        array = postStressComputation(array,N_k_I,k,gaussWeight,detJ,stressTensor,setupObject,dimension);
     end
 end
 

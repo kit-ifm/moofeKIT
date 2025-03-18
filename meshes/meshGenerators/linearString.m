@@ -1,4 +1,4 @@
-function [nodes, edof, edofNeumann] = linearString(length, numberOfElements, order, endPoint)
+function [nodes, edof, edofNeumann] = linearString(length, numberOfElements, order, startPoint, endPoint)
 %LINEARSTRING2D Mesh for one dimensional string domain
 %   This function returns the nodes and the edof for one dimensional
 %   string domains with two DOF at each node (i.e. 2D space).
@@ -26,7 +26,7 @@ mat_nodes = (0 : length / (numberOfElements * order):length)';
 dimension = max(size(endPoint));
 nodes = zeros(numberOfElements * order +1, dimension);
 for k = 1:dimension
-    nodes(:,k) = mat_nodes*endPoint(k);
+    nodes(:,k) = startPoint(k) + mat_nodes*(endPoint(k)-startPoint(k))/length;
 end
 %% compute edof
 edof = zeros(numberOfElements, order+1);

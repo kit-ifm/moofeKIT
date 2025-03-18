@@ -133,7 +133,7 @@ for k = 1:numberOfGausspoints
         sigmaVoigt = C * epsilonVoigt;
         sigma = voigtToMatrix(sigmaVoigt, 'stress');
         stressTensor.Cauchy = sigma;
-        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end
 end
 

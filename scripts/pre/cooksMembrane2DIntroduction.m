@@ -1,11 +1,12 @@
 %% startUpMoofeKIT
-% run('../../startUpMoofeKIT.m');                           % Laden der Ordnerstruktur. Aufruf ist nicht notwendig, wenn das Skript schon einmal ausgeführt wurde.
+run('../../startUpMoofeKIT.m');                           % Laden der Ordnerstruktur. Aufruf ist nicht notwendig, wenn das Skript schon einmal ausgeführt wurde.
 
 %% setup (mandatory: setup and dofs)
 setupObject = setupClass;
 setupObject.totalTimeSteps = 5; % Anzahl der Zeitschritte anpassen (Zeitschleife)
 setupObject.totalTime = 1; % Gesamtzeit der Simulation festlegen
 setupObject.plotObject.flag = true; % Festlegen, dass die Ergebnisse der Simulation geplottet werden
+setupObject.plotObject.view = 2; % Plotten als 2D-Objekt
 
 dofObject = dofClass; % required object for dof and object handling
 
@@ -24,7 +25,6 @@ solidObject.materialObject.nu = 0.2; % Querkontraktionszahl festlegen
 % dirchlet boundary conditions
 dirichletObject = dirichletClass(dofObject);
 dirichletObject.masterObject = solidObject;
-dirichletObject.dimension = 2; % Dimension des zu betrachtenden Körpers angeben
 dirichletObject.nodeList = find(solidObject.meshObject.nodes(:, 1) == 0);
 dirichletObject.nodalDof = [1, 2];
 
@@ -32,7 +32,7 @@ dirichletObject.nodalDof = [1, 2];
 neumannObject = neumannClass(dofObject);
 neumannObject.loadGeometry = 'line'; % Form des Neumann-Rand => line oder area
 neumannObject.masterObject = solidObject;
-neumannObject.forceVector = [0; 1]; % Komponenten des Kraftvektors anpassen
+neumannObject.loadVector = [0; 1]; % Komponenten des Lastvektors anpassen
 neumannObject.timeFunction = @(t) t; % Zeitfunktion, mit der die Kraft aufgetragen wird, angeben
 neumannObject.meshObject.edof = edofNeumann;
 

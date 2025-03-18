@@ -11,9 +11,9 @@ edof = zeros(nel, numberOfNodesPerElement);
 nodesXi = computeIndexFunction(numberOfNodesPerElement);
 
 for ii = 1:numberOfNodesPerElement
-    posX = order / 2 * (nodesXi(1, ii) + 1) + 1;
-    posY = order / 2 * (nodesXi(2, ii) + 1) + 1;
-    posXInv = order + 1 - posX;
+    posX = round(order / 2 * (nodesXi(1, ii) + 1) + 1);
+    posY = round(order / 2 * (nodesXi(2, ii) + 1) + 1);
+    posXInv = round(order + 1 - posX);
     edof(:, ii) = kron(ones(nelY, 1), (posX:order:(nnoX - posXInv))') + kron((0:nnoX * order:nnoX * order * (nelY - 1))'+(posY - 1)*nnoX, ones(nelX, 1));
 end
 

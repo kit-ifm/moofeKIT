@@ -50,7 +50,7 @@ number_of_gausspoints = 2;
 
 % Mesh
 [solidObject.meshObject.nodes,solidObject.meshObject.edof,edofNeumann] = meshOneDimensional(length,numberOfElementsOfCrime,order);
-solidObject.meshObject.nodes = solidObject.meshObject.nodes + length/2; %% TO DO: write adapted mesh
+solidObject.meshObject.nodes = solidObject.meshObject.nodes + length/2; 
 
 % Shapefunctions
 solidObject.dimension = 1;
@@ -61,7 +61,7 @@ solidObject.shapeFunctionObject.numberOfGausspoints = number_of_gausspoints;
 dirichletObject = dirichletClass(dofObject);
 dirichletObject.nodeList = find(solidObject.meshObject.nodes(:,1)==0);
 dirichletObject.nodalDof = 1;
-dirichletObject.masterObject = solidObject; %% TO Do: use a term which is not racist
+dirichletObject.masterObject = solidObject; 
 dirichletObject.timeFunction = str2func('@(t,X) 0*X');
 
 % neumann boundary conditions

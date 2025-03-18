@@ -59,13 +59,14 @@ if new_calculation
     stringObject.numericalTangentObject.showDifferences = false;
     
     %% Spatial discretiaztion
+    startpoint = [0,0];
     endpoint = [0,-1];
     length = norm(endpoint);
     order  = 1;
     number_of_gausspoints = 2;
     
     % Mesh
-    [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,endpoint);
+    [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,startpoint,endpoint);
     
     % Specify mixed quantities different from 1 (required for static case)
     dofObject.listContinuumObjects{1}.mixedFEObject.qR = 1.5*ones(numberOfElementsOfCrime,1);

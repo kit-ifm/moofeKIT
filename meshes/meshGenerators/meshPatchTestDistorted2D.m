@@ -40,7 +40,7 @@ elseif order == 2
     end
     nodes(:, 1) = nodes(:, 1) * lengthX / 0.24;
     nodes(:, 2) = nodes(:, 2) * lengthY / 0.12;
-    bounEdof = struct('SX1', [4, 12, 1], 'SX2', [2, 10, 3], 'SY1', [1, 9, 2], 'SY2', [3, 11, 4]);
+    bounEdof = struct('SX1', [4, 1, 12], 'SX2', [2, 3, 10], 'SY1', [1, 2, 9], 'SY2', [3, 4, 11]);
 else
     error('Not implemented!')
 end

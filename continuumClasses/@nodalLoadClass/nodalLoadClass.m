@@ -107,7 +107,11 @@ classdef nodalLoadClass < baseFEClass
         function verificationOfInputData(obj)
             % load vector
             if strcmp(obj.loadPhysics, 'mechanical')
-                displacementDofsPerNode = size(obj.masterObject.qR, 2) - obj.masterObject.additionalFields;
+                if isa(obj.masterObject,'beamClass')
+                    displacementDofsPerNode = size(obj.masterObject.qR, 2);
+                else
+                    displacementDofsPerNode = size(obj.masterObject.qR, 2) - obj.masterObject.additionalFields;
+                end
                 assert(size(obj.loadVector, 1) == displacementDofsPerNode, ['loadVector must be of size "', num2str(displacementDofsPerNode), ' x 1"']);
             elseif any(strcmp(obj.loadPhysics, {'thermal', 'electrical'}))
                 assert(size(obj.loadVector, 1) == 1, 'loadVector must be of size "1 x 1"');
@@ -124,7 +128,12 @@ classdef nodalLoadClass < baseFEClass
             R = zeros(dofObject.totalNumberOfDofs, 1);
             globalNodesDof = obj.masterObject.meshObject.globalNodesDof;
 
-            displacementDofsPerNode = size(obj.masterObject.qR, 2) - obj.masterObject.additionalFields;
+            if isa(obj.masterObject,'beamClass')
+                displacementDofsPerNode = size(obj.masterObject.qR, 2);
+            else
+                displacementDofsPerNode = size(obj.masterObject.qR, 2) - obj.masterObject.additionalFields;
+            end
+   
             if strcmp(obj.loadPhysics, 'mechanical')
                 globalNodesDof = globalNodesDof(:, 1:displacementDofsPerNode);
             elseif strcmp(obj.loadPhysics, 'thermal')
@@ -147,13 +156,18 @@ classdef nodalLoadClass < baseFEClass
             if any(strcmp(setupObject.integrator, {'Midpoint', 'DiscreteGradient'}))
                 timeEvaluationPoint = timeEvaluationPoint - 1 / 2 * setupObject.timeStepSize;
             end
-
-            R(globalNodesDof(obj.nodeList, :)) = obj.loadVector * obj.timeFunction(timeEvaluationPoint);
+            for i=1:length(obj.nodeList)
+                R(globalNodesDof(obj.nodeList(i), :)) = obj.loadVector * obj.timeFunction(timeEvaluationPoint);
+            end
         end
 
         function computeExternalEnergyContribution(obj, dofObject, setupObject)
             numberOfNodes = length(obj.nodeList);
-            displacementDofsPerNode = size(obj.masterObject.qR, 2) - obj.masterObject.additionalFields;
+            if isa(obj.masterObject,'beamClass')
+                displacementDofsPerNode = size(obj.masterObject.qR, 2);
+            else
+                displacementDofsPerNode = size(obj.masterObject.qR, 2) - obj.masterObject.additionalFields;
+            end
             fieldsToConsider = 1:displacementDofsPerNode;
             if strcmp(obj.loadPhysics, 'thermal')
                 if isa(obj.masterObject, 'solidThermoClass')

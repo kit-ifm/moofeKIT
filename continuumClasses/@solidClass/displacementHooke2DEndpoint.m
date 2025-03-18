@@ -88,6 +88,9 @@ xN = obj.qN(edof(e, :), 1:dimension).';
 % material coordinates of the element
 X = obj.qR(edof(e, :), 1:dimension)';
 
+% compute Jacobian
+JAll = computeJacobianForAllGausspoints(X, dN_xi_k_I);
+
 % displacement vector
 uN1 = x(:) - X(:);
 
@@ -102,8 +105,8 @@ elementEnergy.strainEnergy = 0;
 
 %% GAUSS LOOP
 for k = 1:numberOfGausspoints
-    % compute the Jacobian determinant
-    [detJ, detJStruct, dN_X_k_I, ~] = computeAllJacobian(X,xN,x,dN_xi_k_I,k,setupObject);
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_k_I = computedN_X_I(dN_xi_k_I, J, k);
 
     % compute nodal operator matrix
     B = BMatrix(dN_X_k_I);
@@ -122,7 +125,7 @@ for k = 1:numberOfGausspoints
         % STRESS COMPUTATION
         sigmaN1_v = C * B * uN1;
         stressTensor.Cauchy = voigtToMatrix(sigmaN1_v, 'stress');
-        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end
 end
 

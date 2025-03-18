@@ -108,16 +108,13 @@ for k = 1:numberOfGausspoints
         % Strain energy
         elementEnergy.strainEnergy = elementEnergy.strainEnergy + 0.5 * EN1_v' * DMat * EN1_v * detJ * gaussWeight(k);
     else
-        [~, detJN] = extractJacobianForGausspoint(JNAll, k, setupObject, dimension);
-        [~, detJN1] = extractJacobianForGausspoint(JN1All, k, setupObject, dimension);
-        detJStruct = struct('R', detJ, 'N', detJN, 'N1', detJN1);
         % stress at gausspoint
         SN1_v = DMat * EN1_v;
         SN1 = voigtToMatrix(SN1_v, 'stress');
         PN1 = FN1 * SN1;
         stressTensor.FirstPK = PN1;
         stressTensor.Cauchy = 1 / det(FN1) * PN1 * FN1';
-        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end
 end
 if ~computePostData

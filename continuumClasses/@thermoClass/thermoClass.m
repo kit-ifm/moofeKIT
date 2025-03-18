@@ -1,6 +1,7 @@
 classdef thermoClass < solidSuperClass
-    properties (Constant = true)
+    properties
         additionalFields = 0;
+        dofsPerAdditionalField = [];
     end
     methods
 

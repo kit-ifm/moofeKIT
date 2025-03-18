@@ -100,7 +100,8 @@ switch element
             yOutsideNodes(:) = ed(edof(:, 1:2), 2);
         end
         cOutsideNodes(:) = colorData(edof(:, 1:2));
-        patch(xOutsideNodes', yOutsideNodes', cOutsideNodes', 'edgecolor', edgeColor, 'marker', '.', 'markersize', 15, 'facecolor', faceStyle, 'facealpha', 0.9, 'LineStyle', 'none');
+        patch(xOutsideNodes', yOutsideNodes', cOutsideNodes', 'edgecolor', edgeColor, 'facecolor', faceStyle, 'facealpha', 0.9, 'LineStyle', 'none');
+        %patch(xOutsideNodes', yOutsideNodes', cOutsideNodes', 'edgecolor', edgeColor, 'marker', '.', 'markersize', 15, 'facecolor', faceStyle, 'facealpha', 0.9, 'LineStyle', 'none');
         % plot inner nodes
         if numberOfElementNodes > 2
             xInnerNodes = zeros(numberOfElements, numberOfElementNodes-2);

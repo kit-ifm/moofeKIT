@@ -43,10 +43,10 @@ dofObject = dofClass;   % required object for dof and object handling
 
 %% continuum Objects
 % abaqus mesh
-abaqusMeshData = abaqusInputFileConverter('LShapeH2Serendipity.inp');
-% abaqusMeshData = abaqusInputFileConverter('LShapeH1.inp');
+% abaqusMeshData = abaqusInputFileConverter('LShapeH2Serendipity.inp');
+abaqusMeshData = abaqusInputFileConverter('LShapeH1.inp');
 solidElectroThermoObject = solidElectroThermoClass(dofObject);
-solidElectroThermoObject.meshObject.nodes = abaqusMeshData.QNODE;
+solidElectroThermoObject.meshObject.nodes = abaqusMeshData.qR;
 nnodes=size(solidElectroThermoObject.meshObject.nodes(:,1),1);
 initialThermalField = 293.15*ones(nnodes,1);
 % nodelistoben = abaqusMeshData.SUBSETS(3).EDOF(:);
@@ -59,7 +59,7 @@ initialThermalField = 293.15*ones(nnodes,1);
 
 initialElectricalPotentialField = zeros(size(solidElectroThermoObject.meshObject.nodes,1),1);
 solidElectroThermoObject.meshObject.nodes = [solidElectroThermoObject.meshObject.nodes, initialElectricalPotentialField, initialThermalField];
-solidElectroThermoObject.meshObject.edof = abaqusMeshData.EDOF;
+solidElectroThermoObject.meshObject.edof = abaqusMeshData.edof;
 solidElectroThermoObject.materialObject.name = 'MooneyRivlinFullCoupled';
 % solidElectroThermoObject.materialObject.name = 'MooneyRivlin';
 solidElectroThermoObject.elementDisplacementType = 'mixedSC';
@@ -85,7 +85,8 @@ solidElectroThermoObject.materialObject.RSource = 0;
 solidElectroThermoObject.materialObject.timeFunctionRhoSource = @(t) 0;
 solidElectroThermoObject.dimension = 3;
 solidElectroThermoObject.shapeFunctionObject.order = 2;
-solidElectroThermoObject.mixedFEObject.condensation = true;
+% solidElectroThermoObject.mixedFEObject.condensation = true;
+solidElectroThermoObject.mixedFEObject.condensation = false;
 solidElectroThermoObject.shapeFunctionObject.numberOfGausspoints = 27;
 solidElectroThermoObject.mixedFEObject.typeShapeFunctionData = 1;
 % solidElectroThermoObject.shapeFunctionObject.numberOfGausspoints = 8;
@@ -97,25 +98,27 @@ bcTimeEnd = 5;
 FA = [256;512;768];
 
 neumannObject1 = neumannClass(dofObject);
-neumannObject1.field = 'mechanical';
-neumannObject1.typeOfLoad = 'deadLoad';
+neumannObject1.loadPhysics = 'mechanical';
+neumannObject1.loadType = 'deadLoad';
+neumannObject1.loadGeometry = 'area';
 neumannObject1.masterObject = solidElectroThermoObject;
-neumannObject1.forceVector = 1/9*FA;
+neumannObject1.loadVector = 1/9*FA;
 neumannObject1.shapeFunctionObject.order = solidElectroThermoObject.shapeFunctionObject.order;
 neumannObject1.shapeFunctionObject.numberOfGausspoints = 2^(solidElectroThermoObject.dimension-1);
 neumannObject1.projectionType = 'none';
 neumannObject1.timeFunction = @(t) t.*(t <= bcTimeEnd/2)+(bcTimeEnd-t).*(t > bcTimeEnd/2 & t <= bcTimeEnd);
-neumannObject1.meshObject.edof = abaqusMeshData.SUBSETS(3).EDOF;
+neumannObject1.meshObject.edof = abaqusMeshData.subsets(3).edof;
 
 neumannObject2 = neumannClass(dofObject);
-neumannObject2.typeOfLoad = 'deadLoad';
+neumannObject2.loadType = 'deadLoad';
+neumannObject2.loadGeometry = 'area';
 neumannObject2.masterObject = solidElectroThermoObject;
-neumannObject2.forceVector = -1/9*FA;
+neumannObject2.loadVector = -1/9*FA;
 neumannObject2.shapeFunctionObject.order = solidElectroThermoObject.shapeFunctionObject.order;
 neumannObject2.shapeFunctionObject.numberOfGausspoints = 2^(solidElectroThermoObject.dimension-1);
 neumannObject2.projectionType = 'none';
 neumannObject2.timeFunction = @(t)  t.*(t <= bcTimeEnd/2)+(bcTimeEnd-t).*(t > bcTimeEnd/2 & t <= bcTimeEnd);
-neumannObject2.meshObject.edof = abaqusMeshData.SUBSETS(4).EDOF;
+neumannObject2.meshObject.edof = abaqusMeshData.subsets(4).edof;
 
 % %% Test to be removed
 % % mechanical dirichlet boundary condition, DirichletFixed

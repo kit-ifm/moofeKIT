@@ -66,7 +66,7 @@ if new_calculation
     number_of_gausspoints = 2;
     
     % Mesh
-    [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,endpoint);
+    [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,[0,0],endpoint);
     stringObject.qN = nodesEquilibrium;
     dofObject.listContinuumObjects{1}.mixedFEObject.qN = mixedEquilibrium;
 

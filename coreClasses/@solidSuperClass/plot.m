@@ -25,7 +25,20 @@ for i = 1:numel(obj)
     if isa(obj, 'thermoClass')
         ed = obj.meshObject.nodes;
     elseif isa(obj, 'beamClass')
-        ed = [obj.meshObject.nodes(:, 1), -q(:, 1)];
+        switch obj.elementDisplacementType
+            case 'displacement'
+                if strcmp(obj.theory,'GeometricallyExact')
+                    ed = q(:,1:2);
+                else
+                    ed = [obj.meshObject.nodes(:, 1), -q(:, 1)];
+                end
+            case 'mixedPH'
+                if strcmp(obj.theory,'GeometricallyExact')
+                    ed = q(:,1:2);
+                else 
+                    ed = [obj.meshObject.nodes(:, 1), q(:, 1)];
+                end
+        end
     elseif isa(obj, 'plateClass')
         ed = [obj.meshObject.nodes, q(:, 1)];
     else
@@ -48,7 +61,7 @@ for i = 1:numel(obj)
         if clim(1)~=clim(2)
             caxis(clim)
         end
-    end    
+    end
 end
 end
 %% Function to determine color data
@@ -64,6 +77,9 @@ if ~strcmpi(plotObject.postPlotType,'none')
         K = sparse(vertcat(postDataFE(:).indexKeI), vertcat(postDataFE(:).indexKeJ), vertcat(postDataFE(:).Me),maxElAct,maxElAct);
         colorData = zeros(size(fdof,1),1);
         colorData(:) = K(fdof,fdof)\R(fdof,1);
+        obj.plotData.nodalColorData = colorData;
+    elseif strcmpi(plotObject.postPlotType,'time')
+        colorData = ones(numel(fdof),1)*setupObject.time;
     else
         factor = 1;
         fieldPosition = 1;

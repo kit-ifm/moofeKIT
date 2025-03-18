@@ -56,11 +56,11 @@ EDOF = meshEdofRectangle(1, numberOfElementsX, numberOfElementsY, order);
 bounEDOFs = struct('SY1', zeros(nelX, order+1), 'SY2', zeros(nelX, order+1), ...
     'SX1', zeros(nelY, order+1), 'SX2', zeros(nelY, order+1));
 
-for i=1:order + 1
+for i = 1:order + 1
     bounEDOFs.SY1(:, i) = i:order:nnoX - order - 1 + i;
     bounEDOFs.SY2(:, i) = nnoX * nnoY - nnoX + i:order:nnoX * nnoY - order - 1 + i;
-    bounEDOFs.SX1(:, i) = nnoX * (i-1) + 1:order*nnoX:nnoX * nnoY - nnoX * (order+2-i) + 1;
-    bounEDOFs.SX2(:, i) = nnoX + nnoX * (i-1):order * nnoX:nnoX * nnoY - nnoX * (order+1-i);
+    bounEDOFs.SX1(:, i) = nnoX * (i - 1) + 1:order * nnoX:nnoX * nnoY - nnoX * (order + 2 - i) + 1;
+    bounEDOFs.SX2(:, i) = nnoX + nnoX * (i - 1):order * nnoX:nnoX * nnoY - nnoX * (order + 1 - i);
 end
 
 %change mesh for serendipity
@@ -83,6 +83,12 @@ if serendipity
         error(['Serendipity elements currently not implemented for order ', num2str(order), '!']);
     end
 end
+
+% rearrange bounEdof entries so that it matches the node numbering scheme
+bounEDOFs.SX1 = [bounEDOFs.SX1(:, 1), bounEDOFs.SX1(:, end), bounEDOFs.SX1(:, 2:end-1)];
+bounEDOFs.SX2 = [bounEDOFs.SX2(:, 1), bounEDOFs.SX2(:, end), bounEDOFs.SX2(:, 2:end-1)];
+bounEDOFs.SY1 = [bounEDOFs.SY1(:, 1), bounEDOFs.SY1(:, end), bounEDOFs.SY1(:, 2:end-1)];
+bounEDOFs.SY2 = [bounEDOFs.SY2(:, 1), bounEDOFs.SY2(:, end), bounEDOFs.SY2(:, 2:end-1)];
 
 end
 

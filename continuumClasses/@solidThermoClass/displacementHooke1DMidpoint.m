@@ -135,7 +135,7 @@ for k = 1:numberOfGausspoints
     else
         % stress computation
         stressTensor.Cauchy = sigmaN1;
-        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end    
 end
 if ~computePostData

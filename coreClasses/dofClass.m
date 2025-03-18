@@ -13,6 +13,8 @@ classdef dofClass < matlab.mixin.Copyable
         R
         K
         postDataObject
+        isConstrained = false
+        constraintObjectList
     end
     properties (Dependent = true)
         numberOfContinuumObjects
@@ -38,6 +40,9 @@ classdef dofClass < matlab.mixin.Copyable
                 continuumObject.initializeGlobalDofs(obj);
                 if isa(continuumObject,'solidViscoClass')
                     continuumObject.initializeEpsilonViscoN1;
+                end
+                if ismethod(continuumObject,'initializeHistoryVariableN1')
+                    continuumObject.initializeHistoryVariableN1;
                 end
             end
         end
@@ -74,6 +79,11 @@ classdef dofClass < matlab.mixin.Copyable
                 end
             end
             % assembly
+            if obj.isConstrained
+                for index = 1:numel(obj.constraintObjectList)
+                    massDataFE = obj.constraintObjectList{index}.implementConstraintsInMass(massDataFE);
+                end
+            end
             M = sparse(vertcat(massDataFE(:).indexMeI),vertcat(massDataFE(:).indexMeJ),vertcat(massDataFE(:).Me),obj.totalNumberOfDofs,obj.totalNumberOfDofs);
         end
         function solveDof = get.solveDof(obj)
@@ -102,13 +112,13 @@ classdef dofClass < matlab.mixin.Copyable
                 end
             end
         end
-        function updateTimeDependentFieldPreNewtonLoop(obj,fieldName,time) 
+        function updateTimeDependentFieldPreNewtonLoop(obj,fieldName,time)
             for index1 = 1:obj.numberOfContinuumObjects
                 continuumObject = obj.listContinuumObjects{index1};
                 continuumObject.updateTimeDependentFieldPreNewtonLoop(obj,fieldName,time)
             end
         end
-        function updateTimeDependentFieldNewtonLoop(obj,fieldName,time) 
+        function updateTimeDependentFieldNewtonLoop(obj,fieldName,time)
             for index1 = 1:obj.numberOfContinuumObjects
                 continuumObject = obj.listContinuumObjects{index1};
                 continuumObject.updateTimeDependentFieldNewtonLoop(obj,fieldName,time)
@@ -126,6 +136,15 @@ classdef dofClass < matlab.mixin.Copyable
                 continuumObject.updateContinuumFieldPostNewtonLoop(obj,setupObject,fieldName);
             end
         end
+        function computeHistoryFieldPostNewtonLoop(obj,setupObject)
+            for index1 = 1:obj.numberOfContinuumObjects
+                continuumObject = obj.listContinuumObjects{index1};
+                if ismethod(continuumObject,'updateIteratedHistoryField')
+                    continuumObject.updateIteratedHistoryField(setupObject);
+                end
+            end
+        end
+        
         
         %%%%%%%%%%%%%%%%%
         function out = get.numberOfContinuumObjects(obj)
@@ -142,5 +161,6 @@ classdef dofClass < matlab.mixin.Copyable
                 end
             end
         end
+        
     end
 end

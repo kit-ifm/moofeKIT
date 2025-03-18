@@ -1,6 +1,7 @@
 classdef solidElectroThermoClass < solidSuperClass  
-    properties (Constant = true)
+    properties
         additionalFields = 2;
+        dofsPerAdditionalField = [1; 1];
     end
     properties (Dependent = true)
         permutationMatrix

@@ -229,7 +229,7 @@ for k = 1:numberOfGausspoints
         stressTensor.FirstPK = PN1;
         stressTensor.Cauchy = 1 / det(FxN1) * PN1 * FxN1';
         stressTensor.D = DN1;
-        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end
 
     %% energy

@@ -27,16 +27,21 @@ qN1 = obj.qN1;
 Pr = mixedFEObject.shapeFunctionObject.M;
 numberOfInternalDofs = size(mixedFEObject.qN1, 2);
 % material data and voigt notation
-nu = materialObject.nu;
-E = materialObject.E;
 selectMapVoigt(mapVoigtObject, dimension, 'symmetric');
+
+% aquire material data
+E = materialObject.E;
+nu = materialObject.nu;
 switch lower(strtok(materialObject.name, 'Hooke'))
+    case 'esz'
+        C = E / (1 - nu^2) * [1, nu, 0; nu, 1, 0; 0, 0, (1 - nu) / 2];
     case 'evz'
-        C = E / ((1 + nu) * (1 - 2 * nu)) * [1 - nu, nu, 0; nu, 1 - nu, 0; 0, 0, (1 - 2 * nu) / 2]; %EVZ
+        C = E / ((1 + nu) * (1 - 2 * nu)) * [1 - nu, nu, 0; nu, 1 - nu, 0; 0, 0, (1 - 2 * nu) / 2];
     otherwise
         error('not implemented')
 end
 Cinv = C \ eye(size(C, 1));
+
 % initialize elementEnergy
 elementEnergy.strainEnergy = 0;
 
@@ -74,7 +79,7 @@ for k = 1:numberOfGausspoints
         sigmaN1(3, 3) = nu * trace(sigmaN1);
         % stress at gausspoint
         stressTensor.Cauchy = sigmaN1;
-        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end
 end
 if ~computePostData

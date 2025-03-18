@@ -28,7 +28,7 @@ timeStepSize = 5e-2;
 allDT = [5e-2, 5e-3, 5e-4, 2e-4];
 u = cell(size(allDT));
 error = zeros(size(allDT));
-for k = 1:length(allDT)
+for k = 1:numel(allDT)
 
     timeStepSize = allDT(k);
     %% Simulation setup
@@ -62,13 +62,14 @@ for k = 1:length(allDT)
     stringObject.numericalTangentObject.showDifferences = false;
     
     %% Spatial discretiaztion
+    startpoint = [0,0];
     endpoint = [0,-1];
     length_string = norm(endpoint);
     order  = 1;
     number_of_gausspoints = 2;
     
     % Mesh
-    [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length_string,numberOfElementsOfCrime,order,endpoint);
+    [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length_string,numberOfElementsOfCrime,order,startpoint,endpoint);
     stringObject.qN = nodesEquilibrium;
     dofObject.listContinuumObjects{1}.mixedFEObject.qR = mixedEquilibrium;
 
@@ -110,7 +111,7 @@ for k = 1:length(allDT)
 end
       
 %% Postprocessing
-for l = 1:length(allDT)
+for l = 1:numel(allDT)
     error(l) = norm(u{l}-u{end})/norm(u{end});
 end
 figure()

@@ -1,6 +1,8 @@
 classdef postDataClass < matlab.mixin.Copyable
     properties
         energyJournal = struct('time', [], 'EKin', [], 'EKinDifference', []);
+        storeStateFlag = false;
+        stateJournal = struct('time', [], 'position', [], 'velocity', []);
     end
 
     methods
@@ -18,6 +20,9 @@ classdef postDataClass < matlab.mixin.Copyable
             indexStructure = timeStep + 1;
             updateEnergyJournal(obj, indexStructure, time, vN, vN1, M);
             updateMomenta(obj, dofObject, indexStructure, vN1, M);
+            if obj.storeStateFlag
+                updateStateJournal(obj, dofObject, indexStructure, time, vN, vN1);
+            end
         end
         function updateEnergyJournal(obj, index, time, vN, vN1, M)
             obj.energyJournal(index).time = time;
@@ -31,11 +36,25 @@ classdef postDataClass < matlab.mixin.Copyable
             for ii = 1:dofObject.numberOfContinuumObjects
                 continuumObject = dofObject.listContinuumObjects{ii};
                 if isprop(continuumObject, 'momenta')
-                    continuumObject.L = dofObject.L(continuumObject.meshObject.globalNodesDof(:, 1:continuumObject.dimension));
-                    continuumObject.momenta(index).L = sum(continuumObject.L, 1);
+                    if isa(continuumObject,"beamClass")
+                        continuumObject.L = dofObject.L(continuumObject.meshObject.globalNodesDof);
+                    else
+                        continuumObject.L = dofObject.L(continuumObject.meshObject.globalNodesDof(:, 1:continuumObject.dimension));
+                        continuumObject.momenta(index).L = sum(continuumObject.L, 1);
+                    end
                     continuumObject.momenta(index).J = continuumObject.J;
                 end
             end
+            0;
+        end
+        function updateStateJournal(obj, dofObject, index, time, vN, vN1)
+            if index == 2
+                obj.stateJournal(index-1).position = dofObject.qN;
+                obj.stateJournal(index-1).velocity = vN;
+            end
+            obj.stateJournal(index).time = time;
+            obj.stateJournal(index).position = dofObject.qN1;
+            obj.stateJournal(index).velocity = vN1;
         end
         function out = getTime(obj, setupObject)
             out = vertcat(obj.energyJournal(:).time);

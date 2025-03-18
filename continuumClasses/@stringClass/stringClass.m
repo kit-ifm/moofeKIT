@@ -1,6 +1,7 @@
 classdef stringClass < solidSuperClass
-    properties (Constant = true)
+    properties
         additionalFields = 0;
+        dofsPerAdditionalField = [];
     end
     properties (SetAccess = private)
         numberOfDofsPerNode

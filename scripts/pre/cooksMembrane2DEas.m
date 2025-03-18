@@ -12,14 +12,15 @@ dofObject = dofClass;   % required object for dof and object handling
 %% continuum Objects
 solidObject = solidClass(dofObject);
 % solidObject.elementDisplacementType = 'displacement';
-solidObject.elementDisplacementType = 'easPetrovGalerkin';
+solidObject.elementDisplacementType = 'eas';
+solidObject.elementNameAdditionalSpecification = 'PetrovGalerkin';
 solidObject.shapeFunctionObject.order = 1;
 [solidObject.meshObject.nodes, solidObject.meshObject.edof, edofNeumann] = meshCooksMembrane(2, 2, solidObject.shapeFunctionObject.order);
 solidObject.materialObject.name = 'HookeESZ';
 % solidObject.materialObject.name = 'Hooke';
 solidObject.materialObject.rho = 0;
-solidObject.materialObject.E = 1e2;
-solidObject.materialObject.nu = 0.499;
+solidObject.materialObject.E = 1;
+solidObject.materialObject.nu = 1/3;
 solidObject.dimension = 2;
 solidObject.shapeFunctionObject.numberOfGausspoints = (solidObject.shapeFunctionObject.order+1)^2;
 solidObject.mixedFEObject.condensation = true;
@@ -27,22 +28,15 @@ solidObject.mixedFEObject.typeShapeFunctionData = 4;
 
 % dirchlet boundary conditions
 dirichletObject = dirichletClass(dofObject);
-dirichletObject.dimension = 2;
 dirichletObject.masterObject = solidObject;
 dirichletObject.nodeList = find(solidObject.meshObject.nodes(:,1) == 0);
 dirichletObject.nodalDof = 1:2;
-dirichletObject.timeFunction = str2func('@(t) 0');
 
 % neumann boundary conditions
 neumannObject = neumannClass(dofObject);
-neumannObject.dimension = 2;
-neumannObject.typeOfLoad = 'deadLoad';
+neumannObject.loadGeometry = 'line';
 neumannObject.masterObject = solidObject;
-neumannObject.forceVector = [0;5];
-neumannObject.shapeFunctionObject.order = solidObject.shapeFunctionObject.order;
-neumannObject.shapeFunctionObject.numberOfGausspoints = neumannObject.shapeFunctionObject.order+1;
-neumannObject.projectionType = 'none';
-neumannObject.timeFunction = @(t) t;
+neumannObject.loadVector = [0; 1/16];
 neumannObject.meshObject.edof = edofNeumann;
 
 %% solver
@@ -50,5 +44,7 @@ dofObject = runNewton(setupObject,dofObject);
 % plot(solidObject)
 
 %% postprocessing
-yDisplacementUpperRightNode = solidObject.qN1(end,2)-solidObject.qR(end,2);
+% nodeToMeasure = find(abs(solidObject.meshObject.nodes(:, 1)-48) < 1e-8 & abs(solidObject.meshObject.nodes(:, 2)-60) < 1e-8); % upper right node
+nodeToMeasure = find(abs(solidObject.meshObject.nodes(:, 1)-48) < 1e-8 & abs(solidObject.meshObject.nodes(:, 2)-52) < 1e-8); % middle right node
+yDisplacementUpperRightNode = solidObject.qN1(nodeToMeasure,2)-solidObject.qR(nodeToMeasure,2);
 fprintf('\nDisplacement: %4.3f\n',yDisplacementUpperRightNode)
