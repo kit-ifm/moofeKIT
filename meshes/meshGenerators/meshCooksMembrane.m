@@ -1,22 +1,35 @@
-function [nodes,edof,edofNeumann] = meshCooksMembrane(numberOfElementsX, numberOfElementsY, order)
-% Robin Pfefferkorn 30.4.19
-% mesh for cooks membrane with dimensions:
+function [nodes, edof, edofNeumann] = meshCooksMembrane(numberOfElementsX, numberOfElementsY, order, serendipity)
+%MESHCOOKSMEMBRANE Mesh for the Cooks Membrane
+%   This function returns the nodes and the edof for the Cooks Membrane
+%
+%   CALL
+%   [nodes, edof, bounEdof] = meshCooksMembrane(numberOfElementsX, numberOfElementsY, order, serendipity)
+%   numberOfElementsX: number of elements in X-direction
+%   numberOfElementsY: number of elements in Y-direction
+%   order: order of the ansatz functions
+%   serendipity: serendipity shape functions (true / false)
+%   nodes: coordinates of the nodes
+%   edof: node numbers for all elements
+%   bounEdof: Neumann boundary (right side of membrane)
+%
+%   REFERENCE
+%   -
+%
+%   CREATOR(S)
+%   Jakob Hammes
+
+% dimensions
 heightLeft = 44;
 heightRight = 16;
 length = 48;
 
-% create rectangle first 
-x = 0:length/(numberOfElementsX*order):length;
-y = 0:heightLeft/(numberOfElementsY*order):heightLeft;
-nodes = zeros((numberOfElementsX*order+1)*(numberOfElementsY*order+1),2);
-
-nodes(:,1) = kron(ones(1,numberOfElementsY*order+1),x);
-nodes(:,2) = kron(y,ones(1,numberOfElementsX*order+1));
-edof = meshEdofRectangle(1,numberOfElementsX,numberOfElementsY,order);
+% create rectangle mesh first 
+[nodesOriginal, edof, bounEdof] = meshRectangle(length, heightLeft, numberOfElementsX, numberOfElementsY, order, serendipity);
+nodesOriginal(:,1) = nodesOriginal(:,1) + length/2; 
+nodesOriginal(:,2) = nodesOriginal(:,2) + heightLeft/2;
+edofNeumann = bounEdof.SX2;
 
 % distort rectangle mesh
-nodes(:,2) = nodes(:,2) + nodes(:,1)/length*heightLeft + (nodes(:,2)/heightLeft).*(nodes(:,1)/length*(heightRight-heightLeft));
-
-% edof Neumann
-[~,edofNeumann] = meshBoundaryElements(nodes,[length,heightLeft;length,heightLeft+heightRight],length/numberOfElementsX*1e-5,order);
+nodes = nodesOriginal;
+nodes(:,2) = nodesOriginal(:,2) + nodesOriginal(:,1)/length*heightLeft + (nodesOriginal(:,2)/heightLeft).*(nodesOriginal(:,1)/length*(heightRight-heightLeft));
 end

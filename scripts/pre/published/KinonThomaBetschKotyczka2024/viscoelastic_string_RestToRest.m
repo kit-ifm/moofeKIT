@@ -3,7 +3,7 @@
 % problem: visco-hyperelastic string, maneuvering from
 %          left to right using dirichlet and neumann BC, starts from static
 %          equilibrium
-% spatial discretization: linear Lagrange shapefunction for disp, 
+% spatial discretization: linear Lagrange shapefunction for disp,
 %                         discont. constant shapefunction for strain,
 %                         mixed formulation
 % time discretization: midpoint rule or discrete gradient
@@ -44,27 +44,27 @@ if new_calculation
     setupObject.plotObject.view = [0,90];
     setupObject.plotObject.setXminXmax([-0.1;-2;0],[2;0;0]);
     setupObject.newton.tolerance = newtonTolerance;
-    setupObject.integrator = integrator; 
+    setupObject.integrator = integrator;
     dofObject = dofClass;
     %% Continuum object
     stringObject = stringClass(dofObject,2);
     stringObject.elementDisplacementType = 'mixedPHViscoPT'; %pH Formulation with right Cauchy-Green strains
     stringObject.elementNameAdditionalSpecification = 'C';
-    
+
     % Material
     stringObject.materialObject.name = material;
     stringObject.materialObject.EA = EA;
     stringObject.materialObject.etaA = etaA;
-    stringObject.materialObject.rho = rhoA; 
+    stringObject.materialObject.rho = rhoA;
     stringObject.numericalTangentObject.computeNumericalTangent = false;
     stringObject.numericalTangentObject.showDifferences = false;
-    
+
     %% Spatial discretiaztion
     endpoint = [0,-1];
     length = norm(endpoint);
     order  = 1;
     number_of_gausspoints = 2;
-    
+
     % Mesh
     [stringObject.meshObject.nodes,stringObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElementsOfCrime,order,[0,0],endpoint);
     stringObject.qN = nodesEquilibrium;
@@ -74,21 +74,21 @@ if new_calculation
     stringObject.dimension = 1;
     stringObject.shapeFunctionObject.order = order;
     stringObject.shapeFunctionObject.numberOfGausspoints = number_of_gausspoints;
-    
+
     %% Boundary conditions
     % Dirichlet BC (fixed at x=0)
     dirichletObject = dirichletClass(dofObject);
     dirichletObject.nodeList = find(stringObject.meshObject.nodes(:,2)==0);
     dirichletObject.nodalDof = [2];
     dirichletObject.masterObject = stringObject;
-    
+
     % neumann boundary conditions
     nodalLoadObject = nodalLoadClass(dofObject);
     nodalLoadObject.masterObject = stringObject;
     nodalLoadObject.loadVector = rhoA*[1; 0];
-    nodalLoadObject.timeFunction = str2func('@(t) sin(pi*(t)/2).*(t<=4+1e-12)'); 
+    nodalLoadObject.timeFunction = str2func('@(t) sin(pi*(t)/2).*(t<=4+1e-12)');
     nodalLoadObject.nodeList= 1;
-    
+
     %Bodyforce
     bodyForceObject = bodyForceClass(dofObject);
     bodyForceObject.typeOfLoad = 'deadLoad';
@@ -99,7 +99,7 @@ if new_calculation
     bodyForceObject.meshObject.edof = stringObject.meshObject.edof;
     bodyForceObject.shapeFunctionObject.order = order;
     bodyForceObject.shapeFunctionObject.numberOfGausspoints = number_of_gausspoints;
-    
+
     %% Solver
     dofObject = runNewton(setupObject,dofObject);
 
@@ -113,7 +113,7 @@ if postprocess
     plot(stringObject,setupObject)
     %matlab2tikz('height', '\figH', 'width', '\figW', 'filename', [exportFolder, 'snapshots', '.tikz'], 'showInfo', false, 'floatformat', '%.4g')
 
-    
+
     % Get energy quantities
     kineticEnergy = zeros(setupObject.totalTimeSteps+1,1);
     potentialEnergy = zeros(setupObject.totalTimeSteps+1,1);
@@ -121,18 +121,18 @@ if postprocess
     time = zeros(setupObject.totalTimeSteps+1,1);
     totalDissipatedEnergy = zeros(setupObject.totalTimeSteps+1,1);
     energyIncrement = zeros(setupObject.totalTimeSteps,1);
-       
+
     for j = 1:setupObject.totalTimeSteps+1
         time(j) = (j-1)*setupObject.totalTime/setupObject.totalTimeSteps;
         kineticEnergy(j) = dofObject.postDataObject.energyJournal(j).EKin;
-        potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.ePot(j).strainEnergy + bodyForceObject.ePot(j).externalEnergy;
-        dissipatedEnergy(j) = dofObject.listContinuumObjects{1,1}.ePot(j).dissipatedEnergy;
+        potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.elementData(j).strainEnergy + bodyForceObject.elementData(j).externalEnergy;
+        dissipatedEnergy(j) = dofObject.listContinuumObjects{1,1}.elementData(j).dissipatedEnergy;
     end
     for i = 1:setupObject.totalTimeSteps
-        energyIncrement(i) = (kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i)); 
+        energyIncrement(i) = (kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i));
         totalDissipatedEnergy(i+1) = totalDissipatedEnergy(i) + dissipatedEnergy(i+1);
     end
-    
+
     figure()
     plot(time(1:end-1),dissipatedEnergy(2:end))
     legend('W_{diss}^n');

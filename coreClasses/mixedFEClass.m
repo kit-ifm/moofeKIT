@@ -41,6 +41,12 @@ classdef mixedFEClass < matlab.mixin.Copyable
                     obj.dofsPerField{1} = obj.typeShapeFunctionData;
                     obj.numberOfDofs = obj.typeShapeFunctionData;
                     computeShapeFunctions = false;
+                    if isa(continuumObject,'solidVelocityClass')
+                        obj.numberOfFields = 2;
+                        obj.dofsPerField{1} = obj.typeShapeFunctionData;
+                        obj.dofsPerField{2} = obj.typeShapeFunctionData;
+                        obj.numberOfDofs = 2 * obj.typeShapeFunctionData;
+                    end
                 case {'incompressibleSimoTaylorPistor','incompressibleSimoTaylorPistorContinuous'}
                     if floor(obj.typeShapeFunctionData)~=ceil(obj.typeShapeFunctionData) || obj.typeShapeFunctionData < 0
                         error('invalid obj.orderShapeFunction')
@@ -79,11 +85,14 @@ classdef mixedFEClass < matlab.mixin.Copyable
                 case {'mixedSC','mixedD_SC'}
                     switch continuumObject.elementDisplacementType
                         case {'mixedSC'}
-                            if isa(continuumObject,'solidClass')
-                                if (isempty(continuumObject.elementNameAdditionalSpecification) || strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeCGc'))
+                            if isa(continuumObject,'solidClass') || isa(continuumObject,'solidVelocityClass')
+                                if (isempty(continuumObject.elementNameAdditionalSpecification) || strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeCGc') || strcmpi(continuumObject.elementNameAdditionalSpecification,'pHCGJLambda'))
                                     obj.numberOfFields = 6;
                                     obj.dofsPerFieldVector = [6;6;1;6;6;1];
-                                elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeGc') || strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeGJ')
+                                elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'pHCGJ')
+                                    obj.numberOfFields = 3;
+                                    obj.dofsPerFieldVector = [6;6;1];
+                                elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeGc') || strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeGJ') || strcmpi(continuumObject.elementNameAdditionalSpecification,'pHGJLambda')
                                     obj.numberOfFields = 4;
                                     obj.dofsPerFieldVector = [6;1;6;1];
                                 elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'InvariantCGc') || strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeIIIJ')
@@ -159,13 +168,81 @@ classdef mixedFEClass < matlab.mixin.Copyable
                         end
                         obj.dofsPerField{2} = 1;
                         numberOfNodes = 1; % discontinuous ansatz constant elementwise
+                    elseif isa(continuumObject,'beamVelocityClass')
+                        % TO CHECK: do sth else here?
                     end
                 case {'mixedPHViscoPT'}
                     obj.numberOfFields = 2;
                     obj.dofsPerField{1} = 1;
                     obj.dofsPerField{2} = 1;
                     obj.numberOfDofs = 2; %extended strain variables and elastic strain
-                    numberOfNodes = 1; % discontinuous ansatz constant elementwise 
+                    numberOfNodes = 1; % discontinuous ansatz constant elementwise
+                case {'dispL2'}
+                    obj.numberOfFields = 2;
+                    obj.dofsPerFieldVector = [1; 1];
+
+                    if isempty(numberOfNodes)
+                        orderMixedShapeFunction = obj.typeShapeFunctionData;
+                        if any(strcmpi(continuumObject.elementGeometryType, {'quadrilateral', 'hexahedral'}))
+                            numberOfNodes = (orderMixedShapeFunction+1)^continuumObject.dimension;
+                        elseif strcmpi(continuumObject.elementGeometryType, 'triangular')
+                            if orderMixedShapeFunction == 0
+                                numberOfNodes = 1;
+                            elseif orderMixedShapeFunction == 1
+                                numberOfNodes = 3;
+                            elseif orderMixedShapeFunction == 2
+                                numberOfNodes = 6;
+                            end
+                        elseif strcmpi(continuumObject.elementGeometryType, 'tetrahedral')
+                            if orderMixedShapeFunction == 0
+                                numberOfNodes = 1;
+                            elseif orderMixedShapeFunction == 1
+                                numberOfNodes = 4;
+                            elseif orderMixedShapeFunction == 2
+                                numberOfNodes = 10;
+                            end
+                        else
+                            error('Element geometry type not implemented')
+                        end
+                    end
+                    obj.dofsPerField = cell(obj.numberOfFields,1);
+                    for ii = 1:obj.numberOfFields
+                        obj.dofsPerField{ii,:} = [obj.dofsPerFieldVector(ii)*numberOfNodes obj.dofsPerFieldVector(ii)*numberOfNodes];
+                    end
+                    obj.numberOfDofs = sum(vertcat(obj.dofsPerField{:}),1);
+                case {'mixedCGJL2'}
+                    obj.numberOfFields = 5;
+                    obj.dofsPerFieldVector = [1; 1; 6; 6; 1];
+
+                    if isempty(numberOfNodes)
+                        orderMixedShapeFunction = obj.typeShapeFunctionData;
+                        if any(strcmpi(continuumObject.elementGeometryType, {'quadrilateral', 'hexahedral'}))
+                            numberOfNodes = (orderMixedShapeFunction+1)^continuumObject.dimension;
+                        elseif strcmpi(continuumObject.elementGeometryType, 'triangular')
+                            if orderMixedShapeFunction == 0
+                                numberOfNodes = 1;
+                            elseif orderMixedShapeFunction == 1
+                                numberOfNodes = 3;
+                            elseif orderMixedShapeFunction == 2
+                                numberOfNodes = 6;
+                            end
+                        elseif strcmpi(continuumObject.elementGeometryType, 'tetrahedral')
+                            if orderMixedShapeFunction == 0
+                                numberOfNodes = 1;
+                            elseif orderMixedShapeFunction == 1
+                                numberOfNodes = 4;
+                            elseif orderMixedShapeFunction == 2
+                                numberOfNodes = 10;
+                            end
+                        else
+                            error('Element geometry type not implemented')
+                        end
+                    end
+                    obj.dofsPerField = cell(obj.numberOfFields,1);
+                    for ii = 1:obj.numberOfFields
+                        obj.dofsPerField{ii,:} = [obj.dofsPerFieldVector(ii)*numberOfNodes obj.dofsPerFieldVector(ii)*numberOfNodes];
+                    end
+                    obj.numberOfDofs = sum(vertcat(obj.dofsPerField{:}),1);
                 otherwise
                     error('elementDisplacementType not implemented')
             end
@@ -200,7 +277,7 @@ classdef mixedFEClass < matlab.mixin.Copyable
                 elseif size(continuumObject.meshObject.edof,2) == 9 && obj.typeShapeFunctionData == 1
                     edofNodes = continuumObject.meshObject.edof(:,1:4);
                 else
-                    error('combination of shapefunctions for continuous internal dofs is not implemented') 
+                    error('combination of shapefunctions for continuous internal dofs is not implemented')
                 end
                 % squeeze the unused DOF
                 uniqueDof = unique(edofNodes(:));
@@ -229,17 +306,42 @@ classdef mixedFEClass < matlab.mixin.Copyable
                 else
                     obj.qN = zeros(numberOfElements,obj.numberOfDofs(1));
                 end
-                if strcmp(continuumObject.elementDisplacementType, 'mixedSC')
+                if strcmp(continuumObject.elementDisplacementType, 'dispL2')
+                    E = 1;
+                    Eta = 1;
+                    orderMixedShapeFunction = obj.typeShapeFunctionData;
+                    numberOfNodes = (orderMixedShapeFunction+1)^continuumObject.dimension;
+                    if numel(numberOfNodes)==1
+                        obj.qN = [repmat(E,numberOfElements,numberOfNodes), repmat(Eta,numberOfElements,numberOfNodes)];
+                    else
+                        obj.qN = [repmat(E,numberOfElements,numberOfNodes(1)), repmat(Eta,numberOfElements,numberOfNodes(2))];
+                    end
+                elseif strcmp(continuumObject.elementDisplacementType, 'mixedCGJL2')
+                    E = 1;
+                    Eta = 1;
+                    C   = eye(3);
+                    CV  = matrixToVoigt(C,'strain').';
+                    G = 1 / 2 * wedge(C,C);
+                    GV = matrixToVoigt(G,'strain').';
+                    J = sqrt(1 / 3 * innerProduct(G,C));
+                    orderMixedShapeFunction = obj.typeShapeFunctionData;
+                    numberOfNodes = (orderMixedShapeFunction+1)^continuumObject.dimension;
+                    if numel(numberOfNodes)==1
+                        obj.qN = [repmat(E,numberOfElements,numberOfNodes), repmat(Eta,numberOfElements,numberOfNodes), repmat(CV,numberOfElements,numberOfNodes), repmat(GV,numberOfElements,numberOfNodes), repmat(J,numberOfElements,numberOfNodes)];
+                    else
+                        obj.qN = [repmat(E,numberOfElements,numberOfNodes(1)), repmat(Eta,numberOfElements,numberOfNodes(2)), repmat(CV,numberOfElements,numberOfNodes(3)), repmat(GV,numberOfElements,numberOfNodes(4)), repmat(J,numberOfElements,numberOfNodes(5))];
+                    end
+                elseif strcmp(continuumObject.elementDisplacementType, 'mixedSC')
                     if dimension == 3
                         switch continuumObject.materialObject.name
-                            case {'ANN','MooneyRivlin', 'MooneyRivlinFullCoupled', 'MooneyRivlinFullCoupledMehnert'}
+                            case {'ANN','MooneyRivlin', 'MooneyRivlinFullCoupled', 'MooneyRivlinFullCoupledMehnert','MooneyRivlinVol2','MooneyRivlinModified','MooneyRivlinModifiedVol2'}
                                 C = eye(3);
                                 Cv = matrixToVoigt(C, 'stress')';
                                 G = 1/2*wedge(C, C);
                                 Gv = matrixToVoigt(G, 'stress')';
                                 c = 1/3*innerProduct(G, C);
-%                                 numberOfNodes = size(obj.shapeFunctionObject.N, 2);
-                                if isa(continuumObject,'solidClass')
+                                %                                 numberOfNodes = size(obj.shapeFunctionObject.N, 2);
+                                if isa(continuumObject,'solidClass') || isa(continuumObject,'solidVelocityClass')
                                     if isempty(continuumObject.elementNameAdditionalSpecification)
                                         if strcmpi(continuumObject.materialObject.name,'MooneyRivlin')
                                             dW_C = continuumObject.materialObject.a*eye(3);
@@ -312,6 +414,74 @@ classdef mixedFEClass < matlab.mixin.Copyable
                                         else
                                             obj.qN = [repmat(Gv,numberOfElements,numberOfNodes(1)), repmat(c,numberOfElements,numberOfNodes(2)), repmat(lambdaGv,numberOfElements,numberOfNodes(3)), repmat(lambdac,numberOfElements,numberOfNodes(4))];
                                         end
+                                    elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'pHCGJLambda')
+                                        C = eye(3);
+                                        G = eye(3);
+                                        Cv = matrixToVoigt(C, 'stress')';
+                                        Gv = matrixToVoigt(G, 'stress')';
+                                        J = 1;
+                                        if strcmpi(continuumObject.materialObject.name,'MooneyRivlin')
+                                            dW_C = continuumObject.materialObject.a*eye(3);
+                                            dW_G = continuumObject.materialObject.b*eye(3);
+                                            dW_J = continuumObject.materialObject.c*(J-1) - continuumObject.materialObject.d/J;
+                                        elseif strcmpi(continuumObject.materialObject.name,'MooneyRivlinVol2')
+                                            dW_C = continuumObject.materialObject.a*eye(3);
+                                            dW_G = continuumObject.materialObject.b*eye(3);
+                                            dW_J = continuumObject.materialObject.c*(J-1) - continuumObject.materialObject.d;                                            
+                                        elseif strcmpi(continuumObject.materialObject.name,'MooneyRivlinModified')
+                                            alpha = continuumObject.materialObject.alpha;
+                                            beta = continuumObject.materialObject.beta;
+                                            gamma = continuumObject.materialObject.gamma;
+                                            epsilon1 = continuumObject.materialObject.epsilon1;
+                                            epsilon2 = continuumObject.materialObject.epsilon2;
+                                            I = eye(3);
+                                            dW_C = alpha * trace(C) * I;
+                                            dW_G = beta * trace(G) * I;
+                                            dW_J = - gamma*J^(-1) + 2*epsilon1*epsilon2*(J^(2*epsilon2-1) - J^(-2*epsilon2-1));
+                                        end
+                                        lambdaCv = matrixToVoigt(dW_C, 'stress')';
+                                        lambdaGv = matrixToVoigt(dW_G, 'stress')';
+                                        lambdaJ = dW_J;
+                                        if numel(numberOfNodes)==1
+                                            obj.qN = [repmat(Cv,numberOfElements,numberOfNodes), repmat(Gv,numberOfElements,numberOfNodes), repmat(J,numberOfElements,numberOfNodes), repmat(lambdaCv,numberOfElements,numberOfNodes), repmat(lambdaGv,numberOfElements,numberOfNodes), repmat(lambdaJ,numberOfElements,numberOfNodes)];
+                                        else
+                                            obj.qN = [repmat(Cv,numberOfElements,numberOfNodes(1)), repmat(Gv,numberOfElements,numberOfNodes(2)), repmat(J,numberOfElements,numberOfNodes(3)), repmat(lambdaCv,numberOfElements,numberOfNodes(4)), repmat(lambdaGv,numberOfElements,numberOfNodes(5)), repmat(lambdaJ,numberOfElements,numberOfNodes(6))];
+                                        end
+                                    elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'pHGJLambda')
+                                        G = eye(3);
+                                        Gv = matrixToVoigt(G, 'stress')';
+                                        J = 1;
+                                        if strcmpi(continuumObject.materialObject.name,'MooneyRivlin')
+                                            dW_G = continuumObject.materialObject.b*eye(3);
+                                            dW_J = continuumObject.materialObject.c*(J-1) - continuumObject.materialObject.d/J;
+                                        elseif strcmpi(continuumObject.materialObject.name,'MooneyRivlinVol2')
+                                            dW_G = continuumObject.materialObject.b*eye(3);
+                                            dW_J = continuumObject.materialObject.c*(J-1) - continuumObject.materialObject.d;
+                                        elseif strcmpi(continuumObject.materialObject.name,'MooneyRivlinModified')
+                                            beta = continuumObject.materialObject.beta;
+                                            gamma = continuumObject.materialObject.gamma;
+                                            epsilon1 = continuumObject.materialObject.epsilon1;
+                                            epsilon2 = continuumObject.materialObject.epsilon2;
+                                            I = eye(3);
+                                            dW_G = beta * trace(G) * I;
+                                            dW_J = - gamma*J^(-1) + 2*epsilon1*epsilon2*(J^(2*epsilon2-1) - J^(-2*epsilon2-1));
+                                        end
+                                        lambdaGv = matrixToVoigt(dW_G, 'stress')';
+                                        lambdaJ = dW_J;
+                                        if numel(numberOfNodes)==1
+                                            obj.qN = [repmat(Gv,numberOfElements,numberOfNodes), repmat(J,numberOfElements,numberOfNodes), repmat(lambdaGv,numberOfElements,numberOfNodes), repmat(lambdaJ,numberOfElements,numberOfNodes)];
+                                        else
+                                            obj.qN = [repmat(Gv,numberOfElements,numberOfNodes(2)), repmat(J,numberOfElements,numberOfNodes(3)), repmat(lambdaGv,numberOfElements,numberOfNodes(5)), repmat(lambdaJ,numberOfElements,numberOfNodes(6))];
+                                        end
+                                    elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'pHCGJ')
+                                        Cv = matrixToVoigt(eye(3), 'stress')';
+                                        Gv = matrixToVoigt(eye(3), 'stress')';
+                                        J = 1;
+                                        if numel(numberOfNodes)==1
+                                            obj.qN = [repmat(Cv,numberOfElements,numberOfNodes), repmat(Gv,numberOfElements,numberOfNodes), repmat(J,numberOfElements,numberOfNodes)];
+                                        else
+                                            obj.qN = [repmat(Cv,numberOfElements,numberOfNodes(1)), repmat(Gv,numberOfElements,numberOfNodes(2)), repmat(J,numberOfElements,numberOfNodes(3))];
+                                        end
                                     elseif strcmpi(continuumObject.elementNameAdditionalSpecification,'NonCascadeGJ')
                                         C = eye(3);
                                         G = 1/2*wedge(C, C);
@@ -320,7 +490,7 @@ classdef mixedFEClass < matlab.mixin.Copyable
                                         J = sqrt(c);
                                         if strcmpi(continuumObject.materialObject.name,'MooneyRivlin')
                                             dW_II = continuumObject.materialObject.b;
-%                                             - d * log(J) + c / 2 * (J - 1)^2)
+                                            %                                             - d * log(J) + c / 2 * (J - 1)^2)
                                             dW_J = -continuumObject.materialObject.d/J + continuumObject.materialObject.c*(J-1);
                                         elseif strcmpi(continuumObject.materialObject.name,'ANN')
                                             ANNObject = continuumObject.artificialNeuralNetworkObject;
@@ -439,55 +609,41 @@ classdef mixedFEClass < matlab.mixin.Copyable
                     if dimension == 3
                         switch continuumObject.materialObject.name
                             case {'MooneyRivlin'}
-                                % not neccessary 
+                                % not neccessary
                             otherwise
                                 error('materialObject.name not implemented')
                         end
                     end
                 elseif strcmp(continuumObject.elementDisplacementType, 'mixedPH')
-
                     if strcmp(continuumObject.elementNameAdditionalSpecification,'C')
-                         
-                         if isempty(obj.qR) %no initial values for mixed quantity specified
-                            obj.qN = ones(numberOfElements,obj.numberOfDofs);
-                         else
-                            obj.qN = obj.qR;
-                         end
-
-                    elseif strcmp(continuumObject.elementNameAdditionalSpecification,'E')
-
-                         obj.qN = zeros(numberOfElements,obj.numberOfDofs);
-
-                    else
-
                         if isempty(obj.qR) %no initial values for mixed quantity specified
-                            obj.qN = zeros(numberOfElements,obj.numberOfDofs);
+                            obj.qN = ones(numberOfElements,obj.numberOfDofs);
                         else
                             obj.qN = obj.qR;
                         end
-
+                    elseif strcmp(continuumObject.elementNameAdditionalSpecification,'E')
+                        obj.qN = zeros(numberOfElements,obj.numberOfDofs);
                     end
-
                 elseif strcmp(continuumObject.elementDisplacementType, 'mixedPHViscoPT')
-                
+
                     if strcmp(continuumObject.elementNameAdditionalSpecification,'C')
 
                         if isempty(obj.qR) %no reference values for mixed quantity specified
-                                obj.qN = ones(numberOfElements,obj.numberOfDofs);
+                            obj.qN = ones(numberOfElements,obj.numberOfDofs);
                         else
-                                obj.qN = obj.qR;
+                            obj.qN = obj.qR;
                         end
                     end
                 end
             end
-            
+
             obj.qN1 = obj.qN;
         end
         function updateGlobalField(obj,continuumObject,dofObject)
             % for preinitialization of internalDofs/mixedFields without condensation for dofObject.qN array
             if contains(continuumObject.elementDisplacementType, 'mixed')
-            % if ~contains(continuumObject.elementDisplacementType, 'displacement')
-            % does not work for all other mixed elements i.e. for Q1Theta1P1discont
+                % if ~contains(continuumObject.elementDisplacementType, 'displacement')
+                % does not work for all other mixed elements i.e. for Q1Theta1P1discont
                 if ~obj.condensation
                     numberOfElements = size(continuumObject.meshObject.globalFullEdof, 1);
                     numberOfDisplacementDofs = dofObject.totalNumberOfDofs - numberOfElements*obj.numberOfDofs(1);
@@ -518,7 +674,7 @@ classdef mixedFEClass < matlab.mixin.Copyable
                 array.Re = [RD; RA];
                 array.Ke = [KDD, KDA; KAD, KAA];
                 dataFEMixed.ReDTilde = [];
-                dataFEMixed.KeDDTilde = [];   
+                dataFEMixed.KeDDTilde = [];
             end
         end
         function updateMixedElements(obj,continuumObject,dofObject,setupObject,delta,fieldName,field)

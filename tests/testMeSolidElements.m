@@ -28,11 +28,11 @@ assert(yDisplacementUpperRightNode > 0.658 & yDisplacementUpperRightNode < 0.66,
 
 %% Test 5: check y-displacement of upper right node of 'Aufgabe05' from lecture FEidF
 run('../scripts/pre/FEidF/Aufgabe05.m')
-assert(yDisplacementUpperRightNode > 17.271 & yDisplacementUpperRightNode < 17.273,'y-displacement of upper right node does not correspond to the expected value')
+assert(yDisplacementUpperRightNode > 17.2739 & yDisplacementUpperRightNode < 17.2741,'y-displacement of upper right node does not correspond to the expected value')
 
 %% Test 6: check y-displacement of upper right node of 'Aufgabe06' from lecture FEidF
 run('../scripts/pre/FEidF/Aufgabe06.m')
-assert(yDisplacementUpperRightNode > 15.701 & yDisplacementUpperRightNode < 15.703,'y-displacement of upper right node does not correspond to the expected value')
+assert(yDisplacementUpperRightNode > 15.7034 & yDisplacementUpperRightNode < 15.7036,'y-displacement of upper right node does not correspond to the expected value')
 
 %% Test 7: check y-displacement of upper right node of 'Aufgabe07' from lecture FEidF
 run('../scripts/pre/FEidF/Aufgabe07.m')
@@ -40,15 +40,15 @@ assert(min(yDisplacementUpperRightNode) > 5.629 & min(yDisplacementUpperRightNod
 
 %% Test 8: check y-displacement of upper right node of 'Aufgabe08' from lecture FEidF
 run('../scripts/pre/FEidF/Aufgabe08.m')
-assert(yDisplacementUpperRightNode > 14.974 & yDisplacementUpperRightNode < 14.976,'y-displacement of upper right node does not correspond to the expected value')
+assert(yDisplacementUpperRightNode > 14.9767 & yDisplacementUpperRightNode < 14.9769,'y-displacement of upper right node does not correspond to the expected value')
 
 %% Test 9: check y-displacement of upper right node of 'Aufgabe09' from lecture FEidF
 run('../scripts/pre/FEidF/Aufgabe09.m')
-assert(yDisplacementUpperRightNode > 14.914 & yDisplacementUpperRightNode < 14.916,'y-displacement of upper right node does not correspond to the expected value')
+assert(yDisplacementUpperRightNode > 14.9167 & yDisplacementUpperRightNode < 14.9169,'y-displacement of upper right node does not correspond to the expected value')
 
 %% Test 10: check y-displacement of upper right node of 'Aufgabe10' from lecture FEidF
 run('../scripts/pre/FEidF/Aufgabe10.m')
-assert(yDisplacementUpperRightNode > 14.670 & yDisplacementUpperRightNode < 14.672,'y-displacement of upper right node does not correspond to the expected value')
+assert(yDisplacementUpperRightNode > 14.6723 & yDisplacementUpperRightNode < 14.6725,'y-displacement of upper right node does not correspond to the expected value')
 
 %% Test 11: check y-displacement of upper right node of 'Aufgabe11' from lecture FEidF
 run('../scripts/pre/FEidF/Aufgabe11.m')

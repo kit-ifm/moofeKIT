@@ -1,17 +1,17 @@
 % LSHAPE Script for preprocessing a dynamic mechanical simulation.
-% 
+%
 % FORMULATION
 % Different formulations like standard displacement-based and mixed en-
 % hanced assumed strain (eas) and different material models can be chosen.
-% 
+%
 % REFERENCE
 % https://doi.org/10.1007/BF00913408
-% 
-% SEE ALSO 
+%
+% SEE ALSO
 % cooksMembrane,
 % LShapeElectroThermo
-% 
-% CREATOR(S) 
+%
+% CREATOR(S)
 % Marlon Franke
 
 %% setup (mandatory: setup and dofs)
@@ -40,11 +40,11 @@ solidObject.meshObject.nodes = abaqusMeshData.qR;
 solidObject.meshObject.edof = abaqusMeshData.edof;
 if 1
     solidObject.materialObject.name = 'ANNMooneyRivlin';
-%     solidObject.materialObject.name = 'ANNMooneyRivlin3';
-%     solidObject.materialObject.name = 'ANNMooneyRivlin2';
-%     solidObject.materialObject.name = 'MooneyRivlin';
+    %     solidObject.materialObject.name = 'ANNMooneyRivlin3';
+    %     solidObject.materialObject.name = 'ANNMooneyRivlin2';
+    %     solidObject.materialObject.name = 'MooneyRivlin';
     solidObject.elementDisplacementType = 'displacementSC';
-%     solidObject.elementDisplacementType = 'mixedSC';
+    %     solidObject.elementDisplacementType = 'mixedSC';
     solidObject.numericalTangentObject.computeNumericalTangent = true;
     solidObject.numericalTangentObject.showDifferences = false;
     bulk    = 5209;                                                 % K
@@ -61,14 +61,14 @@ if 1
     solidObject.mixedFEObject.typeShapeFunctionData = 0;
 elseif 0
     solidObject.materialObject.name = 'NeoHooke';
-%     solidObject.materialObject.name = 'SaintVenant';
-%     solidObject.materialObject.name = 'SaintVenantNumericalTangent';
+    %     solidObject.materialObject.name = 'SaintVenant';
+    %     solidObject.materialObject.name = 'SaintVenantNumericalTangent';
     % solidObject.materialObject.name = 'Hyperelastic'; % 'Hooke';
     solidObject.elementDisplacementType = 'displacement'; %'displacement'; % 'displacementSC'; % 'eas';
-%     solidObject.elementDisplacementType = 'displacementSC';
-%     solidObject.elementDisplacementType = 'eas';
+    %     solidObject.elementDisplacementType = 'displacementSC';
+    %     solidObject.elementDisplacementType = 'eas';
     solidObject.mixedFEObject.condensation = true;
-%     solidObject.mixedFEObject.condensation = true;
+    %     solidObject.mixedFEObject.condensation = true;
     % 'displacementSC'; % 'eas';
     solidObject.materialObject.rho = 1;
     E = 2.26115e+03;
@@ -77,11 +77,11 @@ elseif 0
     solidObject.materialObject.mu = E/(2*(1+nu));                              % G (second lame parameter)
 elseif 0
     solidObject.materialObject = materialPackage.saintVenantClass;
-%     solidObject.materialObject.name = 'Hyperelastic'; % 'Hooke';
-%     solidObject.elementDisplacementType = 'displacement'; % 'displacementSC'; % 'eas';
+    %     solidObject.materialObject.name = 'Hyperelastic'; % 'Hooke';
+    %     solidObject.elementDisplacementType = 'displacement'; % 'displacementSC'; % 'eas';
     solidObject.materialObject.name = 'Hooke';
     solidObject.elementDisplacementType = 'displacement'; % 'displacementSC'; % 'eas';
-%     solidObject.elementDisplacementType = 'eas';
+    %     solidObject.elementDisplacementType = 'eas';
     solidObject.materialObject.E = 2.26115e+03;
     solidObject.materialObject.nu = 4.95469e-01;
 elseif 0
@@ -93,7 +93,7 @@ elseif 0
     mu      = shear;
     solidObject.materialObject.c1 = 5/6*mu;
     solidObject.materialObject.c2 = 1/6*mu;
-    solidObject.materialObject.c = 0;    
+    solidObject.materialObject.c = 0;
 end
 solidObject.materialObject.rho = 10;
 solidObject.dimension = 3;
@@ -128,8 +128,8 @@ timeVector = getTime(dofObject.postDataObject,setupObject);
 kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
 [linearMomentum, totalLinearMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'L',3);
 [angularMomentum, totalAngularMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'J',3);
-strainEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'strainEnergy');
-externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+strainEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'strainEnergy');
+externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
 totalEnergy = strainEnergy + kineticEnergy;
 tStartDiff = ceil(bcTimeEnd/setupObject.totalTime*setupObject.totalTimeSteps);
 totalEnergyDiff = totalEnergy(tStartDiff+1:end) - totalEnergy(tStartDiff:end-1);

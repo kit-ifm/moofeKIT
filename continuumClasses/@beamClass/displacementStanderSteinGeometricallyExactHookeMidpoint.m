@@ -1,4 +1,4 @@
-function [rData, kData, elementEnergy, array] = displacementStanderSteinGeometricallyExactHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
+function [rData, kData, elementData, array] = displacementStanderSteinGeometricallyExactHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
 % Geometrically exact beam in EM conserving, displacement Formulation by
 % Stander and Stein
 
@@ -57,7 +57,7 @@ JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I);
 JAllreduced = computeJacobianForAllGausspoints(edR, dN_xi_k_I_reduced);
 
 % initialize elementEnergy
-elementEnergy.strainEnergy = 0;
+elementData.strainEnergy = 0;
 
 % residual
 rData{2} = zeros(2,1);
@@ -89,7 +89,7 @@ for k = 1:numberOfGausspoints
         rData{2} = rData{2} + G1*resultant_momentN05;
 
         % potential energy due to strain
-        elementEnergy.strainEnergy = elementEnergy.strainEnergy + 1/2 * EI * kappaN1^2 * detJ * gaussWeight(k);
+        elementData.strainEnergy = elementData.strainEnergy + 1/2 * EI * kappaN1^2 * detJ * gaussWeight(k);
         
     else
 
@@ -142,7 +142,7 @@ for kk=1:numberOfReducedGaussPoints
         rData{2} = rData{2} - V*resultant_forcesN05;
 
         % potential energy due to strain
-        elementEnergy.strainEnergy = elementEnergy.strainEnergy + 1/2 * (GammaN1)'*material_matrix*(GammaN1)  * detJ * gaussWeightReduced(kk);
+        elementData.strainEnergy = elementData.strainEnergy + 1/2 * (GammaN1)'*material_matrix*(GammaN1)  * detJ * gaussWeightReduced(kk);
         
     else
         RN1 = get_planar_rotation_matrix(Phi1*phiN1);

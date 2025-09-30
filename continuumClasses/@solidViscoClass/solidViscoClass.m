@@ -1,5 +1,6 @@
 classdef solidViscoClass < solidSuperClass
     properties
+        flagHistoryFields = true;
         epsilonViscoN % internal viscoelastic variable at timestep N
         epsilonViscoN1 % internal viscoelastic variable at timestep N+1
         dissWorkN % sum of dissipated work over time t_0 to t_n

@@ -1,17 +1,17 @@
 % LSHAPE Script for preprocessing a dynamic mechanical simulation.
-% 
+%
 % FORMULATION
 % Different formulations like standard displacement-based and mixed en-
 % hanced assumed strain (eas) and different material models can be chosen.
-% 
+%
 % REFERENCE
 % https://doi.org/10.1007/BF00913408
-% 
-% SEE ALSO 
+%
+% SEE ALSO
 % cooksMembrane,
 % LShapeElectroThermo
-% 
-% CREATOR(S) 
+%
+% CREATOR(S)
 % Marlon Franke
 
 run('../../startUpMoofeKIT.m')
@@ -35,12 +35,12 @@ dofObject = dofClass;   % required object for dof and object handling
 
 %% continuum Objects
 % abaqus mesh
-mesh = 'H1H0'; 
+mesh = 'H1H0';
 % mesh = 'H2H1';
 solidObject = solidClass(dofObject);
 if strcmpi(mesh,'H1H0')
-%     abaqusMeshData = abaqusInputFileConverter('LShapeH1VeryCoarse.inp');
-%     abaqusMeshData = abaqusInputFileConverter('LShapeH1.inp');
+    %     abaqusMeshData = abaqusInputFileConverter('LShapeH1VeryCoarse.inp');
+    %     abaqusMeshData = abaqusInputFileConverter('LShapeH1.inp');
     abaqusMeshData = abaqusInputFileConverter('LShapeH1Medium.inp');
     solidObject.shapeFunctionObject.order = 1;
     solidObject.shapeFunctionObject.numberOfGausspoints = 8;
@@ -51,23 +51,23 @@ elseif strcmpi(mesh,'H2H1')
 end
 solidObject.meshObject.nodes = abaqusMeshData.qR;
 solidObject.meshObject.edof = abaqusMeshData.edof;
-% 
+%
 solidObject.materialObject.name = 'ANNMooneyRivlin';    % IC, IIC, c
 % solidObject.materialObject.name = 'ANNMooneyRivlin2';    % C, G, c %TODO: implement analytical tangent
 % solidObject.materialObject.name = 'ANNMooneyRivlin3';    % IC, IIC, J, -J
 % solidObject.materialObject.name = 'MooneyRivlin';     % ground truth
 solidObject.elementDisplacementType = 'displacementSC';
 %     solidObject.elementDisplacementType = 'mixedSC';
-% 
+%
 solidObject.numericalTangentObject.computeNumericalTangent = false;
 solidObject.numericalTangentObject.showDifferences = false;
-% 
+%
 bulk    = 5209;                                                 % K
 shear   = 997.5;                                                % G
 mu      = shear;                                                % second lame parameter
 c1      = 5/6*mu;                                               % a
 c2      = 1/6*mu;                                               % b
-c       = 0; 
+c       = 0;
 solidObject.materialObject.a = c1/2;
 solidObject.materialObject.b = c2/2;
 solidObject.materialObject.c = c;
@@ -123,7 +123,7 @@ neumannObject2.meshObject.edof = abaqusMeshData.subsets(4).edof;
 %% solver
 
 %try
-    dofObject = runNewton(setupObject,dofObject);
+dofObject = runNewton(setupObject,dofObject);
 %end
 
 %% postprocessing - energy
@@ -133,8 +133,8 @@ try
     [linearMomentum, totalLinearMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'L',3);
     [angularMomentum, totalAngularMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'J',3);
 end
-strainEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'strainEnergy');
-externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+strainEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'strainEnergy');
+externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
 totalEnergy = strainEnergy(1:length(kineticEnergy)) + kineticEnergy;
 if strcmpi(setupObject.integrator,'DiscreteGradient')
     tStartDiff = ceil(bcTimeEnd/setupObject.totalTime*setupObject.totalTimeSteps);
@@ -144,10 +144,10 @@ if strcmpi(setupObject.integrator,'DiscreteGradient')
     matlab2tikz(['diffEnergy',solidObject.materialObject.name,setupObject.integrator,'.tikz'],'width','\figW','height','\figH')
 end
 try
-%     figure;
-%     plot(timeVector,linearMomentum);
-%     figure;
-%     plot(timeVector,totalLinearMomentum);
+    %     figure;
+    %     plot(timeVector,linearMomentum);
+    %     figure;
+    %     plot(timeVector,totalLinearMomentum);
     figure;
     plot(timeVector,angularMomentum);
     xlabel t; ylabel J; legend('J_x','J_y','J_z'); set(gca,'fontsize',20)
@@ -161,7 +161,7 @@ figure;
 plot(timeVector, totalEnergy);
 xlabel t; ylabel E; set(gca,'fontsize',20)
 matlab2tikz(['energy',solidObject.materialObject.name,setupObject.integrator,'.tikz'],'width','\figW','height','\figH')
-% 
+%
 figure;
 plot(timeVector, setupObject.newton.step','x');
 xlabel t; ylabel Iterations; set(gca,'fontsize',20)

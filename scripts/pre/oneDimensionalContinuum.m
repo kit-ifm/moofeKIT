@@ -7,27 +7,27 @@ setupObject.totalTime = 5;
 setupObject.plotObject.flag = true;
 setupObject.plotObject.stress.component = 1;
 setupObject.newton.tolerance = 1e-4;
-% setupObject.integrator = 'Endpoint'; 
-setupObject.integrator = 'Midpoint'; 
+% setupObject.integrator = 'Endpoint';
+setupObject.integrator = 'Midpoint';
 
 dofObject = dofClass;   % required object for dof and object handling
 
 %% continuum Objects
-    %für linear-elastisch:
+%für linear-elastisch:
 % solidViscoObject = solidClass(dofObject);
-    %für linear-viskoelastisch:
+%für linear-viskoelastisch:
 solidViscoObject = solidViscoClass(dofObject);
 solidViscoObject.linearity = 'linear';
 % solidViscoObject.materialObject.name = 'HookeSplit';
 solidViscoObject.materialObject.name = 'Hooke';
 solidViscoObject.elementDisplacementType = 'displacement';
 % E = 2.26115e+03;
- E = 300000;
+E = 300000;
 nu = 3e-01;
 solidViscoObject.materialObject.lambda = E*nu/((1+nu)*(1-2*nu));                 % Lame parameter
 solidViscoObject.materialObject.mu = E/(2*(1+nu));
-% solidViscoObject.materialObject.rho = 10; 
-solidViscoObject.materialObject.rho = 1500; 
+% solidViscoObject.materialObject.rho = 10;
+solidViscoObject.materialObject.rho = 1500;
 
 solidViscoObject.materialObject.eModul0 = 250000;
 solidViscoObject.materialObject.eModul1 = 50000;
@@ -86,8 +86,8 @@ dissipatedWork = zeros(setupObject.totalTimeSteps,1);
 for j = 1:setupObject.totalTimeSteps
     timeStep(j) = j;
     kineticEnergy(j) = getfield(dofObject.postDataObject.energyJournal(j+1), 'EKin');
-    potentialEnergy(j) =  getfield(dofObject.listContinuumObjects{1,1}.ePot(j+1), 'strainEnergy');
-    dissipatedWork(j) = getfield(dofObject.listContinuumObjects{1,1}.ePot(j+1), 'dissipatedWork');
+    potentialEnergy(j) =  getfield(dofObject.listContinuumObjects{1,1}.elementData(j+1), 'strainEnergy');
+    dissipatedWork(j) = getfield(dofObject.listContinuumObjects{1,1}.elementData(j+1), 'dissipatedWork');
 end
 
 figure
@@ -99,7 +99,7 @@ Energiedifferenz = zeros((setupObject.totalTimeSteps-1),1);
 f = setupObject.totalTimeSteps/5+1:(setupObject.totalTimeSteps-1);
 
 for i= 1:(setupObject.totalTimeSteps-1)
-    Energiedifferenz(i) = (kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i))+dissipatedWork(i+1)-dissipatedWork(i); 
+    Energiedifferenz(i) = (kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i))+dissipatedWork(i+1)-dissipatedWork(i);
 end
 
 figure

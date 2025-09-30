@@ -19,7 +19,7 @@ meshObject = obj.meshObject;
 edof = meshObject.edof(e, :);
 dimension = obj.dimension;
 DT = setupObject.timeStepSize;
-dimensionVisco = sum(1:dimension); % number of DOF internal variable on GP -> dimension of local residual
+
 
 % gauss integration and shape functions
 gaussWeight = shapeFunctionObject.gaussWeight;
@@ -43,10 +43,10 @@ dN = shapeFunctionObject.dN_xi_k_I;
 % nodal dofs
 qR = obj.qR;
 qN = obj.qN;
-qN1 = obj.qN1;
+qN1 = dofs.edN1;
 edR = qR(edof, 1:dimension)';
 edN = qN(edof, 1:dimension)';
-edN1 = qN1(edof, 1:dimension)';
+edN1 = qN1;
 
 %% material data
 lambda = materialObject.lambda;
@@ -147,40 +147,40 @@ f = lambda / 2 * (log(J) + J^2 - J);
 end
 
 function [g] = auxilaryFunctionDW2(J, lambda)
-g = lambda / 4 * (2*J^2 - J + 1);
+    g = lambda / 4 * (2*J^2 - J + 1);
 end
 
 function [C_o_C_sym_voigt] = sym_voigt(A,B, stressStrainA, stressStrainB)
-A11 = A(1,1); A12 = A(1,2); A13 = A(1,3);
-A21 = A(2,1); A22 = A(2,2); A23 = A(2,3);
-A31 = A(3,1); A32 = A(3,2); A33 = A(3,3);
+    A11 = A(1,1); A12 = A(1,2); A13 = A(1,3);
+    A21 = A(2,1); A22 = A(2,2); A23 = A(2,3);
+    A31 = A(3,1); A32 = A(3,2); A33 = A(3,3);
 
-if strcmpi(stressStrainA,'strain')
-    A12 = 2*A12;
-    A21 = 2*A21;
-    A13 = 2*A13;
-    A31 = 2*A31;
-    A23 = 2*A23;
-    A32 = 2*A32;
-end
+    if strcmpi(stressStrainA,'strain')
+        A12 = 2*A12;
+        A21 = 2*A21;
+        A13 = 2*A13;
+        A31 = 2*A31;
+        A23 = 2*A23;
+        A32 = 2*A32;
+    end
 
-B11 = B(1,1); B12 = B(1,2); B13 = B(1,3);
-B21 = B(2,1); B22 = B(2,2); B23 = B(2,3);
-B31 = B(3,1); B32 = B(3,2); B33 = B(3,3);
+    B11 = B(1,1); B12 = B(1,2); B13 = B(1,3);
+    B21 = B(2,1); B22 = B(2,2); B23 = B(2,3);
+    B31 = B(3,1); B32 = B(3,2); B33 = B(3,3);
 
-if strcmpi(stressStrainB,'strain')
-    B12 = 2*B12;
-    B21 = 2*B21;
-    B13 = 2*B13;
-    B31 = 2*B31;
-    B23 = 2*B23;
-    B32 = 2*B32;
-end
+    if strcmpi(stressStrainB,'strain')
+        B12 = 2*B12;
+        B21 = 2*B21;
+        B13 = 2*B13;
+        B31 = 2*B31;
+        B23 = 2*B23;
+        B32 = 2*B32;
+    end
 
-C_o_C_sym_voigt = [ A11*B11   A12*B12   A13*B13  0.5*A11*B12 + 0.5*A12*B11     0.5*A12*B13 + 0.5*A13*B12     0.5*A11*B13 + 0.5*A13*B11;
-                    A21*B21   A22*B22   A23*B23  0.5*A21*B22 + 0.5*A22*B21     0.5*A22*B23 + 0.5*A23*B22     0.5*A21*B23 + 0.5*A23*B21;
-                    A31*B31   A32*B32   A33*B33  0.5*A31*B32 + 0.5*A32*B31     0.5*A32*B33 + 0.5*A33*B32     0.5*A31*B33 + 0.5*A33*B31;
-                    A11*B21   A12*B22   A13*B23  0.5*A11*B22 + 0.5*A12*B21     0.5*A12*B23 + 0.5*A13*B22     0.5*A11*B23 + 0.5*A13*B21;
-                    A21*B31   A22*B32   A23*B33  0.5*A21*B32 + 0.5*A22*B31     0.5*A22*B33 + 0.5*A23*B32     0.5*A21*B33 + 0.5*A23*B31;
-                    A11*B31   A12*B32   A13*B33  0.5*A11*B32 + 0.5*A12*B31     0.5*A12*B33 + 0.5*A13*B32     0.5*A11*B33 + 0.5*A13*B31];
+    C_o_C_sym_voigt = [ A11*B11   A12*B12   A13*B13  0.5*A11*B12 + 0.5*A12*B11     0.5*A12*B13 + 0.5*A13*B12     0.5*A11*B13 + 0.5*A13*B11;
+                        A21*B21   A22*B22   A23*B23  0.5*A21*B22 + 0.5*A22*B21     0.5*A22*B23 + 0.5*A23*B22     0.5*A21*B23 + 0.5*A23*B21;
+                        A31*B31   A32*B32   A33*B33  0.5*A31*B32 + 0.5*A32*B31     0.5*A32*B33 + 0.5*A33*B32     0.5*A31*B33 + 0.5*A33*B31;
+                        A11*B21   A12*B22   A13*B23  0.5*A11*B22 + 0.5*A12*B21     0.5*A12*B23 + 0.5*A13*B22     0.5*A11*B23 + 0.5*A13*B21;
+                        A21*B31   A22*B32   A23*B33  0.5*A21*B32 + 0.5*A22*B31     0.5*A22*B33 + 0.5*A23*B32     0.5*A21*B33 + 0.5*A23*B31;
+                        A11*B31   A12*B32   A13*B33  0.5*A11*B32 + 0.5*A12*B31     0.5*A12*B33 + 0.5*A13*B32     0.5*A11*B33 + 0.5*A13*B31];
 end

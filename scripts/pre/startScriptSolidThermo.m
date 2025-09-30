@@ -83,7 +83,7 @@ neumannObject.loadGeometry = 'area';
 % bodyLoad.typeOfLoad = 'deadLoad';
 % bodyLoad.timeFunction = @(t) t;
 % bodyLoad.loadFunction = [0;0;-9.81];
-% 
+%
 % boundaryK2 = dirichletClass(dofObject);
 % boundaryK2.masterObject = solidThermoObject;
 % boundaryK2.nodeList = 1:size(solidThermoObject.meshObject.nodes,1);
@@ -96,9 +96,9 @@ dofObject = runNewton(setupObject,dofObject);
 %% postprocessing - energy
 % timeVector = getTime(dofObject.postDataObject,setupObject);
 % kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
-% strainEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
-% externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
-% figure; 
+% strainEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
+% externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+% figure;
 % plot(timeVector,kineticEnergy + strainEnergy);
 % %plot(solidThermoObject)
 % filename = 'execute';

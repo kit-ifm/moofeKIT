@@ -1,4 +1,4 @@
-function [rData, kData, elementEnergy, array] = mixedPHGeometricallyExactHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
+function [rData, kData, elementData, array] = mixedPHGeometricallyExactHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
 %BEAMTIMOSHENKOENDPOINT Timoshenko beam
 
 %% SETUP
@@ -67,7 +67,7 @@ dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
 JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I);
 
 % initialize elementEnergy
-elementEnergy.strainEnergy = 0;
+elementData.strainEnergy = 0;
 
 % coefficient matrices
 G1  = zeros(2,1);
@@ -97,6 +97,7 @@ for k = 1:numberOfGausspoints
     if ~computePostData
         % rotation matrix
         RN05 = get_planar_rotation_matrix(Phi1*phiN05);
+        RN1 = get_planar_rotation_matrix(Phi1*phiN1);
         
         % coefficient matrices
         G1  = G1  + dsPhi1' * Psi1 * detJ * gaussWeight(k);
@@ -106,8 +107,8 @@ for k = 1:numberOfGausspoints
         V   = V   + Phi1'   * (dsPhi2*rN05)' * skew_matrix * RN05 * Psi2 * detJ * gaussWeight(k);
         
         % potential energy due to strain
-        elementEnergy.strainEnergy = elementEnergy.strainEnergy + 1/2 * ((GammaN1)'*material_matrix*(GammaN1) + EI * kappaN1^2) * detJ * gaussWeight(k);
-        
+        elementData.strainEnergy = elementData.strainEnergy + 1/2 * ((GammaN1)'*material_matrix*(GammaN1) + EI * kappaN1^2) * detJ * gaussWeight(k);
+        elementData.drift = norm(GammaN1 - RN1'*(dsPhi2*rN1) +[1;0]);
     else
         
         stressTensor.Cauchy = [resultant_forcesN1; resultant_momentN1];

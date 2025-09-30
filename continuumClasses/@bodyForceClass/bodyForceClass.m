@@ -4,22 +4,22 @@ classdef bodyForceClass < baseFEClass
     properties (Constant)
         callMassMatrix = false;
         callElements = true;
-   end
+    end
     properties (SetAccess = private)
         elementGeometryType
-    end        
+    end
     properties
         time = 0;
         dimension = 3;
-% 
+        %
         storageFEObject
-        shapeFunctionObject% = lagrangeShapeFunctionClass();    
-%         
+        shapeFunctionObject% = lagrangeShapeFunctionClass();
+        %
         masterObject
         typeOfLoad
         timeFunction
         loadFunction
-        ePot = struct();
+        elementData = struct();
     end
     methods
         %% Constructor
@@ -34,15 +34,15 @@ classdef bodyForceClass < baseFEClass
             obj.shapeFunctionObject = shapeFunctionClass();
             obj.meshObject = meshClass();
         end
-        
+
         %% FE- Routines
         out = deadLoad(obj,varargin)
-        
+
         %% Tools
         obj = constructor(obj,mesh,varargin)                 % Constructor.
-        plot(obj,varargin)                   
+        plot(obj,varargin)
     end
-%% mandatory methods
+    %% mandatory methods
     methods
         function initializeShapeFunctions(obj,dofObject)
             shapeFunctionObject = obj.shapeFunctionObject;
@@ -69,14 +69,14 @@ classdef bodyForceClass < baseFEClass
         end
         function updateGlobalField(obj,dofObject,fieldNameCell)
             % nothing to do here
-%             
-%             for index2 = 1:numel(fieldNameCell)
-%                 fieldName = fieldNameCell{index2};
-%                 assert(ischar(fieldName));
-%                 if isprop(obj,fieldName)
-%                     dofObject.(fieldName)(obj.meshObject.globalNodesDof) = obj.(fieldName);
-%                 end
-%             end
+            %
+            %             for index2 = 1:numel(fieldNameCell)
+            %                 fieldName = fieldNameCell{index2};
+            %                 assert(ischar(fieldName));
+            %                 if isprop(obj,fieldName)
+            %                     dofObject.(fieldName)(obj.meshObject.globalNodesDof) = obj.(fieldName);
+            %                 end
+            %             end
         end
         function updateContinuumFieldPreNewtonLoop(obj,setupObject,fieldNameCell)
             % nothing to do here

@@ -1,3 +1,5 @@
 # List of untracked files to ignore
-# .mat files
-*.mat
+# .vtk files
+*.vtk
+# .eps files
+*.eps

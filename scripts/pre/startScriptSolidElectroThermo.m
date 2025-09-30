@@ -131,10 +131,10 @@ dofObject = runNewton(setupObject, dofObject);
 % % export_fig('test','-eps');
 timeVector = getTime(dofObject.postDataObject,setupObject);
 kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
-internalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
-externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+internalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
+externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
 totalEnergy = kineticEnergy + internalEnergy;
-figure; 
+figure;
 plot(timeVector,totalEnergy);
 %plot(solidThermoObject)
 % filename = 'execute';

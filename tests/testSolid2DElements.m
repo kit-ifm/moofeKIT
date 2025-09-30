@@ -5,21 +5,21 @@ disp('Now testing: 2D solid elements');
 disp('=======================================');
 
 elementsToTest = {'displacementHooke2DEndpoint', ...
+    'displacementHooke2DEndpointQ8', ...
     'displacementHooke2DEndpointQ9', ...
     'displacementNeoHooke2DEndpoint', ...
     'displacementSCSaintVenant2DEndpoint', ...
+    'displacementPetrovGalerkinRajendranLiew2003Hooke2DEndpoint', ...
+    'displacementPetrovGalerkinXieEtAl2016UQ8Hooke2DEndpoint', ...
     'displacementPetrovGalerkinCenEtAl2015Hooke2DEndpoint', ...
     'displacementPetrovGalerkinXieEtAl2016TQ4Hooke2DEndpoint', ...
+    'displacementPetrovGalerkinSaintVenant2DEndpoint', ...
     'selectiveReducedIntegrationHooke2DEndpoint', ...
     'incompatibleModesPetrovGalerkinHuangEtAl2020Hooke2DEndpoint', ...
     'pianSumiharaHooke2DEndpoint', ...
     'pianSumiharaSaintVenant2DEndpoint', ...
     'easHooke2DEndpoint', ...
     'easPetrovGalerkinPfefferkornBetsch2021Hooke2DEndpoint'};
-% 'displacementHooke2DEndpointQ8', ...
-% 'displacementPetrovGalerkinRajendranLiew2003Hooke2DEndpoint'
-% 'displacementPetrovGalerkinXieEtAl2016UQ8Hooke2DEndpoint',
-
 
 for ii = 1:size(elementsToTest, 2)
     elementProperties = getElementProperties(elementsToTest{ii});
@@ -45,7 +45,7 @@ for ii = 1:size(elementsToTest, 2)
     solidObject = solidClass(dofObject);
     solidObject.elementDisplacementType = elementProperties.displacementType;
     solidObject.elementNameAdditionalSpecification = elementProperties.elementNameAdditionalSpecification;
-    [solidObject.meshObject.nodes, solidObject.meshObject.edof, edofNeumann] = meshCooksMembrane(4, 4, elementProperties.order);
+    [solidObject.meshObject.nodes, solidObject.meshObject.edof, edofNeumann] = meshCooksMembrane(4, 4, elementProperties.order, elementProperties.serendipity);
     solidObject.materialObject.name = elementProperties.materialName;
     solidObject.elementNameAdditionalSpecification = elementProperties.elementNameAdditionalSpecification;
     solidObject.materialObject.rho = 0;
@@ -99,24 +99,24 @@ switch elementName
     case 'displacementHooke2DEndpointQ8'
         order = 2;
         serendipity = true;
-        correctSolution = 23.8397;
+        correctSolution = 23.7083;
     case 'displacementHooke2DEndpointQ9'
         order = 2;
         correctSolution = 23.8397;
     case 'displacementNeoHooke2DEndpoint'
-        materialName = 'NeoHookeESZ';
+        materialName = 'NeoHookeEVZ'; % TODO: change to ESZ
         numberOfLoadSteps = 5;
         correctSolution = 12.6413;
     case 'displacementSCSaintVenant2DEndpoint'
         elementNameAdditionalSpecification = 'SC';
         materialName = 'SaintVenantESZ';
         numberOfLoadSteps = 5;
-        correctSolution = 12.4195;
+        correctSolution = 13.5356;
     case 'displacementPetrovGalerkinRajendranLiew2003Hooke2DEndpoint'
         order = 2;
         serendipity = true;
         elementNameAdditionalSpecification = 'PetrovGalerkinRajendranLiew2003';
-        correctSolution = 23.8397;
+        correctSolution = 23.7535;
     case 'displacementPetrovGalerkinCenEtAl2015Hooke2DEndpoint'
         elementNameAdditionalSpecification = 'PetrovGalerkinCenEtAl2015';
         correctSolution = 23.4337;
@@ -124,10 +124,15 @@ switch elementName
         order = 2;
         serendipity = true;
         elementNameAdditionalSpecification = 'PetrovGalerkinXieEtAl2016UQ8';
-        correctSolution = 23.4337;
+        correctSolution = 23.7257;
     case 'displacementPetrovGalerkinXieEtAl2016TQ4Hooke2DEndpoint'
         elementNameAdditionalSpecification = 'PetrovGalerkinXieEtAl2016TQ4';
         correctSolution = 23.4337;
+    case 'displacementPetrovGalerkinSaintVenant2DEndpoint'
+        elementNameAdditionalSpecification = 'PetrovGalerkin';
+        materialName = 'SaintVenantESZ';
+        numberOfLoadSteps = 5;
+        correctSolution = 13.6742;
     case 'selectiveReducedIntegrationHooke2DEndpoint'
         displacementType = 'selectiveReducedIntegration';
         materialName = 'HookeEVZ'; % TODO: change to ESZ

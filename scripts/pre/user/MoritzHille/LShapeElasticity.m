@@ -1,17 +1,17 @@
 % LSHAPE Script for preprocessing a dynamic mechanical simulation.
-% 
+%
 % FORMULATION
 % Different formulations like standard displacement-based and mixed en-
 % hanced assumed strain (eas) and different material models can be chosen.
-% 
+%
 % REFERENCE
 % https://doi.org/10.1007/BF00913408
-% 
-% SEE ALSO 
+%
+% SEE ALSO
 % cooksMembrane,
 % LShapeElectroThermo
-% 
-% CREATOR(S) 
+%
+% CREATOR(S)
 % Moritz Hille 07.08.2023
 
 %% setup (mandatory: setup and dofs)
@@ -27,8 +27,8 @@ setupObject.newton.tolerance = 1e-8;
 setupObject.newton.maximumSteps = 500;
 
 % setupObject.integrator = 'Endpoint';
-% setupObject.integrator = 'Midpoint';
-setupObject.integrator = 'DiscreteGradient';
+setupObject.integrator = 'Midpoint';
+% setupObject.integrator = 'DiscreteGradient';
 
 dofObject = dofClass;   % required object for dof and object handling
 
@@ -36,18 +36,18 @@ dofObject = dofClass;   % required object for dof and object handling
 % abaqus mesh
 abaqusMeshData = abaqusInputFileConverter('LShapeH1.inp');
 solidObject = solidClass(dofObject);% initialize solidObject
-solidObject.meshObject.nodes = abaqusMeshData.qR;  
+solidObject.meshObject.nodes = abaqusMeshData.qR;
 solidObject.meshObject.edof = abaqusMeshData.edof;
 
 % material
 % solidViscoObject.materialObject.name = 'Hooke';
-% solidObject.materialObject.name = 'NeoHooke';
+solidObject.materialObject.name = 'NeoHooke';
 % solidObject.materialObject.name = 'MooneyRivlin';
-solidObject.materialObject.name = 'MooneyRivlinWedge';
+% solidObject.materialObject.name = 'MooneyRivlinWedge';
 %     solidObject.materialObject.name = 'SaintVenant';
 %     solidObject.materialObject.name = 'SaintVenantNumericalTangent';
 %     solidObject.materialObject.name = 'Hyperelastic'; % 'Hooke';
-    solidObject.elementDisplacementType = 'displacement';
+solidObject.elementDisplacementType = 'displacement';
 %     solidObject.elementDisplacementType = 'eas';
 %     solidObject.mixedFEObject.condensation = true;
 solidObject.materialObject.rho = 1;
@@ -62,7 +62,8 @@ solidObject.dimension = 3;
 solidObject.shapeFunctionObject.order = 1;
 solidObject.shapeFunctionObject.numberOfGausspoints = 8;
 % solidViscoObject.shapeFunctionObject.numberOfGausspoints = 27;
-% solidObject.numericalTangentObject.computeNumericalTangent = true;
+solidObject.numericalTangentObject.computeNumericalTangent = true;
+solidObject.numericalTangentObject.type = 'complex';
 % solidObject.numericalTangentObject.showDifferences = true;
 
 bcTimeEnd = 5;
@@ -93,17 +94,17 @@ timeVector = getTime(dofObject.postDataObject,setupObject);
 kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
 [linearMomentum, totalLinearMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'L',3);
 [angularMomentum, totalAngularMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'J',3);
-internalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
+internalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
 
 % % viscous "energy" -> sum of dissipated energy
-% viscousEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'viscousEnergy');
+% viscousEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'viscousEnergy');
 % Dt = setupObject.totalTime/setupObject.totalTimeSteps;
 % viscousEnergy = Dt*viscousEnergy;
 % for t = 2: setupObject.totalTimeSteps +1
 % viscousEnergy(t) = viscousEnergy(t) + viscousEnergy(t-1);
 % end
 
-externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
 totalEnergy = internalEnergy + kineticEnergy;
 tStartDiff = ceil(bcTimeEnd/setupObject.totalTime*setupObject.totalTimeSteps);
 totalEnergyDiff = totalEnergy(tStartDiff+3:end) - totalEnergy(tStartDiff+2:end-1);

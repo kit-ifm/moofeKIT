@@ -1,5 +1,5 @@
-function [rData, kData, elementEnergy, array] = displacementSCANN3DiscreteGradient(obj, setupObject, computePostData, e, rData, kData, dofs, array, stressTensor, flagNumericalTangent)
-% DISPLACEMENTSCANNMOONEYRIVLIN3DISCRETEGRADIENT Element routine of class solidClass.
+function [rData, kData, elementEnergy, array] = displacementSCANNDiscreteGradient(obj, setupObject, computePostData, e, rData, kData, dofs, array, stressTensor, flagNumericalTangent)
+% DISPLACEMENTSCANNMOONEYRIVLINDISCRETEGRADIENT Element routine of class solidClass.
 %
 % FORMULATION
 % This is a 'displacement'-based finite element routine  covering nonlinear
@@ -11,8 +11,7 @@ function [rData, kData, elementEnergy, array] = displacementSCANN3DiscreteGradie
 % The routine is suitable for dynamic simulations where an energy-momentum 
 % consistent integration scheme is used which is based on the conecpt of 
 % discrete gradients in the sense of Gonzalez ('DiscreteGradient').
-% In particular algorthmic derivatives for IC, IIC, J and J* are employed.
-% -> does not work properly
+% In particular algorthmic derivatives for IC, IIC and c are employed. 
 %
 % CALL
 % displacementSCANNMooneyRivlinDiscreteGradient(obj,setupObject,computePostData)
@@ -39,102 +38,41 @@ function [rData, kData, elementEnergy, array] = displacementSCANN3DiscreteGradie
 %% SETUP
 % load objects
 shapeFunctionObject = obj.shapeFunctionObject;
-materialObject = obj.materialObject;
-mixedFEObject = obj.mixedFEObject;
 meshObject = obj.meshObject;
 numericalTangentObject = obj.numericalTangentObject;
-
+% load trained ann model
+ANNObject = obj.artificialNeuralNetworkObject;
 % aquire general data
 N_k_I = shapeFunctionObject.N_k_I;
 dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
-
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
 gaussWeight = shapeFunctionObject.gaussWeight;
-
 edof = meshObject.edof(e, :);
-
 dimension = obj.dimension;
-
-% aquire material data
-a = materialObject.a;
-b = materialObject.b;
-c = materialObject.c;
-d = materialObject.d;
-
-% already trained ANN model
-normalizeFactor = 1;
-if 0
-    b2 = -1.257220077514648438e+02;
-    w1 =  [ 9.268754005432128906e+00 6.275703907012939453e-01 8.978516578674316406e+00 9.184016227722167969e+00 8.944575309753417969e+00 8.825480461120605469e+00 4.117710050195455551e-03 9.206143379211425781e+00;
-        1.117671847343444824e+00 1.695705890655517578e+00 1.225380182266235352e+00 1.790273785591125488e+00 2.119191884994506836e+00 3.604783296585083008e+00 3.489471077919006348e-01 1.372677236795425415e-01;
-        4.465130623430013657e-03 5.173204541206359863e-01 4.450271837413311005e-03 4.819013178348541260e-03 4.955890122801065445e-03 6.109093781560659409e-03 3.643061399459838867e+00 3.700215835124254227e-03;
-        2.500126075744628906e+01 2.176816558837890625e+01 2.508148765563964844e+01 2.498847198486328125e+01 2.479306983947753906e+01 2.380420684814453125e+01 2.061729812622070312e+01 2.552124214172363281e+01];
-    w2 = [  7.630357265472412109e+00;
-        3.028271198272705078e+00;
-        7.628017425537109375e+00;
-        7.640446186065673828e+00;
-        7.606583595275878906e+00;
-        7.949126720428466797e+00;
-        4.874103546142578125e+01;
-        7.896135807037353516e+00];
-    b1 = [  -3.441793203353881836e+00;
-        1.242680740356445312e+01;
-        -2.851085186004638672e+00;
-        -4.938632488250732422e+00;
-        -5.322002410888671875e+00;
-        -1.029190444946289062e+01;
-        9.544090270996093750e+00;
-        -9.355480670928955078e-01];
-else
-    normalizeFactor = 1e3;
-    w1 = [  -0.000000000000000000e+00 -0.000000000000000000e+00 -0.000000000000000000e+00 3.498095989227294922e+00;
-            -0.000000000000000000e+00 -0.000000000000000000e+00 6.021448597311973572e-02 9.343179702758789062e+00;
-            1.066247582435607910e+00 7.192744612693786621e-01 2.154079377651214600e-01 3.736973181366920471e-02;
-            8.472843766212463379e-01 3.536386787891387939e-02 2.211225219070911407e-04 3.044792413711547852e+00;
-            -0.000000000000000000e+00 -0.000000000000000000e+00 -0.000000000000000000e+00 3.267039537429809570e+00;
-            -0.000000000000000000e+00 -0.000000000000000000e+00 -0.000000000000000000e+00 3.178473234176635742e+00;
-            -0.000000000000000000e+00 -0.000000000000000000e+00 -0.000000000000000000e+00 3.943647623062133789e+00;
-            -0.000000000000000000e+00 -0.000000000000000000e+00 -0.000000000000000000e+00 3.375712156295776367e+00];
-    w1 = w1';
-    b1 = [  -5.596243381500244141e+00 4.461702823638916016e+00 1.894991379231214523e-03 2.932721614837646484e+00 -5.644768238067626953e+00 -5.689310073852539062e+00 -5.542060375213623047e+00 -5.609594821929931641e+00]';
-    w2 = [  -0.000000000000000000e+00 1.564468592405319214e-01 8.862167596817016602e-02 4.042990505695343018e-01 -0.000000000000000000e+00 -0.000000000000000000e+00 -0.000000000000000000e+00 -0.000000000000000000e+00]';
-    b2 = -1.550519585609436035e+00;
-end
-alpha = 5e2;
 % aquire the nodal values of the variables for the current element
 edR = obj.qR(edof, 1:dimension).';
 edN = obj.qN(edof, 1:dimension).';
 edN1 = dofs.edN1;
 edN05 = 0.5 * (edN + edN1);
-
 % initialize residual & tangent
 RX = rData{1};
 KXX = kData{1, 1};
-
+numberOfDOFs = dimension*size(edof, 2);
+I = eye(dimension);
 % initialize elementEnergy
 elementEnergy.strainEnergy = 0;
-
 % initialize flagDiscreteGradient
 if ~flagNumericalTangent
-    initializeFlagDiscreteGradient(numericalTangentObject, shapeFunctionObject.numberOfGausspoints, 4)
+    initializeFlagDiscreteGradient(numericalTangentObject, shapeFunctionObject.numberOfGausspoints, 3)
 end
 flagDiscreteGradient = numericalTangentObject.flagDiscreteGradient;
-
-numberOfDOFs = dimension*size(edof, 2);
-
-activation = computeActivationFunction();
-
-netANN.w1 = w1;
-netANN.w2 = w2;
-netANN.b1 = b1;
-netANN.b2 = b2;
-netANN.activation = activation;
-netANN.alpha = alpha;
-netANN.normalizeFactor = normalizeFactor;
-
+% compute Jacobian
+JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I);
 % Run through all Gauss points
 for k = 1:numberOfGausspoints
-    [detJ, detJStruct, dN_X_I, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
+    [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
+%     [detJ, detJStruct, dN_X_I, ~] = computeAllJacobian(edR,edN,edN1,dN_xi_k_I,k,setupObject);
     % Deformation gradient
     FN1 = edN1 * dN_X_I';
     FN = edN * dN_X_I';
@@ -142,7 +80,6 @@ for k = 1:numberOfGausspoints
     % B-matrix (current configuration)
     BN1 = BMatrix(dN_X_I, FN1);
     BN05 = BMatrix(dN_X_I, FN05);
-%     BN05 = 2 * BN05;
     % Right Cauchy-Green tensor
     CN1 = FN1' * FN1;
     CN = FN' * FN;
@@ -151,134 +88,182 @@ for k = 1:numberOfGausspoints
     % Cofactor
     GN1 = 0.5 * wedge(CN1, CN1); %cof(CN1)=det(CN1)*CN1^-T
     GN = 0.5 * wedge(CN, CN);
-    GAlgo = 0.5 * (GN + GN1); %averaged
+    GAlgo1 = 0.5 * (GN + GN1); %averaged
     GN05 = 0.5 * wedge(CN05, CN05); %mid-configuration
-
+    % Determinant
+    cN = det(CN);
+    cN1 = det(CN1);
+    cN05 = det(CN05);
     % invariants for ANN model
     IN = trace(CN);
     IIN = trace(GN);
     IN1 = trace(CN1);
-    IIN1 = trace(GN1);
-    IN05 = trace(CN05);
-    IIN05 = trace(GN05);
-    cN = det(CN);
-    JN = sqrt(cN);
-    JstarN = -JN;
-    cN1 = det(CN1);
-    JN1 = sqrt(cN1);
-    JstarN1 = -JN1;
-    cN05 = det(CN05);
-    JN05 = sqrt(cN05);
-    JstarN05 = -JN05;
-
+    IIN1 = trace(GN1);    
     % first derivative
-    xN = [IN;IIN;JN;JstarN];
-    xN1 = [IN1;IIN1;JN1;JstarN1];
-    xN05 = [IN05;IIN05;JN05;JstarN05];
-
-    h1N05 = w1'*xN05 + b1;
-
-    WN1 = computeEnergyANN(IN1,IIN1,JN1,JstarN1,netANN);
-    
-    dh2dh1N05 = diag(activation.derivative(h1N05));
-    dWvol_JN05 = 2*alpha*(JN05-1);
-    dWvol_JstarN05 = 0;
-    dW_xN05 = w2'*(dh2dh1N05*w1');
-    dW_xN05(3) = dW_xN05(3) + dWvol_JN05;
-    dW_xN05(4) = dW_xN05(4) + dWvol_JstarN05;
-    dW_IN05 = dW_xN05(1);
-    dW_IIN05 = dW_xN05(2);
-    dW_JN05 = dW_xN05(3);
-    dW_JstarN05 = dW_xN05(4);    
-
+    dIC_C = I;
+    dIIC_G = I;    
+    [~,       ~,        ~,       ~,       ~,           dJ_cN1,  dJstar_cN1] = ANNObject.computeDiffEnergyIIIcANN(CN1,GN1,cN1);
+    % second derivative (midpoint)
+    d2W_IN05 = 0.5*ANNObject.compute2ndDiffEnergyANN(CN05,GN05,cN05);    
+    % discrete gradient
     deltaI = IN1 - IN;
     normDeltaI = abs(deltaI);
     deltaII = IIN1 - IIN;
     normDeltaII = abs(deltaII);
-    deltaJ = JN1 - JN;
-    normDeltaJ = abs(deltaJ);
-    deltaJstar = JstarN1 - JstarN;
-    normDeltaJstar = abs(deltaJstar);
-    
-    % discrete gradient
+    deltac = cN1 - cN;
+    normDeltac = abs(deltac);
     if ~flagNumericalTangent
-        discreteGradientThreshold = 1e-16; % FIXME: include into solidObject
+        discreteGradientThreshold = 1e-10; % FIXME: include into solidObject
         discreteGradientCondition_I = (normDeltaI > discreteGradientThreshold);
         discreteGradientCondition_II = (normDeltaII > discreteGradientThreshold);
-        discreteGradientCondition_J = (normDeltaJ > discreteGradientThreshold);
-        discreteGradientCondition_Jstar = (normDeltaJstar > discreteGradientThreshold);
-%         discreteGradientCondition_D = setupObject.newton.step > 1;
-        if (setupObject.newton.step > 1) && (~discreteGradientCondition_I || ~discreteGradientCondition_II || ~discreteGradientCondition_J || ~discreteGradientCondition_Jstar)
-            disp(1)
+        discreteGradientCondition_c = (normDeltac > discreteGradientThreshold);
+        if (setupObject.newton.step(setupObject.timeStep) > 1) && (~discreteGradientCondition_I || ~discreteGradientCondition_II || ~discreteGradientCondition_c)
+            % disp(1)
         end
     else
         discreteGradientCondition_I = flagDiscreteGradient(k, 1);
         discreteGradientCondition_II = flagDiscreteGradient(k, 2);
-        discreteGradientCondition_J = flagDiscreteGradient(k, 3);
-        discreteGradientCondition_Jstar = flagDiscreteGradient(k, 4);
+        discreteGradientCondition_c = flagDiscreteGradient(k, 3);
+    end
+    D2W = zeros(4);
+    if ~discreteGradientCondition_I || ~discreteGradientCondition_II || ~discreteGradientCondition_c
+        [dW_IN05, dW_IIN05, dW_cN05, dW_JN05, dW_JstarN05, dJ_cN05, dJstar_cN05] = ANNObject.computeDiffEnergyIIIcANN(CN05,GN05,cN05);
     end
     if discreteGradientCondition_I
         flagDiscreteGradient(k, 1) = 1;
-        dW_IN1 = (computeEnergyANN(IN1,IIN,JN,JstarN,netANN)-computeEnergyANN(IN,IIN,JN,JstarN,netANN))/deltaI;
-        dW_IN = (computeEnergyANN(IN1,IIN1,JN1,JstarN1,netANN)-computeEnergyANN(IN,IIN1,JN1,JstarN1,netANN))/deltaI;
-        DW_I = 1/2*(dW_IN1+dW_IN);
+        tempDW_IN1 = ANNObject.computeEnergyANN(CN1,GN,cN)-ANNObject.computeEnergyANN(CN,GN,cN);
+        tempDW_IN = ANNObject.computeEnergyANN(CN1,GN1,cN1)-ANNObject.computeEnergyANN(CN,GN1,cN1);
+        DW_I = 1/2*(tempDW_IN1+tempDW_IN)/deltaI;
+        tempD2W_IN1a = ANNObject.computeDiffEnergyANNVec(CN1,GN,cN);
+        tempD2W_IN1b = ANNObject.computeDiffEnergyANNVec(CN,GN,cN);
+        tempD2W_IN1a(2:4) = 0;
+        tempD2W_IN1b(:) = 0;
+        tempD2W_IN1 = tempD2W_IN1a-tempD2W_IN1b;
+        tempD2W_INa = ANNObject.computeDiffEnergyANNVec(CN1,GN1,cN1);
+        tempD2W_INb = ANNObject.computeDiffEnergyANNVec(CN,GN1,cN1);
+        tempD2W_INb(1) = 0;
+        tempD2W_IN = tempD2W_INa-tempD2W_INb;
+        D2W(1,:) = 1/2*(tempD2W_IN1+tempD2W_IN)/deltaI;
+        D2W(1,1) = D2W(1,1) - 1/2*(tempDW_IN1+tempDW_IN)/(deltaI^2);
     else
         flagDiscreteGradient(k, 1) = 0;
         DW_I = dW_IN05;
+        D2W(1,:) = d2W_IN05(1,:);
     end
     if discreteGradientCondition_II
         flagDiscreteGradient(k, 2) = 1;
-        dW_IIN1 = (computeEnergyANN(IN1,IIN1,JN,JstarN,netANN)-computeEnergyANN(IN1,IIN,JN,JstarN,netANN))/deltaII;
-        dW_IIN = (computeEnergyANN(IN,IIN1,JN1,JstarN1,netANN)-computeEnergyANN(IN,IIN,JN1,JstarN1,netANN))/deltaII;
-        DW_II = 1/2*(dW_IIN1+dW_IIN);
+        tempDW_IIN1 = ANNObject.computeEnergyANN(CN1,GN1,cN)-ANNObject.computeEnergyANN(CN1,GN,cN);
+        tempDW_IIN = ANNObject.computeEnergyANN(CN,GN1,cN1)-ANNObject.computeEnergyANN(CN,GN,cN1);
+        DW_II = 1/2*(tempDW_IIN1+tempDW_IIN)/deltaII;
+        tempD2W_IIN1a = ANNObject.computeDiffEnergyANNVec(CN1,GN1,cN);
+        tempD2W_IIN1b = ANNObject.computeDiffEnergyANNVec(CN1,GN,cN);
+        tempD2W_IIN1a(3:4) = 0;
+        tempD2W_IIN1b(2:4) = 0;
+        tempD2W_IIN1 = tempD2W_IIN1a-tempD2W_IIN1b;
+        tempD2W_IINa = ANNObject.computeDiffEnergyANNVec(CN,GN1,cN1);
+        tempD2W_IINb = ANNObject.computeDiffEnergyANNVec(CN,GN,cN1);
+        tempD2W_IINa(1) = 0;
+        tempD2W_IINb(1:2) = 0;
+        tempD2W_IIN = tempD2W_IINa-tempD2W_IINb;
+        D2W(2,:) = 1/2*(tempD2W_IIN1+tempD2W_IIN)/deltaII;
+        D2W(2,2) = D2W(2,2) - 1/2*(tempDW_IIN1+tempDW_IIN)/(deltaII^2);        
     else
         flagDiscreteGradient(k, 2) = 0;
         DW_II = dW_IIN05;
-    end    
-    if discreteGradientCondition_J
+        D2W(2,:) = d2W_IN05(2,:);
+    end
+    if discreteGradientCondition_c
         flagDiscreteGradient(k, 3) = 1;
-        dW_JN1 = (computeEnergyANN(IN1,IIN1,JN1,JstarN,netANN)-computeEnergyANN(IN1,IIN1,JN,JstarN,netANN))/deltaJ;
-        dW_JN = (computeEnergyANN(IN,IIN,JN1,JstarN1,netANN)-computeEnergyANN(IN,IIN,JN,JstarN1,netANN))/deltaJ;
-        DW_J = 1/2*(dW_JN1+dW_JN);
+        tempDW_cN1 = ANNObject.computeEnergyANN(CN1,GN1,cN1)-ANNObject.computeEnergyANN(CN1,GN1,cN);
+        tempDW_cN = ANNObject.computeEnergyANN(CN,GN,cN1)-ANNObject.computeEnergyANN(CN,GN,cN);
+        DW_c = 1/2*(tempDW_cN1+tempDW_cN)/deltac;
+        tempD2W_cN1a = ANNObject.computeDiffEnergyANNVecc(CN1,GN1,cN1);
+        tempD2W_cN1b = ANNObject.computeDiffEnergyANNVecc(CN1,GN1,cN);
+        tempD2W_cN1b(3) = 0;
+        tempD2W_cN1 = tempD2W_cN1a-tempD2W_cN1b;
+        tempD2W_cNa = ANNObject.computeDiffEnergyANNVecc(CN,GN,cN1);
+        tempD2W_cNb = ANNObject.computeDiffEnergyANNVecc(CN,GN,cN);
+        tempD2W_cNa(1:2) = 0;
+        tempD2W_cNb(:) = 0;
+        tempD2W_cN = tempD2W_cNa-tempD2W_cNb;
+        D2W(3,1:3) = 1/2*(tempD2W_cN1+tempD2W_cN)/deltac;
+        D2W(3,3) = D2W(3,3) - 1/2*(tempDW_cN1+tempDW_cN)/(deltac^2);        
     else
         flagDiscreteGradient(k, 3) = 0;
-        DW_J = dW_JN05;
+        DW_c = dW_cN05;
+        D2W(3,:) = d2W_IN05(3,:);        
+        D2W(4,:) = d2W_IN05(4,:);        
     end    
-    if discreteGradientCondition_Jstar
-        flagDiscreteGradient(k, 4) = 1;
-        dW_JstarN1 = (computeEnergyANN(IN1,IIN1,JN1,JstarN,netANN)-computeEnergyANN(IN1,IIN1,JN1,JstarN,netANN))/deltaJstar;
-        dW_JstarN = (computeEnergyANN(IN,IIN,JN,JstarN1,netANN)-computeEnergyANN(IN,IIN,JN,JstarN,netANN))/deltaJstar;
-        DW_Jstar = 1/2*(dW_JstarN1+dW_JstarN);
-    else
-        flagDiscreteGradient(k, 4) = 0;
-        DW_Jstar = dW_JstarN05;
-    end    
-
-    dIC_CN05 = eye(dimension);
-    dIIC_GN05 = eye(dimension);
-    dJ_cN05 = 1/2*(cN05)^(-1/2);
-    dJstar_cN05 = -dJ_cN05;
-      
-    DW_C = DW_I*dIC_CN05;
-    DW_G = DW_II*dIIC_GN05;
-    DW_c = DW_J*dJ_cN05 + DW_Jstar*dJstar_cN05;
-
-%     SN05 = 2*(DW_C + wedge(DW_G, CN05) + DW_c*GN05);
-%     SN05 = 2*(DW_C + wedge(DW_G, CAlgo) + DW_c * 1 / 2 * (wedge(CAlgo, CAlgo) + GAlgo));
-     SN05 = 2*(DW_C + wedge(DW_G, CAlgo) + DW_c * 1 / 3 * (wedge(CAlgo, CAlgo) + GAlgo));
+    SN05 = 2*(DW_I*dIC_C + wedge(DW_II*dIIC_G, CAlgo) + DW_c * 1 / 3 * (wedge(CAlgo, CAlgo) + GAlgo1));
     SN05_v = [SN05(1, 1); SN05(2, 2); SN05(3, 3); SN05(1, 2); SN05(2, 3); SN05(1, 3)];
-
     if ~computePostData
-        % Residual
+        %% Residual
         RX = RX + BN05' * SN05_v * detJ * gaussWeight(k);
+        %% Tangent
+        % geometric tangent
+        A1 = 0.5*dN_X_I' * SN05 * dN_X_I;
+        geometricTangent = zeros(numberOfDOFs);
+        for g = 1:dimension
+            geometricTangent(g:dimension:numberOfDOFs, g:dimension:numberOfDOFs) = A1;
+        end
+        % Derivative of dW_C = dW_IC*dIC_C
+        KmatCN1 = 0;
+        KmatCN05 = 0;
+        if ~flagDiscreteGradient(k, 1)
+            tempC = wedge(D2W(1,2)*dIIC_G, CN05);
+            KmatCN05 = D2W(1,1)*dIC_C([1;5;9;4;8;7])*dIC_C([1;5;9;4;8;7]') + dIC_C([1;5;9;4;8;7])*tempC([1;5;9;4;8;7]') + D2W(1,3)*dIC_C([1;5;9;4;8;7])*dJ_cN05*GN05([1;5;9;4;8;7]') + D2W(1,4)*dIC_C([1;5;9;4;8;7])*dJstar_cN05*GN05([1;5;9;4;8;7]');
+        else
+            tempC = wedge(D2W(1,2)*dIIC_G, CN1);
+            KmatCN1 = D2W(1,1)*dIC_C([1;5;9;4;8;7])*dIC_C([1;5;9;4;8;7]') + dIC_C([1;5;9;4;8;7])*tempC([1;5;9;4;8;7]') + D2W(1,3)*dIC_C([1;5;9;4;8;7])*dJ_cN1*GN1([1;5;9;4;8;7]') + D2W(1,4)*dIC_C([1;5;9;4;8;7])*dJstar_cN1*GN1([1;5;9;4;8;7]');
+        end
+        % geometric derivative of wedge(DW_II*dIIC_G,CAlgo)
+        KmatGgeoN1 = 0.5*secDiffOperator(DW_II*dIIC_G);
+        % material derivative of wedge(dW_IIC*dIIC_G,C)=wedge(C,dW_IIC*dIIC_G)
+        temp2 = wedge(CAlgo,dIIC_G);
+        KmatGmatN1 = 0;
+        KmatGmatN05 = 0;
+        if ~flagDiscreteGradient(k, 2)
+            temp3N05 = wedge(dIIC_G,CN05);
+            KmatGmatN05 = temp2([1;5;9;4;8;7])*D2W(2,1)*dIC_C([1;5;9;4;8;7]') + temp2([1;5;9;4;8;7])*D2W(2,2)*temp3N05([1;5;9;4;8;7]') + temp2([1;5;9;4;8;7])*D2W(2,3)*dJ_cN05*GN05([1;5;9;4;8;7]') + temp2([1;5;9;4;8;7])*D2W(2,4)*dJstar_cN05*GN05([1;5;9;4;8;7]');
+        else
+            temp3N1 = wedge(dIIC_G,CN1);
+            KmatGmatN1 = temp2([1;5;9;4;8;7])*D2W(2,1)*dIC_C([1;5;9;4;8;7]') + temp2([1;5;9;4;8;7])*D2W(2,2)*temp3N1([1;5;9;4;8;7]') + temp2([1;5;9;4;8;7])*D2W(2,3)*dJ_cN1*GN1([1;5;9;4;8;7]') + temp2([1;5;9;4;8;7])*D2W(2,4)*dJstar_cN1*GN1([1;5;9;4;8;7]');
+        end
+        % geometric derivative of dW_c*G, G =  1 / 3 * (wedge(CAlgo, CAlgo) + GAlgo1), GAlgo1 = 0.5 * (GN + GN1); GN1 = 0.5 * wedge(CN1, CN1);  GN = 0.5 * wedge(CN, CN);
+        KmatcgeoN1 = DW_c * 2 / 3 *(secDiffOperator(CAlgo) + 0.5*secDiffOperator(CN1));
+        % material derivative of dW_c*(1 / 3 * (wedge(CAlgo, CAlgo) + GAlgo1)), dW_c = dW_J*dJ_c + dW_Jstar*dJstar_c
+        Gtemp = 1 / 3 * (wedge(CAlgo, CAlgo) + GAlgo1);
+        Gtemp_v = [Gtemp(1, 1); Gtemp(2, 2); Gtemp(3, 3); Gtemp(1, 2); Gtemp(2, 3); Gtemp(1, 3)];
+        KmatcmatN1 = 0;
+        KmatcmatN05 = 0;
+        if ~flagDiscreteGradient(k, 3)
+            GN05_v = [GN05(1, 1); GN05(2, 2); GN05(3, 3); GN05(1, 2); GN05(2, 3); GN05(1, 3)];
+            tempG = wedge(D2W(3,2) * dJ_cN05 * dIIC_G, CN05);
+            Kmatcmat1 = 0.5*dW_JN05*Gtemp([1;5;9;4;8;7])*(-1/4*cN05^(-3/2))*GN05([1;5;9;4;8;7]') + 0.5*dW_JstarN05*Gtemp([1;5;9;4;8;7])*(1/4*cN05^(-3/2))*GN05([1;5;9;4;8;7]') + D2W(3,1) * dJ_cN05 * Gtemp([1;5;9;4;8;7])*dIC_C([1;5;9;4;8;7]') + Gtemp([1;5;9;4;8;7])*tempG([1;5;9;4;8;7]') + D2W(3,3) * dJ_cN05 * dJ_cN05 * (Gtemp_v * GN05_v') + D2W(3,4) * dJ_cN05 * dJstar_cN05 * (Gtemp_v * GN05_v');
+            tempGstar = wedge(D2W(4,2) * dJstar_cN05 * dIIC_G, CN05);
+            Kmatcmat2 = D2W(4,1) * dJstar_cN05 * Gtemp([1;5;9;4;8;7])*dIC_C([1;5;9;4;8;7]') + Gtemp([1;5;9;4;8;7])*tempGstar([1;5;9;4;8;7]') + D2W(4,3) * dJstar_cN05 * dJ_cN05 * (Gtemp_v * GN05_v') + D2W(4,4) * dJstar_cN05 * dJstar_cN05 * (Gtemp_v * GN05_v');
+            KmatcmatN05 = Kmatcmat1 + Kmatcmat2;
+        else
+            GN1_v = [GN1(1, 1); GN1(2, 2); GN1(3, 3); GN1(1, 2); GN1(2, 3); GN1(1, 3)];
+            tempG = wedge(D2W(3,2) * dIIC_G, CN1);
+            KmatcmatN1 = D2W(3,1) * Gtemp([1;5;9;4;8;7])*dIC_C([1;5;9;4;8;7]') + Gtemp([1;5;9;4;8;7])*tempG([1;5;9;4;8;7]') + D2W(3,3) * (Gtemp_v * GN1_v');
+        end
+        % Assembly of elasticity tensor
+        materialTangentN05 = 4 * (KmatCN05 + KmatGmatN05 + KmatcmatN05);
+        materialTangentN1 = 4 * (0.5*KmatcgeoN1 + KmatCN1 + KmatGmatN1 + KmatGgeoN1 + KmatcmatN1);
+        KXX = KXX + geometricTangent * detJ * gaussWeight(k);
+        KXX = KXX + BN05' * (materialTangentN05 * BN05 + materialTangentN1 * BN1) * detJ * gaussWeight(k);
         % Strain energy
+        WN1 = ANNObject.computeEnergyANN(CN1,GN1,cN1);
         elementEnergy.strainEnergy = elementEnergy.strainEnergy + WN1 * detJ * gaussWeight(k);
     else
         % stress at gausspoint
+        [dW_IN1, dW_IIN1, dW_cN1] = ANNObject.computeDiffEnergyANN(CN1,GN1,cN1);
+        SN1 = 2*(dW_IN1*eye(3) + wedge(dW_IIN1*eye(3), CN1) + dW_cN1 * GN1);
         PN1 = FN1 * SN1;
         stressTensor.FirstPK = PN1;
         stressTensor.Cauchy = 1 / det(FN1) * PN1 * FN1';
-        array = postStressComputation(array, N_k_I, k, gaussWeight, detJStruct, stressTensor, setupObject, dimension);
+        array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension);
     end
 end
 if ~computePostData
@@ -314,54 +299,71 @@ D(6, 4) = 0.25 * (A(2, 3) + A(3, 2));
 D(6, 5) = 0.25 * (A(1, 2) + A(2, 1));
 D(6, 6) = -0.5 * A(2, 2);
 end
-function [activation] = computeActivationFunction()
-activation.function = @(x) log(1+exp(x));
-activation.derivative = @(x) exp(x)./(1+exp(x));
-activation.secondDerivative = @(x) exp(x)./((1+exp(x)).^2);
-% activation.function = @(x) 1./(1+exp(-x));
-% activation.derivative = @(x) x.*(1 - x);
-end
-function W = computeEnergyANN(I,II,J,Jstar,netANN)
-w1 = netANN.w1;
-w2 = netANN.w2;
-b1 = netANN.b1;
-b2 = netANN.b2;
-activation = netANN.activation;
-alpha = netANN.alpha;
-normalizeFactor = netANN.normalizeFactor;
-x = [I;II;J;Jstar];
-h1 = w1'*x + b1;
-h2 = activation.function(h1);
-Wdev = w2'*h2 + b2;
-Wvol = alpha*(J-1)^2;
-W = normalizeFactor*Wdev + Wvol;
-end
 
-%     dW_I = zeros(4,1);
-%     for indexI = 1:4
-%         for aIndex = 1:8
-%             dW_I(indexI,1) = w2(aIndex)*activation.derivative(h1(aIndex))*w1(indexI,aIndex);
-%         end
+%% numerical tangent
+% if 1
+%     %GN05
+%     temp = 2;
+%     if temp == 0
+%         SN052 = 2*(DW_I*dIC_C + wedge(DW_II*dIIC_G, CAlgo) + DW_c * 1 / 3 * (wedge(CAlgo, CAlgo) + GAlgo1));
+%     elseif temp == 1
+%         SN052 = 2*(DW_I*dIC_C);
+%     elseif temp == 2
+%         SN052 = 2*(wedge(DW_II*dIIC_G, CAlgo));
+%     elseif temp == 3
+%         SN052 = DW_c * 1 / 3 * (wedge(CAlgo, CAlgo) + GAlgo1);
 %     end
-%     d2W_I_I = zeros(4);
-%     for indexI = 1:4
-%         for indexJ = 1:4
-%             for aIndex = 1:8
-%                 d2W_I_I(indexI,indexJ) = d2W_I_I(indexI,indexJ) + w2(aIndex)*activation.secondDerivative(h1(aIndex))*w1(indexI,aIndex)*w1(indexJ,aIndex);
-%             end
-%         end
-%     end
+%     %
+%     SN05_v2 = [SN052(1, 1); SN052(2, 2); SN052(3, 3); SN052(1, 2); SN052(2, 3); SN052(1, 3)];
+%     SN05 = 2*(0*DW_I*dIC_C + 0*wedge(DW_II*dIIC_G, CAlgo) + DW_c * 1 / 3 * (wedge(CAlgo, CAlgo) + GAlgo1));
+%     SN05_v = [SN05(1, 1); SN05(2, 2); SN05(3, 3); SN05(1, 2); SN05(2, 3); SN05(1, 3)];
+%     r = BN05'*SN05_v;
+%     r2 = BN05'*SN05_v2;
 %     h = 1e-6;
-%     d2WNum = zeros(numel(x));
-%     for ii = 1:numel(x)
-% %         x = [IC;IIC;J;Jstar];
-%         xNum = x;
-%         xNum(ii) = xNum(ii) + h;
-%         h1Num = w1'*xNum + b1;
-%         dh2dh1Num = diag(activation.derivative(h1Num));
-%         dWvol_J = 2*alpha*(J-1);
-%         dW_INum = w2'*(dh2dh1Num*w1');
-%         dW_INum(3) = dW_INum(3) + dWvol_J;
-%         d2WNum(:,ii) = (dW_INum-dW_I)/h;
+%     kNum = zeros(numel(edN1));
+%     kNum2 = zeros(numel(edN1));
+%     for ii = 1:numel(edN1)
+%         edN1Num = edN1;
+%         edN1Num(ii) = edN1Num(ii) + h;
+%         edN05Num = 0.5 * (edN + edN1Num);
+%         FN1Num = edN1Num * dN_X_I';
+%         FN05Num = edN05Num * dN_X_I';
+%         CN1Num = FN1Num' * FN1Num;
+%         CN05Num = FN05Num' * FN05Num;
+%         CAlgoNum = 0.5 * (CN + CN1Num);
+%         GN1Num = 0.5 * wedge(CN1Num, CN1Num);
+%         GN05Num = 0.5 * wedge(CN05Num, CN05Num);
+%         GAlgo1Num = 0.5 * (GN + GN1Num); %averaged
+%         cN05Num = det(CN05Num);
+%         % only midpoint!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%         [DW_INum, DW_IINum, DW_cNum] = ANNObject.computeDiffEnergyIIIcANN(CN05Num,GN05Num,cN05Num);
+%         % % % % % % % % % % % %
+%         SN05Num = 2*(0*DW_INum*dIC_C + 0*wedge(DW_IINum*dIIC_G, CAlgoNum) + DW_cNum * 1 / 3 * (wedge(CAlgoNum, CAlgoNum) + GAlgo1Num));
+%         %                 SN05Num = 2*(0*DW_INum*dIC_C + 0*wedge(DW_IINum*dIIC_G, CAlgoNum) + DW_c * 1 / 3 * (wedge(CAlgoNum, CAlgoNum) + GAlgo1Num));
+%         %                 SN05Num = SN05Num + 2*DW_cNum * 1 / 3 * (wedge(CAlgo, CAlgo) + GAlgo1);
+% 
+%         % % % % % % % % % % % %
+%         SN05_vNum = [SN05Num(1, 1); SN05Num(2, 2); SN05Num(3, 3); SN05Num(1, 2); SN05Num(2, 3); SN05Num(1, 3)];
+%         rNum = BN05' * SN05_vNum;
+%         kNum(:,ii) = (rNum-r)/h;
+%         % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%         if temp == 0
+%             SN05Num2 = 2*(DW_INum*dIC_C + wedge(DW_IINum*dIIC_G, CAlgoNum) + DW_cNum * 1 / 3 * (wedge(CAlgoNum, CAlgoNum) + GAlgo1Num));
+%         elseif temp == 1
+%             SN05Num2 = 2*(DW_INum*dIC_C);
+%         elseif temp == 2
+%             SN05Num2 = 2*wedge(DW_IINum*dIIC_G, CAlgoNum);
+%         elseif temp == 3
+%             SN05Num2 = 2*(DW_cNum * 1 / 3 * (wedge(CAlgoNum, CAlgoNum) + GAlgo1Num));
+%         end
+%         SN05_vNum2 = [SN05Num2(1, 1); SN05Num2(2, 2); SN05Num2(3, 3); SN05Num2(1, 2); SN05Num2(2, 3); SN05Num2(1, 3)];
+%         %
+%         rNum2 = BN05' * SN05_vNum2;
+%         kNum2(:,ii) = (rNum2-r2)/h;
 %     end
-
+%     KXX = KXX + geometricTangent * detJ * gaussWeight(k);
+%     KXX = KXX + BN05' * (materialTangentN05 * BN05 + materialTangentN1 * BN1) * detJ * gaussWeight(k);
+%     %               KXX = KXX + kNum* detJ * gaussWeight(k);
+%     %               k2 = BN05' * materialTangentN05temp * BN05 + BN05' * materialTangentN1temp * BN1;
+%     %               kNum2-k2
+% end

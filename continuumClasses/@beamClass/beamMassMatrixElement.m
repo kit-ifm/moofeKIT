@@ -67,6 +67,10 @@ for k = 1:numberOfGausspoints
         MAT((displacement_dofs_per_node+1):displacement_dofs_per_node+additionalFields:sizeN, (displacement_dofs_per_node+1):displacement_dofs_per_node+additionalFields:sizeN) = A2;
     end
 
+    if isa(obj, 'beamVelocityClass')
+        % TO CHECK: do sth else here?
+    end
+
     Me = Me + MAT * detJ * gaussWeight(k);
 
 end

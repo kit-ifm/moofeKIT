@@ -46,6 +46,7 @@ end
 %% plotting
 x = zeros(numberOfNodesDirichletBoundary, 4);
 y = zeros(numberOfNodesDirichletBoundary, 4);
+z = zeros(numberOfNodesDirichletBoundary, 4);
 
 if isa(obj.masterObject, 'plateClass')
     % plates
@@ -99,7 +100,7 @@ if isa(obj.masterObject, 'plateClass')
                 error('direction not implemented')
         end
     end
-else
+elseif obj.masterObject.dimension == 2
     % general 2D solids
     for i = 1:numel(obj.nodalDof)
         switch obj.nodalDof(i)
@@ -120,5 +121,57 @@ else
         y(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), yTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 2));
         plot(x', y', 'r', 'linewidth', 2*lineWeight)
     end
-end
+elseif obj.masterObject.dimension == 3 && any(strcmp(class(obj.masterObject), {'solidClass', 'solidVelocityClass', 'solidShellClass'}))
+    % 3D solids
+    for i = 1:numel(obj.nodalDof)
+        switch obj.nodalDof(i)
+            case 1
+                xTri = [0, -h, -h, 0];
+                yTri = [0, a / 2, -a / 2, 0];
+                zTri = [0, a / 2, -a / 2, 0];
+
+                x(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), xTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 1));
+                y(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), yTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 2));
+                z(:, :) = kron(ones(1, 4), nodes(nodeListDirichletBoundary, 3));
+                plot3(x', y', z', 'r', 'linewidth', 2*lineWeight)
+
+                x(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), xTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 1));
+                y(:, :) = kron(ones(1, 4), nodes(nodeListDirichletBoundary, 2));
+                z(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), zTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 3));
+                plot3(x', y', z', 'r', 'linewidth', 2*lineWeight)
+
+            case 2
+                xTri = [0, -a / 2, a / 2, 0];
+                yTri = [0, -h, -h, 0];
+                zTri = [0, a / 2, -a / 2, 0];
+                    
+                x(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), xTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 1));
+                y(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), yTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 2));
+                z(:, :) = kron(ones(1, 4), nodes(nodeListDirichletBoundary, 3));
+                plot3(x', y', z', 'r', 'linewidth', 2*lineWeight)
+
+                x(:, :) = kron(ones(1, 4), nodes(nodeListDirichletBoundary, 1));
+                y(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), yTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 2));
+                z(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), zTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 3));
+                plot3(x', y', z', 'r', 'linewidth', 2*lineWeight)
+
+            case 3
+                xTri = [0, a / 2, -a / 2, 0];
+                yTri = [0, a / 2, -a / 2, 0];
+                zTri = [0, -h, -h, 0];
+
+                x(:, :) = kron(ones(1, 4), nodes(nodeListDirichletBoundary, 1));
+                y(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), yTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 2));
+                z(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), zTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 3));
+                plot3(x', y', z', 'r', 'linewidth', 2*lineWeight)
+    
+                x(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), xTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 1));
+                y(:, :) = kron(ones(1, 4), nodes(nodeListDirichletBoundary, 2));
+                z(:, :) = kron(ones(numberOfNodesDirichletBoundary, 1), zTri) + kron(ones(1, 4), nodes(nodeListDirichletBoundary, 3));
+                plot3(x', y', z', 'r', 'linewidth', 2*lineWeight)
+
+                otherwise
+                % error('direction not implemented')
+        end    
+    end
 end

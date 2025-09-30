@@ -41,8 +41,10 @@ classdef dofClass < matlab.mixin.Copyable
                 if isa(continuumObject,'solidViscoClass')
                     continuumObject.initializeEpsilonViscoN1;
                 end
-                if ismethod(continuumObject,'initializeHistoryVariableN1')
-                    continuumObject.initializeHistoryVariableN1;
+                if isa(continuumObject,'solidClass') || isa(continuumObject,'beamClass')
+                    if continuumObject.flagHistoryFields
+                        continuumObject.initializeHistoryN1;
+                    end
                 end
             end
         end
@@ -108,7 +110,9 @@ classdef dofClass < matlab.mixin.Copyable
             for index1 = 1:obj.numberOfContinuumObjects
                 continuumObject = obj.listContinuumObjects{index1};
                 if ismethod(continuumObject,'updateHistoryField')
-                    continuumObject.updateHistoryField(obj);
+                    if continuumObject.flagHistoryFields
+                        continuumObject.updateHistoryField(obj);
+                    end
                 end
             end
         end
@@ -144,8 +148,8 @@ classdef dofClass < matlab.mixin.Copyable
                 end
             end
         end
-        
-        
+
+
         %%%%%%%%%%%%%%%%%
         function out = get.numberOfContinuumObjects(obj)
             out = numel(obj.listContinuumObjects);
@@ -161,6 +165,6 @@ classdef dofClass < matlab.mixin.Copyable
                 end
             end
         end
-        
+
     end
 end

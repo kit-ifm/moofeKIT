@@ -1,4 +1,4 @@
-function [rData, kData, elementEnergy, array] = displacementBernoulliHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
+function [rData, kData, elementData, array] = displacementBernoulliHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
 %BEAMBERNOULLIENDPOINT Bernoulli beam
 
 %% SETUP
@@ -44,7 +44,7 @@ KWprimeW = kData{2, 1};
 KWprimeWprime = kData{2, 2};
 
 % initialize elementEnergy
-elementEnergy.strainEnergy = 0;
+elementData.strainEnergy = 0;
 
 %stiffness matrix
 stiffness_mat = zeros(4,4);
@@ -66,7 +66,7 @@ for k = 1:numberOfGausspoints
         % residual vector (linear)
         R = stiffness_mat*uN05;
 
-        elementEnergy.strainEnergy = elementEnergy.strainEnergy + 1/2 * E*I * kappaN1^2 * detJ * gaussWeight(k);
+        elementData.strainEnergy = elementData.strainEnergy + 1/2 * E*I * kappaN1^2 * detJ * gaussWeight(k);
     else
 
         % stress resultants

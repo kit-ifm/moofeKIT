@@ -9,7 +9,7 @@
 % creator(s)                Felix Zähringer
 % date                      2021/12/16
 % see also                  LShape, cooksMembrane
- 
+
 %% setup (mandatory: setup and dofs)
 setupObject = setupClass;
 setupObject.saveObject.fileName = 'unitTest';
@@ -106,6 +106,6 @@ dofObject = runNewton(setupObject,dofObject);
 
 %% postprocessing - energy
 kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
-internalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
+internalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
 totalEnergy = kineticEnergy + internalEnergy;
 lastTotalEnergyValue = totalEnergy(end);

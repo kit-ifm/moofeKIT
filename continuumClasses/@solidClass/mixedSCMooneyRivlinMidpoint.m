@@ -186,11 +186,11 @@ for k = 1:numberOfGausspoints
 
         % RESIDUAL
         RX = RX + 2 * BN05.' * lambdaCN1v * detJ * gaussWeight(k);
-        RCv = RCv + kron(M_k_I(k, :)', matrixToVoigt(DW_C-lambdaCN1+wedge(lambdaGN1, CN05)+1/3*lambdacN1*GN05, 'strain')) * detJ * gaussWeight(k);
-        RGv = RGv + kron(M_k_I(k, :)', matrixToVoigt(DW_G-lambdaGN1+1/3*lambdacN1*CN05, 'strain')) * detJ * gaussWeight(k);
+        RCv = RCv + kron(M_k_I(k, :)', matrixToVoigt(DW_C-lambdaCN1+wedge(lambdaGN1, CN05)+1/3*lambdacN1*GN05, 'stress')) * detJ * gaussWeight(k);
+        RGv = RGv + kron(M_k_I(k, :)', matrixToVoigt(DW_G-lambdaGN1+1/3*lambdacN1*CN05, 'stress')) * detJ * gaussWeight(k);
         Rc = Rc + M_k_I(k, :)' * (DW_c - lambdacN1) * detJ * gaussWeight(k);
-        RLambdaCv = RLambdaCv + kron(M_k_I(k, :)', matrixToVoigt(CxN05-CN05, 'strain')) * detJ * gaussWeight(k);
-        RLambdaGv = RLambdaGv + kron(M_k_I(k, :)', matrixToVoigt(0.5*wedge(CN05, CN05)-GN05, 'strain')) * detJ * gaussWeight(k);
+        RLambdaCv = RLambdaCv + kron(M_k_I(k, :)', matrixToVoigt(CxN05-CN05, 'stress')) * detJ * gaussWeight(k);
+        RLambdaGv = RLambdaGv + kron(M_k_I(k, :)', matrixToVoigt(0.5*wedge(CN05, CN05)-GN05, 'stress')) * detJ * gaussWeight(k);
         RLambdac = RLambdac + M_k_I(k, :)' * (1 / 3 * innerProduct(GN05, CN05) - cN05) * detJ * gaussWeight(k);
 
         % TANGENT

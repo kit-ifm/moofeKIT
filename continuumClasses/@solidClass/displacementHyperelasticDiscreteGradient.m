@@ -6,7 +6,7 @@ function displacementHyperelasticDiscreteGradient(obj,setupObject,varargin)
 % Description:
 % -various hyperelastic laws,
 % -evaluated at time n+1/2, i.e. midpoint rule.
-% -spatial formulation in Tau and left Cauchy Green 
+% -spatial formulation in Tau and left Cauchy Green
 %
 % 19.4.2021 Robin Pfefferkorn
 
@@ -52,16 +52,16 @@ for e = 1:numberOfElements
     %post processing stresses
     se = zeros(numberOfDofs/dimension,1);
     Me = zeros(numberOfDofs/dimension);
-        
+
     %dofs and jacobian
     edN = qN(edof(e,:),1:dimension).'; %#ok<PFBNS>
     edN1 = qN1(edof(e,:),1:dimension).'; %#ok<PFBNS>
     edN05 = 0.5*(edN + edN1); %#ok<PFBNS>
     J = qR(edof(e,:),1:dimension)'*dNr';    %#ok<PFBNS>
-    
+
     % test for activation of discrete gradient
     activeDisGra = false;
-    if discreteGradientFlag        
+    if discreteGradientFlag
         for k = 1:numberOfGausspoints
             indx = dimension*k-(dimension-1):dimension*k;
             detJ = det(J(:,indx)');
@@ -78,10 +78,10 @@ for e = 1:numberOfElements
             if norm(CN1-CN,'fro')>1e-11
                 activeDisGra = true;
                 break;
-            end            
+            end
         end
-    end    
-    
+    end
+
     % Run through all Gauss points
     for k = 1:numberOfGausspoints
         indx = dimension*k-(dimension-1):dimension*k;
@@ -90,7 +90,7 @@ for e = 1:numberOfElements
             error('Jacobi determinant equal or less than zero.')
         end
         dNX = (J(:,indx)')\dNr(indx,:);  %material config.
-        
+
         %deformation gradient
         FN = I;
         FN(1:dimension,1:dimension) = edN*dNX.';
@@ -98,7 +98,7 @@ for e = 1:numberOfElements
         FN05(1:dimension,1:dimension) = edN05*dNX.';
         FN1 = I;
         FN1(1:dimension,1:dimension) = edN1*dNX.';
-        
+
         % strain energy, constitutive stresses, material tangent
         %--------------------------------------------------------------
         [WpotN1,Salg,Salg_v,CCalg,errMat] = hyperelasticDiscreteGradient(materialObject,mapVoigtObject,FN.'*FN,FN1.'*FN1,activeDisGra);
@@ -113,10 +113,10 @@ for e = 1:numberOfElements
         %bmatrix
         BMatN05 = BMatrix(dNX,FN05);
         BMatN1 = BMatrix(dNX,FN1);
-        
+
         %Residual
         Re = Re + BMatN05.'*Salg_v*detJ*gaussWeight(k);
-        
+
         %Tangent
         kgeo = dNX'*Salg(1:dimension,1:dimension)*dNX*detJ*gaussWeight(k);
         Kgeo = zeros(numberOfDofs);
@@ -128,5 +128,5 @@ for e = 1:numberOfElements
     end
     storeDataFE(storageFEObject,Re,Ke,globalFullEdof,e);
 end
-obj.ePot(setupObject.timeStep).strainEnergy = strainEnergy;
+obj.elementData(setupObject.timeStep).strainEnergy = strainEnergy;
 end

@@ -94,6 +94,8 @@ h = 1/4*[1, -1, 1, -1].';
 C1 = 1/detJ0*(a2.'*yVal*h.'*xVal-a2.'*xVal*h.'*yVal);
 C2 = 1/detJ0*(-a1.'*yVal*h.'*xVal+a1.'*xVal*h.'*yVal);
 
+testStress = zeros(6, 12);
+
 %% GAUSS LOOP
 for k = 1:numberOfGausspoints
     [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
@@ -107,29 +109,90 @@ for k = 1:numberOfGausspoints
     xi = gaussPoints(1, k);
     eta = gaussPoints(2, k);
     Er = zeros(5, 6);
-    Er(1, 3) = xi;
-    Er(2, 6) = eta;
-    Er(3, 4) = eta;
-    Er(3, 5) = xi;
+%     Er(1, 3) = xi;
+%     Er(2, 6) = eta;
+%     Er(3, 4) = xi*eta;
+%     Er(3, 5) = xi*eta;
+%     Er(4, 1) = xi;
+%     Er(5, 2) = eta;
+%     Er(4, 5) = xi*eta-1/3*C2*eta;
+%     Er(5, 4) = xi*eta-1/3*C1*xi;
+%     Er(4, 1) = xi;
+%     Er(5, 2) = eta;
+%     Er(3, 3) = -2*xi;
+%     Er(4, 3) = 2*xi*eta;
+%     Er(3, 4) = -2*eta;
+%     Er(5, 4) = 2*xi*eta;
+%     Er(1, 5) = -6*xi;
+%     Er(2, 6) = -6*eta;
+    
     Er(4, 1) = xi;
     Er(5, 2) = eta;
+    
+    Er(1, 3) = xi;
+    Er(2, 3) = xi;
+    Er(4, 3) = -(1+nu)*(1/3);
+    
+    Er(1, 4) = eta;
+    Er(2, 4) = eta;
+    Er(5, 4) = -(1+nu)*(1/3);
+
     Er(4, 5) = xi*eta-1/3*C2*eta;
-    Er(5, 4) = xi*eta-1/3*C1*xi;
+    
+    Er(5, 6) = xi*eta-1/3*C1*xi;
+
+    Er(3, 5) = xi*eta;
+
+    Er(3, 6) = xi*eta;
+
+    xiBar = gaussPointsInSkewCoordinates(1, k);
+    etaBar = gaussPointsInSkewCoordinates(2, k);
+    S = zeros(5, 12);
+    S(:, 4) = [2; 2*nu; 0; 0; 0];
+    S(:, 5) = [0; 0; 1-nu; 0; 0];
+    S(:, 6) = [2*nu; 2; 0; 0; 0];
+    S(:, 7) = [6*xiBar; 6*nu*xiBar; 0; 6; 0];
+    S(:, 8) = [6*nu*etaBar; 6*etaBar; 0; 0; 6];
+    S(:, 9) = [2*etaBar; 2*nu*etaBar; 2*(1-nu)*xiBar; 0; 2];
+    S(:, 10) = [2*nu*xiBar; 2*xiBar; 2*(1-nu)*etaBar; 2; 0];
+
+    testStress = testStress + Er.'*S*gaussWeight(k);
 
     % shape functions for the enhanced part of the strain field
     Hr = zeros(5, 6);
-    % bending part
-    
-    % shear part
     Hr(4:5, 1:2) = dMTilder(indx, 1:2);
-    Hr(4, 3) = -(J012*dMTilder(indx(1), 3)+J011*dMTilder(indx(1), 5))+J011*MTilde(k, 1);
-    Hr(5, 3) = -(J012*dMTilder(indx(2), 3)+J011*dMTilder(indx(2), 5))+J012*MTilde(k, 1);
-    Hr(4, 4) = -(J011*dMTilder(indx(1), 4)+J012*dMTilder(indx(1), 6))+J011*MTilde(k, 2);
-    Hr(5, 4) = -(J011*dMTilder(indx(2), 4)+J012*dMTilder(indx(2), 6))+J012*MTilde(k, 2);
-    Hr(4, 5) = -(J022*dMTilder(indx(1), 3)+J021*dMTilder(indx(1), 5))+J021*MTilde(k, 1);
-    Hr(5, 5) = -(J022*dMTilder(indx(2), 3)+J021*dMTilder(indx(2), 5))+J022*MTilde(k, 1);
-    Hr(4, 6) = -(J021*dMTilder(indx(1), 4)+J022*dMTilder(indx(1), 6))+J021*MTilde(k, 2);
-    Hr(5, 6) = -(J021*dMTilder(indx(2), 4)+J022*dMTilder(indx(2), 6))+J022*MTilde(k, 2);
+    
+    Hr(2, 3) = - dMTilder(indx(2), 1);
+    Hr(3, 3) = - dMTilder(indx(1), 1);
+    Hr(4, 3) = dMTilder(indx(1), 3);
+    Hr(5, 3) = dMTilder(indx(2), 3) - MTilde(k, 1);
+    
+    Hr(1, 4) = - dMTilder(indx(2), 2);
+    Hr(3, 4) = - dMTilder(indx(2), 2);
+    Hr(4, 4) = dMTilder(indx(1), 4) - MTilde(k, 2);
+    Hr(5, 4) = dMTilder(indx(2), 4);
+    
+    Hr(1, 5) = - 3 * dMTilder(indx(1), 1);
+    Hr(3, 5) = - 3 * dMTilder(indx(2), 1);
+    Hr(4, 5) = dMTilder(indx(1), 5) - 3 * MTilde(k, 1);
+    Hr(5, 5) = dMTilder(indx(2), 5);
+    
+    Hr(2, 6) = - 3 * dMTilder(indx(2), 2);
+    Hr(3, 6) = - 3 * dMTilder(indx(1), 2);
+    Hr(4, 6) = dMTilder(indx(1), 6);
+    Hr(5, 6) = dMTilder(indx(2), 6) - 3 * MTilde(k, 2);
+
+%     Hr(1, 7) = - 3 * dMTilder(indx(1), 3);
+%     Hr(2, 7) = - dMTilder(indx(2), 5);
+%     Hr(3, 7) = - 3 * dMTilder(indx(2), 3) - dMTilder(indx(1), 5);
+%     Hr(4, 7) = dMTilder(indx(1), 7) - 3 * MTilde(k, 3);
+%     Hr(5, 7) = dMTilder(indx(2), 7) - MTilde(k, 5);
+% 
+%     Hr(1, 8) = - dMTilder(indx(1), 6);
+%     Hr(2, 8) = - 3 * dMTilder(indx(2), 4);
+%     Hr(3, 8) = - dMTilder(indx(2), 6) - 3 * dMTilder(indx(1), 4);
+%     Hr(4, 8) = dMTilder(indx(1), 8) - MTilde(k, 6);
+%     Hr(5, 8) = dMTilder(indx(2), 8) - 3 * MTilde(k, 4);
 
     % B-Matrix
     % bending component
@@ -163,30 +226,7 @@ for k = 1:numberOfGausspoints
 
     G = detJ0 / detJ * (F0.' \ Er);
 
-
-    Hold = F0.' \ Hr;
-
-    H = zeros(5, 6);
-    H(1, 3) = dMTildex(1, 1);
-    H(1, 4) = dMTildex(1, 2);
-    H(2, 5) = dMTildex(2, 1);
-    H(2, 6) = dMTildex(2, 2);
-    H(3, 3) = dMTildex(2, 1);
-    H(3, 4) = dMTildex(2, 2);
-    H(3, 5) = dMTildex(1, 1);
-    H(3, 6) = dMTildex(1, 2);
-    H(4, 1) = dMTildex(1, 1);
-    H(4, 2) = dMTildex(1, 2);
-    H(4, 3) = -(J012*dMTildex(1, 3)+J011*dMTildex(1, 5))+MTilde(k, 1);
-    H(4, 4) = -(J011*dMTildex(1, 4)+J012*dMTildex(1, 6))+MTilde(k, 2);
-    H(4, 5) = -(J022*dMTildex(1, 3)+J021*dMTildex(1, 5));
-    H(4, 6) = -(J021*dMTildex(1, 4)+J022*dMTildex(1, 6));
-    H(5, 1) = dMTildex(2, 1);
-    H(5, 2) = dMTildex(2, 2);
-    H(5, 3) = -(J012*dMTildex(2, 3)+J011*dMTildex(2, 5));
-    H(5, 4) = -(J011*dMTildex(2, 4)+J012*dMTildex(2, 6));
-    H(5, 5) = -(J022*dMTildex(2, 3)+J021*dMTildex(2, 5))+MTilde(k, 1);
-    H(5, 6) = -(J021*dMTildex(2, 4)+J022*dMTildex(2, 6))+MTilde(k, 2);
+    H = F0.' \ Hr;
     
     if ~computePostData
         % Tangent
@@ -203,6 +243,8 @@ for k = 1:numberOfGausspoints
         array = postStressComputation(array, N_k_I, k, gaussWeight, detJ, stressTensor, setupObject, dimension+1);
     end
 end
+
+% disp(testStress);
 
 %% RESIDUAL
 RX = RX + KXX * qN1(:) + KXA * alphaN1(:);
@@ -222,14 +264,16 @@ end
 function [MTilde, dMTilder] = computeShapeFunctionsTrialFunctionEnhancedStrain(nodesInSkewCoordinates, gaussPointsInSkewCoordinates, M, dMr)
 % Computes the shape functions for the trial function for the enhanced part
 % of the strain field
-MTilde = zeros(size(gaussPointsInSkewCoordinates, 2), 6);
+MTilde = zeros(size(gaussPointsInSkewCoordinates, 2), 8);
 MTilde(:, 1:2) = (gaussPointsInSkewCoordinates.^2).' - M * (nodesInSkewCoordinates.^2).';
 MTilde(:, 3) = (gaussPointsInSkewCoordinates(1, :).^2.*gaussPointsInSkewCoordinates(2, :)).' - M * (nodesInSkewCoordinates(1, :).^2.*nodesInSkewCoordinates(2, :)).';
 MTilde(:, 4) = (gaussPointsInSkewCoordinates(1, :).*gaussPointsInSkewCoordinates(2, :).^2).' - M * (nodesInSkewCoordinates(1, :).*nodesInSkewCoordinates(2, :).^2).';
-MTilde(:, 5) = 1/3 * (gaussPointsInSkewCoordinates(1, :).^3).' - 1/3 * M * (nodesInSkewCoordinates(1, :).^3).';
-MTilde(:, 6) = 1/3 * (gaussPointsInSkewCoordinates(2, :).^3).' - 1/3 * M * (nodesInSkewCoordinates(2, :).^3).';
+MTilde(:, 5) = (gaussPointsInSkewCoordinates(1, :).^3).' - M * (nodesInSkewCoordinates(1, :).^3).';
+MTilde(:, 6) = (gaussPointsInSkewCoordinates(2, :).^3).' - M * (nodesInSkewCoordinates(2, :).^3).';
+MTilde(:, 7) = (gaussPointsInSkewCoordinates(1, :).^3.*gaussPointsInSkewCoordinates(2, :)).' - M * (nodesInSkewCoordinates(1, :).^3.*nodesInSkewCoordinates(2, :)).';
+MTilde(:, 8) = (gaussPointsInSkewCoordinates(1, :).*gaussPointsInSkewCoordinates(2, :).^3).' - M * (nodesInSkewCoordinates(1, :).*nodesInSkewCoordinates(2, :).^3).';
 
-dMTilder = zeros(2*size(gaussPointsInSkewCoordinates, 2), 6);
+dMTilder = zeros(2*size(gaussPointsInSkewCoordinates, 2), 8);
 dMTilder(1:2:end, 1) = 2*gaussPointsInSkewCoordinates(1, :).' - dMr(1:2:end, :) * (nodesInSkewCoordinates(1, :).^2).';
 dMTilder(2:2:end, 1) = - dMr(2:2:end, :) * (nodesInSkewCoordinates(1, :).^2).';
 dMTilder(1:2:end, 2) = - dMr(1:2:end, :) * (nodesInSkewCoordinates(2, :).^2).';
@@ -238,6 +282,13 @@ dMTilder(1:2:end, 3) = 2*(gaussPointsInSkewCoordinates(1, :).*gaussPointsInSkewC
 dMTilder(2:2:end, 3) = (gaussPointsInSkewCoordinates(1, :).^2).' - dMr(2:2:end, :) * (nodesInSkewCoordinates(1, :).^2.*nodesInSkewCoordinates(2, :)).';
 dMTilder(1:2:end, 4) = (gaussPointsInSkewCoordinates(2, :).^2).' - dMr(1:2:end, :) * (nodesInSkewCoordinates(1, :).*nodesInSkewCoordinates(2, :).^2).';
 dMTilder(2:2:end, 4) = 2*(gaussPointsInSkewCoordinates(1, :).*gaussPointsInSkewCoordinates(2, :)).' - dMr(2:2:end, :) * (nodesInSkewCoordinates(1, :).*nodesInSkewCoordinates(2, :).^2).';
-dMTilder(1:2:end, 5) = (gaussPointsInSkewCoordinates(1, :).^2).' - 1/3 * dMr(1:2:end, :) * (nodesInSkewCoordinates(1, :).^3).';
-dMTilder(2:2:end, 6) =(gaussPointsInSkewCoordinates(2, :).^2).' - 1/3 * dMr(2:2:end, :) * (nodesInSkewCoordinates(2, :).^3).';
+dMTilder(1:2:end, 5) = 3*(gaussPointsInSkewCoordinates(1, :).^2).' - dMr(1:2:end, :) * (nodesInSkewCoordinates(1, :).^3).';
+dMTilder(2:2:end, 5) = - dMr(2:2:end, :) * (nodesInSkewCoordinates(1, :).^3).';
+dMTilder(1:2:end, 6) = - dMr(1:2:end, :) * (nodesInSkewCoordinates(2, :).^3).';
+dMTilder(2:2:end, 6) = 3*(gaussPointsInSkewCoordinates(2, :).^2).' - dMr(2:2:end, :) * (nodesInSkewCoordinates(2, :).^3).';
+
+dMTilder(1:2:end, 7) = 3*(gaussPointsInSkewCoordinates(1, :).^2.*gaussPointsInSkewCoordinates(2, :)).' - dMr(1:2:end, :) * (nodesInSkewCoordinates(1, :).^3.*nodesInSkewCoordinates(2, :)).';
+dMTilder(2:2:end, 7) = (gaussPointsInSkewCoordinates(1, :).^3).' - dMr(2:2:end, :) * (nodesInSkewCoordinates(1, :).^3.*nodesInSkewCoordinates(2, :)).';
+dMTilder(1:2:end, 8) = (gaussPointsInSkewCoordinates(2, :).^3).' - dMr(1:2:end, :) * (nodesInSkewCoordinates(1, :).*nodesInSkewCoordinates(2, :).^3).';
+dMTilder(2:2:end, 8) = 3*(gaussPointsInSkewCoordinates(1, :).*gaussPointsInSkewCoordinates(2, :).^2).' - dMr(2:2:end, :) * (nodesInSkewCoordinates(1, :).*nodesInSkewCoordinates(2, :).^3).';
 end

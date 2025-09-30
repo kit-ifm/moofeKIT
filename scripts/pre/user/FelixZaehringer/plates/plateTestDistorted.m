@@ -1,5 +1,5 @@
 %% Start parameters
-elementsToTest = {'easPetrovGalerkinFullIncompatible4DOF', 'displacementBatheDvorkin'};%, 'displacementBatheDvorkin', 'displacementQ8', 'displacementPetrovGalerkinQ8', 'easAndelfingerRamm', 'easPetrovGalerkinAndelfingerRamm', 'easSimoRifai'
+elementsToTest = {'easPetrovGalerkinFullIncompatible10Field', 'displacementBatheDvorkin'};%, 'displacementBatheDvorkin', 'displacementQ8', 'displacementPetrovGalerkinQ8', 'easAndelfingerRamm', 'easPetrovGalerkinAndelfingerRamm', 'easSimoRifai'
 numberStepsMeshDistortion = 10;
 maxDistortion = 10;
 testBothDirections = false;
@@ -38,6 +38,7 @@ for ii = 1:size(elementsToTest, 2)
         
         %% continuum Objects
         plateObject = plateClass(dofObject);
+        numberOfGausspoints = @(order) (order + 1)^2;
         switch elementsToTest{ii}
             case 'displacementQ8'
                 plateObject.materialObject.name = 'Hooke';
@@ -237,6 +238,15 @@ for ii = 1:size(elementsToTest, 2)
                 plateObject.mixedFEObject.typeShapeFunctionData = 8;
                 order = 1;
                 serendipity = false;
+            case 'easPetrovGalerkinFullIncompatible10Field'
+                plateObject.materialObject.name = 'Hooke';
+                plateObject.elementDisplacementType = 'eas';
+                plateObject.elementNameAdditionalSpecification = 'PetrovGalerkinFullIncompatible10Field';
+                plateObject.mixedFEObject.condensation = false;
+                plateObject.mixedFEObject.typeShapeFunctionData = 10;
+                order = 1;
+                numberOfGausspoints = @(order) (order + 2)^2;
+                serendipity = false;
             case 'easPetrovGalerkinAssumedStrain'
                 plateObject.materialObject.name = 'Hooke';
                 plateObject.elementDisplacementType = 'easPetrovGalerkin';
@@ -347,7 +357,7 @@ for ii = 1:size(elementsToTest, 2)
         plateObject.h = 1;
         plateObject.dimension = 2;
         plateObject.shapeFunctionObject.order = order;
-        plateObject.shapeFunctionObject.numberOfGausspoints = (max(order) + 2)^2;
+        plateObject.shapeFunctionObject.numberOfGausspoints = numberOfGausspoints(order);
 
         % Dirichlet boundary
         boundary1 = dirichletClass(dofObject);

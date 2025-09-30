@@ -117,6 +117,9 @@ KVV = kData{2, 2};
 elementEnergy.strainEnergy = 0;
 elementEnergy.kineticEnergy = 0;
 
+elementEnergy.dispError = 0;
+elementEnergy.dispErrorPos = 0;
+
 %% GAUSS LOOP
 for k = 1:numberOfGausspoints
     [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
@@ -142,6 +145,9 @@ for k = 1:numberOfGausspoints
         % ENERGY
         elementEnergy.strainEnergy = elementEnergy.strainEnergy + (1 / 2 * (B * uN1(:))' * C * (B * uN1(:))) * detJ * gaussWeight(k);
         elementEnergy.kineticEnergy = elementEnergy.kineticEnergy + (1 / 2 * (NMat * vN1(:))' * rho * (NMat * vN1(:))) * detJ * gaussWeight(k);
+
+        elementEnergy.dispError = elementEnergy.dispError + ((NMat * uN1(:))' * (NMat * uN1(:))) * detJ * gaussWeight(k);
+        elementEnergy.dispError = elementEnergy.dispErrorPos + ((NMat * uN1(:))' * (NMat * uN1(:))) * detJ * gaussWeight(k);
     else
         % STRESS COMPUTATION
         sigmaN1_v = C * B * uN1(:);

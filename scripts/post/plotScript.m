@@ -6,12 +6,15 @@ if plotObject.flag
             if ~setupObject.plotObject.docked
                 scrsz = get(groot, 'screensize');
                 figurePlot = figure('outerposition', [scrsz(3) * .4, scrsz(4) * .1, scrsz(3) * .6, scrsz(4) * .85]);
+                %figurePlot = figure('outerposition', [scrsz(3) * .4, scrsz(4) * .1, scrsz(3) * .6, scrsz(4) * .55]);
             else
                 figurePlot = figure();
             end
         else
-            if ~setupObject.plotObject.keepFormerPlots
-                cla(figureAxes)
+            if mod(timeStep, plotObject.steps) == 0 || timeStep == 0
+                if ~setupObject.plotObject.keepFormerPlots
+                    cla(figureAxes)
+                end
             end
         end
         %formatting of axis
@@ -53,8 +56,14 @@ if plotObject.flag
                 if isa(dofObject.listContinuumObjects{index1}, 'solidSuperClass')
                     plot(dofObject.listContinuumObjects{index1}, setupObject);
                 end
-                % boundarys 2D
-                if isa(dofObject.listContinuumObjects{index1}, 'dirichletClass') || isa(dofObject.listContinuumObjects{index1}, 'neumannClass')
+
+                if isa(dofObject.listContinuumObjects{index1}, 'dirichletClass')
+                    % boundarys 2D/3D
+                    if dofObject.listContinuumObjects{index1}.masterObject.dimension == 2 || dofObject.listContinuumObjects{index1}.masterObject.dimension == 3 || size(dofObject.listContinuumObjects{index1}.masterObject.qR,2) == 2
+                        plot(dofObject.listContinuumObjects{index1}, dofObject, setupObject);
+                    end
+                elseif isa(dofObject.listContinuumObjects{index1}, 'neumannClass')
+                    % loads 2D
                     if dofObject.listContinuumObjects{index1}.masterObject.dimension == 2 || size(dofObject.listContinuumObjects{index1}.masterObject.qR,2) == 2
                         plot(dofObject.listContinuumObjects{index1}, dofObject, setupObject);
                     end
@@ -62,17 +71,19 @@ if plotObject.flag
             end
         end
         if ~isempty(setupObject.plotObject.colorBarLimits)
-            clim(setupObject.plotObject.colorBarLimits)
-        end
-        
-        if plotObject.savePlot.flagPlotColorbar
-            clf(figPlot)
-            saveName = strcat(saveName,'Colorbar');
+            caxis(setupObject.plotObject.colorBarLimits)
+            %             clim(setupObject.plotObject.colorBarLimits)
         end
 
-      %  axis([-4    10    -4    14])
+        % if plotObject.savePlot.flagPlotColorbar
+        %     clf(figPlot)
+        %     saveName = strcat(saveName,'Colorbar');
+        % end
 
-        % % % % % % % % % % % % % % % %  
+         % axis([-4    10    -4    14])
+         axis([-5 5 -1 7 -4 4])
+
+        % % % % % % % % % % % % % % % %
         grid on
         if ~plotObject.showGrid
             axis off
@@ -88,9 +99,13 @@ if plotObject.flag
         % % % % % % % % % % % % % % % %
         drawnow
         if plotObject.savePlot.flag
+            if ~setupObject.plotObject.savePlot.flagPlotColorbar
+                colorbar off
+            end
             print(figurePlot,strcat(plotObject.savePlot.name,num2str(setupObject.timeStep)),plotObject.savePlot.type);
+            % nameFile = 'colorBar';
+            % matlab2tikz([nameFile,'.tikz'],'width','\figW','height','\figH')
         end
-
     end
 end
 % TODO: configuration to export multiple vtk files

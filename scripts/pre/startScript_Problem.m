@@ -15,7 +15,7 @@ solidObject = solidClass(dofObject);
 [solidObject.nodes,solidObject.edof] = meshGeneratorCube(1,1,1,3,3,3,2,true);
 solidObject.nodes = solidObject.nodes + 0.5;
 % solidObject.materialObject.name = 'SCNeoHooke';
-% solidObject.materialObject.name = 'SaintVenant'; 
+% solidObject.materialObject.name = 'SaintVenant';
 solidObject.materialObject.name = 'MooneyRivlin';
 solidObject.elementDisplacementType = 'mixedSC';
 % solidObject.elementDisplacementType = 'displacementSC';
@@ -62,7 +62,7 @@ toc
 %% postprocessing - energy
 timeVector = getTime(dofObject.postDataObject,setupObject);
 kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
-strainEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'strainEnergy');
-externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
-figure; 
+strainEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'strainEnergy');
+externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+figure;
 plot(timeVector,kineticEnergy + strainEnergy);

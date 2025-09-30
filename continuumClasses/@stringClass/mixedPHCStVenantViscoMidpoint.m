@@ -1,4 +1,4 @@
-function [rData, kData, elementEnergy, array] = mixedPHCStVenantViscoMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, stressTensor, flagNumericalTangent)
+function [rData, kData, elementData, array] = mixedPHCStVenantViscoMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, stressTensor, flagNumericalTangent)
 % MIXEDPHSTVENANTMIDPOINT Element routine of class solidClass.
 %
 % FORMULATION
@@ -85,7 +85,7 @@ selectMapVoigt(mapVoigtObject, dimension, 'symmetric');
 %% Create residual and tangent
 
 % initialize
-elementEnergy.strainEnergy = 0;
+elementData.strainEnergy = 0;
 Ms = zeros(1,1);
 K = zeros(2*dimAbs,1);
 DKDr = zeros(2*dimAbs,2*dimAbs);
@@ -120,7 +120,7 @@ for k = 1:numberOfGausspoints
          DADr = DADr + etaA/CN05 * (B'*B)*((B'*B*rN05)'*(rN1-rN)) * detJ * gaussWeight(k);
          DADC = DADC + -etaA/CN05^2*1/2*Phi(k,:) * (B'*B)*(rN05*rN05')*(B'*B) * detJ * gaussWeight(k);
          % stored strain energy
-         elementEnergy.strainEnergy = elementEnergy.strainEnergy + getStrainEnergy(EA,CN1) * detJ * gaussWeight(k);
+         elementData.strainEnergy = elementData.strainEnergy + getStrainEnergy(EA,CN1) * detJ * gaussWeight(k);
 
     else
         % stress at gausspoint

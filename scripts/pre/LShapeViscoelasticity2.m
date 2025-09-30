@@ -1,17 +1,17 @@
 % LSHAPE Script for preprocessing a dynamic mechanical simulation.
-% 
+%
 % FORMULATION
 % Different formulations like standard displacement-based and mixed en-
 % hanced assumed strain (eas) and different material models can be chosen.
-% 
+%
 % REFERENCE
 % https://doi.org/10.1007/BF00913408
-% 
-% SEE ALSO 
+%
+% SEE ALSO
 % cooksMembrane,
 % LShapeElectroThermo
-% 
-% CREATOR(S) 
+%
+% CREATOR(S)
 % Marlon Franke
 %
 % Update Visco
@@ -40,7 +40,7 @@ dofObject = dofClass;   % required object for dof and object handling
 abaqusMeshData = abaqusInputFileConverter('LShapeH1.inp');
 solidViscoObject = solidViscoClass(dofObject);% initialize solidViscoObject
 solidViscoObject.linearity = 'nonlinear';                                   % nonlinear viscoelastic material behavior
-solidViscoObject.meshObject.nodes = abaqusMeshData.qR;  
+solidViscoObject.meshObject.nodes = abaqusMeshData.qR;
 solidViscoObject.meshObject.edof = abaqusMeshData.edof;
 
 % material
@@ -98,8 +98,8 @@ timeVector = getTime(dofObject.postDataObject,setupObject);
 kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
 [linearMomentum, totalLinearMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'L',3);
 [angularMomentum, totalAngularMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'J',3);
-internalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
-externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+internalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
+externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
 totalEnergy = internalEnergy + kineticEnergy;
 tStartDiff = ceil(bcTimeEnd/setupObject.totalTime*setupObject.totalTimeSteps);
 totalEnergyDiff = totalEnergy(tStartDiff+1:end) - totalEnergy(tStartDiff:end-1);

@@ -5,7 +5,7 @@
 setupObject = setupClass;
 setupObject.totalTimeSteps = 1; % Anzahl der Zeitschritte anpassen (Zeitschleife)
 setupObject.totalTime = 1; % Gesamtzeit der Simulation festlegen
-setupObject.plotObject.flag = false; % Festlegen, dass die Ergebnisse der Simulation geplottet werden
+setupObject.plotObject.flag = true; % Festlegen, dass die Ergebnisse der Simulation geplottet werden
 setupObject.plotObject.view = 2; % Plotten als 2D-Objekt
 
 dofObject = dofClass; % required object for dof and object handling
@@ -17,7 +17,7 @@ solidObject.shapeFunctionObject.order = 1; % Ordnung der Formfunktionen angeben
 solidObject.shapeFunctionObject.numberOfGausspoints = 4; % Anzahl der Gaußpunkte anpassen
 solidObject.elementDisplacementType = 'displacement'; % Art der FE-Formulierung. Hier 'displacement'.
 solidObject.elementNameAdditionalSpecification = 'PetrovGalerkinXieEtAl2016TQ4'; % Konkretisierung Elementname
-[solidObject.meshObject.nodes, solidObject.meshObject.edof, edofNeumann] = meshCooksMembrane(8, 8, solidObject.shapeFunctionObject.order); % Knoten und edof der Cooks-Membran beschaffen
+[solidObject.meshObject.nodes, solidObject.meshObject.edof, bounEdof] = meshCooksMembrane(8, 8, solidObject.shapeFunctionObject.order,false); % Knoten und edof der Cooks-Membran beschaffen
 solidObject.materialObject.name = 'HookeESZ'; % Art des Materialgesetzes. Hier das Hookesche Gesetz im Falle eines ebenen Verzerrungszustandes.
 solidObject.materialObject.rho = 0; % Dichte angeben. Falls rho=0 gewählt wird, wird rein statisch (ohne Berücksichtigung von dynamischen Effekten) gerechnet.
 solidObject.materialObject.E = 1; % Elastizitaetsmodul anpassen
@@ -34,7 +34,7 @@ neumannObject = neumannClass(dofObject);
 neumannObject.loadGeometry = 'line'; % Form des Neumann-Rand => line oder area
 neumannObject.masterObject = solidObject;
 neumannObject.loadVector = [0; 1]/16; % Komponenten des Lastvektors anpassen
-neumannObject.meshObject.edof = edofNeumann;
+neumannObject.meshObject.edof = bounEdof;
 
 %% solver
 runNewton(setupObject, dofObject);

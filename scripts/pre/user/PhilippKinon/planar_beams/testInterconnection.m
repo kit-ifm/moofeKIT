@@ -156,7 +156,7 @@ time = zeros(setupObject.totalTimeSteps+1,1);
 for j = 1:setupObject.totalTimeSteps+1
     time(j) = (j-1)*setupObject.totalTime/setupObject.totalTimeSteps;
     kineticEnergy(j) = dofObject.postDataObject.energyJournal(j).EKin;
-    potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.ePot(j).strainEnergy + dofObject.listContinuumObjects{1,4}.ePot(j).strainEnergy;
+    potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.elementData(j).strainEnergy + dofObject.listContinuumObjects{1,4}.elementData(j).strainEnergy;
 end
 
 figure()

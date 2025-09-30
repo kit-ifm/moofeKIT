@@ -61,7 +61,7 @@ if strcmpi(mesh,'H1')
     solidObject.shapeFunctionObject.order = 1;
     solidObject.shapeFunctionObject.numberOfGausspoints = 8;
     solidObject.elementDisplacementType = 'displacementSC';
-%     solidObject.elementNameAdditionalSpecification = 'IIIJ';
+    %     solidObject.elementNameAdditionalSpecification = 'IIIJ';
     % solidObject.numericalTangentObject.computeNumericalTangent = true;
     % solidObject.numericalTangentObject.type = 'complex';
 elseif strcmpi(mesh,'H1H0')
@@ -83,8 +83,8 @@ end
 solidObject.meshObject.nodes = abaqusMeshData.qR;
 solidObject.meshObject.edof = abaqusMeshData.edof;
 
-% solidObject.materialObject.name = 'ANN';
-solidObject.materialObject.name = 'MooneyRivlin';     % ground truth
+solidObject.materialObject.name = 'ANN';
+% solidObject.materialObject.name = 'MooneyRivlin';     % ground truth
 %
 bulk    = 5209;                                                 % K
 shear   = 997.5;                                                % G
@@ -147,8 +147,8 @@ neumannObject2.timeFunction =  @(t) 1/(bcTimeEnd/2)*t.*(t <= bcTimeEnd/2)+1/(bcT
 neumannObject2.meshObject.edof = abaqusMeshData.subsets(4).edof;
 
 %% solver
-% try 
-    dofObject = runNewton(setupObject,dofObject);
+% try
+dofObject = runNewton(setupObject,dofObject);
 % end
 
 %% postprocessing - energy
@@ -159,8 +159,8 @@ try
     [linearMomentum, totalLinearMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'L',3);
     [angularMomentum, totalAngularMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'J',3);
 end
-strainEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'strainEnergy');
-externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+strainEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'strainEnergy');
+externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
 totalEnergy = strainEnergy(1:length(kineticEnergy)) + kineticEnergy + externalEnergy(1:length(kineticEnergy));
 if strcmpi(setupObject.integrator,'DiscreteGradient')
     tStartDiff = ceil(bcTimeEnd/setupObject.totalTime*setupObject.totalTimeSteps);

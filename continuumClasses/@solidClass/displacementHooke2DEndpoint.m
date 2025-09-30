@@ -67,8 +67,8 @@ numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
 gaussWeight = shapeFunctionObject.gaussWeight;
 
 % aquire material data
-nu = materialObject.nu;
 E = materialObject.E;
+nu = materialObject.nu;
 
 % compute material matrix
 switch lower(strtok(obj.materialObject.name, 'Hooke'))

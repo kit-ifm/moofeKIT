@@ -66,13 +66,20 @@ numberOfDOFs = size(globalFullEdof, 2);
 I = eye(dimension);
 
 % aquire material data
-lambda = materialObject.lambda;
-mu = materialObject.mu;
+E = materialObject.E;
+nu = materialObject.nu;
 
-% material matrix (EVZ)
-DMat = [lambda + 2 * mu, lambda, 0; ...
-    lambda, lambda + 2 * mu, 0; ...
-    0, 0, mu];
+% material matrix
+switch lower(extractAfter(obj.materialObject.name, 'SaintVenant'))
+    case 'esz'
+        % ESZ
+        DMat = E / (1 - nu^2) * [1, nu, 0; nu, 1, 0; 0, 0, (1 - nu) / 2];
+    case 'evz'
+        % EVZ
+        DMat = E / ((1 + nu) * (1 - 2 * nu)) * [1 - nu, nu, 0; nu, 1 - nu, 0; 0, 0, (1 - 2 * nu) / 2];
+    otherwise
+        error('not implemented')
+end
 
 % aquire the nodal values of the variables for the current element
 edR = obj.qR(edof, 1:dimension).';

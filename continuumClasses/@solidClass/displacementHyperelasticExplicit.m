@@ -6,7 +6,7 @@ function displacementHyperelasticExplicit(obj,setupObject,varargin)
 % Description:
 % -various hyperelastic laws,
 % -evaluated at time n+1/2, i.e. midpoint rule.
-% -spatial formulation in Tau and left Cauchy Green 
+% -spatial formulation in Tau and left Cauchy Green
 %
 % 19.4.2021 Robin Pfefferkorn
 
@@ -41,11 +41,11 @@ for e = 1:numberOfElements
     % Element routine (residual and tangent)
     Re = zeros(numberOfDofs,1);
     Ke = zeros(numberOfDofs);
-        
+
     %dofs and jacobian
     edN = qN(edof(e,:),1:dimension).'; %#ok<PFBNS>
     J = qR(edof(e,:),1:dimension)'*dNr';    %#ok<PFBNS>
-    
+
     % Run through all Gauss points
     for k = 1:numberOfGausspoints
         indx = dimension*k-(dimension-1):dimension*k;
@@ -54,11 +54,11 @@ for e = 1:numberOfElements
             error('Jacobi determinant equal or less than zero.')
         end
         dNX = (J(:,indx)')\dNr(indx,:);  %material config.
-        
+
         %deformation gradient
         FN = I;
         FN(1:dimension,1:dimension) = edN*dNX.';
-        
+
         % strain energy, constitutive stresses, material tangent
         %--------------------------------------------------------------
         [WpotN,~,TauN_v,~,errMat] = materialObject.hyperelasticTB(FN);
@@ -72,15 +72,15 @@ for e = 1:numberOfElements
         %--------------------------------------------------------------
         %spatial shape functions
         dNx = FN(1:dimension,1:dimension).'\dNX;
-        
+
         %bmatrix
         bMat = BMatrix(dNx);
-        
+
         %Residual
         Re = Re + bMat.'*TauN_v*detJ*gaussWeight(k);
-        
+
     end
     storeDataFE(obj,Re,Ke,globalFullEdof,e);
 end
-obj.ePot(setupObject.timeStep).strainEnergy = strainEnergy;
+obj.elementData(setupObject.timeStep).strainEnergy = strainEnergy;
 end

@@ -15,6 +15,11 @@ else
     dimension = obj.dimension;
 end
 additionalFields = obj.additionalFields;
+dofsPerAdditionalField = obj.dofsPerAdditionalField;
+if isempty(dofsPerAdditionalField)
+    dofsPerAdditionalField = 0;
+end
+numberOfDofsOfAdditionalFields = sum(dofsPerAdditionalField);
 % gauss integration and shape functions
 gaussWeight = shapeFunctionObject.gaussWeight;
 numberOfGausspoints = shapeFunctionObject.numberOfGausspoints;
@@ -39,11 +44,18 @@ for k = 1:numberOfGausspoints
     %         Me(index2,index2)  = Me(index2,index2) + rho*(Nkron*Nkron')*detJ*gaussWeight(k);
     A1 = (N_k_I(k, :)' * N_k_I(k, :)) * rho;
     MAT = zeros(numberOfDofs);
-    sizeN = size(N_k_I, 2) * (dimension + additionalFields);
+    sizeN = size(N_k_I, 2) * (dimension + numberOfDofsOfAdditionalFields);
     for l = 1:dimension
-        MAT(l:dimension+additionalFields:sizeN, l:dimension+additionalFields:sizeN) = A1;
+        MAT(l:dimension+numberOfDofsOfAdditionalFields:sizeN, l:dimension+numberOfDofsOfAdditionalFields:sizeN) = A1;
     end
     
+    if isa(obj, 'solidVelocityClass')
+        MAT = zeros(numberOfDofs);
+        for l = 1:dimension
+            MAT(dimension+l:dimension+numberOfDofsOfAdditionalFields:sizeN, dimension+l:dimension+numberOfDofsOfAdditionalFields:sizeN) = A1;
+        end
+    end
+
     Me = Me + MAT * detJ * gaussWeight(k);
 end
 array.Me = Me;

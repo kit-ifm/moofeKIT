@@ -74,13 +74,13 @@ dofObject = runNewton(setupObject,dofObject);
 %% postprocessing - energy
 timeVector = getTime(dofObject.postDataObject,setupObject);
 kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
-internalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
-externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
-internalEnergyDifference = getEnergy(dofObject.postDataObject,dofObject,setupObject,'internalEnergyDifference');
+internalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
+externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+internalEnergyDifference = getElementData(dofObject.postDataObject,dofObject,setupObject,'internalEnergyDifference');
 kineticEnergyDifference = getKineticEnergyDifference(dofObject.postDataObject,setupObject);
 totalEnergy = kineticEnergy + internalEnergy;
 totalEnergyDifference = kineticEnergyDifference + internalEnergyDifference;
-figure; 
+figure;
 plot(timeVector,kineticEnergy,timeVector,internalEnergy,timeVector,totalEnergy);
 legend('kineticEnergy','internalEnergy','totalEnergy')
 xlabel('time [s]')

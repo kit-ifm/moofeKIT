@@ -1,4 +1,4 @@
-function [rData, kData, elementEnergy, array] = displacementTimoshenkoHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
+function [rData, kData, elementData, array] = displacementTimoshenkoHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
 %BEAMTIMOSHENKOENDPOINT Timoshenko beam
 
 %% SETUP
@@ -62,7 +62,7 @@ stiffness_mat_shear = zeros(4,4); % in GFE: K_s
 stiffness_mat_bending = zeros(4,4); % in GFE: K_b
 
 % initialize elementEnergy
-elementEnergy.strainEnergy = 0;
+elementData.strainEnergy = 0;
 
 %% Gauss loop
 for k = 1:numberOfGausspoints
@@ -86,7 +86,7 @@ for k = 1:numberOfGausspoints
         % strain energy
         kappaN1 = B_bending*uN1; %curvature
         gammaN1 = B_shear*uN1; % shear deformation
-        elementEnergy.strainEnergy = elementEnergy.strainEnergy + 1/2 * (E*I * kappaN1^2 + shearCorFact*G*A*gammaN1^2) * detJ * gaussWeight(k);
+        elementData.strainEnergy = elementData.strainEnergy + 1/2 * (E*I * kappaN1^2 + shearCorFact*G*A*gammaN1^2) * detJ * gaussWeight(k);
         
     end
 

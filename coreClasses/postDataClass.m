@@ -65,14 +65,14 @@ classdef postDataClass < matlab.mixin.Copyable
         function out = getKineticEnergyDifference(obj, setupObject)
             out = vertcat(obj.energyJournal(:).EKinDifference);
         end
-        function out = getEnergy(obj, dofObject, setupObject, energyType)
+        function out = getElementData(obj, dofObject, setupObject, energyType)
             flag = false;
             out = zeros(setupObject.timeStep+1, 1);
             for ii = 1:dofObject.numberOfContinuumObjects
                 continuumObject = dofObject.listContinuumObjects{ii};
-                if isprop(continuumObject, 'ePot')
-                    if isfield(continuumObject.ePot, energyType)
-                        out = out + vertcat(continuumObject.ePot(:).(energyType));
+                if isprop(continuumObject, 'elementData')
+                    if isfield(continuumObject.elementData, energyType)
+                        out = out + vertcat(continuumObject.elementData(:).(energyType));
                         flag = true;
                     end
                 end

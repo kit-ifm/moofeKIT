@@ -2,10 +2,10 @@
 %
 % based on: oneDimensionalContinuum.m
 %
-% problem: hyperelastic or linear elastic rod, fixed on one end, 
+% problem: hyperelastic or linear elastic rod, fixed on one end,
 %          time-dependent force on the other
 % spatial discretization: linear Lagrange shapefunction for disp
-%                         discont. constant ansatz for strain, 
+%                         discont. constant ansatz for strain,
 %                         mixed formulation
 % time discretization: midpoint rule or discrete gradient
 %
@@ -20,7 +20,7 @@ setupObject.totalTime = 5;
 setupObject.plotObject.flag = true;
 setupObject.plotObject.stress.component = 1;
 setupObject.newton.tolerance = 1e-4;
-setupObject.integrator = 'Midpoint'; 
+setupObject.integrator = 'Midpoint';
 %setupObject.integrator = 'DiscreteGradient';
 dofObject = dofClass;   % required object for dof and object handling
 
@@ -38,7 +38,7 @@ solidObject.materialObject.E = E;
 solidObject.materialObject.nu = nu;
 solidObject.materialObject.lambda = E*nu/((1+nu)*(1-2*nu));                 % Lame parameter
 solidObject.materialObject.mu = E/(2*(1+nu));
-solidObject.materialObject.rho = 1500; 
+solidObject.materialObject.rho = 1500;
 solidObject.numericalTangentObject.computeNumericalTangent = false;
 solidObject.numericalTangentObject.showDifferences = false;
 
@@ -50,7 +50,7 @@ number_of_gausspoints = 2;
 
 % Mesh
 [solidObject.meshObject.nodes,solidObject.meshObject.edof,edofNeumann] = meshOneDimensional(length,numberOfElementsOfCrime,order);
-solidObject.meshObject.nodes = solidObject.meshObject.nodes + length/2; 
+solidObject.meshObject.nodes = solidObject.meshObject.nodes + length/2;
 
 % Shapefunctions
 solidObject.dimension = 1;
@@ -61,7 +61,7 @@ solidObject.shapeFunctionObject.numberOfGausspoints = number_of_gausspoints;
 dirichletObject = dirichletClass(dofObject);
 dirichletObject.nodeList = find(solidObject.meshObject.nodes(:,1)==0);
 dirichletObject.nodalDof = 1;
-dirichletObject.masterObject = solidObject; 
+dirichletObject.masterObject = solidObject;
 dirichletObject.timeFunction = str2func('@(t,X) 0*X');
 
 % neumann boundary conditions
@@ -87,7 +87,7 @@ time = zeros(setupObject.totalTimeSteps+1,1);
 for j = 1:setupObject.totalTimeSteps
     time(j+1) = j*setupObject.totalTime/setupObject.totalTimeSteps;
     kineticEnergy(j+1) = dofObject.postDataObject.energyJournal(j+1).EKin;
-    potentialEnergy(j+1) = dofObject.listContinuumObjects{1,1}.ePot(j+1).strainEnergy;
+    potentialEnergy(j+1) = dofObject.listContinuumObjects{1,1}.elementData(j+1).strainEnergy;
 end
 
 % Compute increment
@@ -101,7 +101,7 @@ energyIncrement = zeros(setupObject.totalTimeSteps,1);
 timeWithoutLoading = loadingTime:setupObject.totalTime/setupObject.totalTimeSteps:setupObject.totalTime;
 
 for i = 1:setupObject.totalTimeSteps
-    energyIncrement(i) = (kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i)); 
+    energyIncrement(i) = (kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i));
 end
 
 plot(timeWithoutLoading(1:end-1),energyIncrement(loadingTime/setupObject.totalTime*setupObject.totalTimeSteps+1:end))

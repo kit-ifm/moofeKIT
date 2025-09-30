@@ -20,13 +20,20 @@ setupObject = setupClass;
 setupObject.saveObject.fileName = mfilename;
 setupObject.saveObject.saveData = false;
 setupObject.totalTime = 15;
+%setupObject.totalTime = 8;
 setupObject.totalTimeSteps = setupObject.totalTime/stepsize;
 setupObject.newton.tolerance = 1e-11;
 setupObject.integrator = 'Midpoint';
 setupObject.plotObject.flag = true;
 setupObject.plotObject.steps = 5;
 setupObject.plotObject.keepFormerPlots = true;
+%setupObject.plotObject.steps = 1;
+%setupObject.plotObject.keepFormerPlots = false;
 setupObject.plotObject.postPlotType = "stress";
+%setupObject.plotObject.docked = false;
+%setupObject.plotObject.savePlot.flag = true;
+%setupObject.plotObject.savePlot.type = "-dpng";
+%setupObject.plotObject.colorBarLimits = [-120,110];
 setupObject.plotObject.stress.component = 3; %select 3 for bending moment, 1 for normal force, and 2 for shear force
 setupObject.plotObject.view = [0,90];
 setupObject.plotObject.lineWeight = 1.1;
@@ -88,7 +95,7 @@ time = zeros(setupObject.totalTimeSteps+1,1);
 for j = 1:setupObject.totalTimeSteps+1
     time(j) = (j-1)*setupObject.totalTime/setupObject.totalTimeSteps;
     kineticEnergy(j) = dofObject.postDataObject.energyJournal(j).EKin;
-    potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.ePot(j).strainEnergy;
+    potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.elementData(j).strainEnergy;
 end
 
 figure()

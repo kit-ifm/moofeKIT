@@ -1,4 +1,4 @@
-function [rData, kData, elementEnergy, array] = mixedPHCHyperelasticViscoMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, stressTensor, flagNumericalTangent)
+function [rData, kData, elementData, array] = mixedPHCHyperelasticViscoMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, stressTensor, flagNumericalTangent)
 % MIXEDPHHYPERELASTICMIDPOINT Element routine of class solidClass.
 %
 % FORMULATION
@@ -87,8 +87,8 @@ selectMapVoigt(mapVoigtObject, dimension, 'symmetric');
 
 %% Create residual and tangent
 % initialize
-elementEnergy.strainEnergy = 0;
-elementEnergy.dissipatedEnergy = 0;
+elementData.strainEnergy = 0;
+elementData.dissipatedEnergy = 0;
 Ms = zeros(1,1);
 K = zeros(2*dimAbs,1);
 DKDr = zeros(2*dimAbs,2*dimAbs);
@@ -127,8 +127,8 @@ for k = 1:numberOfGausspoints
          D2HDC2 = D2HDC2 + Phi(k,:)'*getStrainEnergyHessian(EA,CN05)*1/2 * detJ * gaussWeight(k);
          
          % stored strain energy
-         elementEnergy.strainEnergy = elementEnergy.strainEnergy + getStrainEnergy(EA,CN1) * detJ * gaussWeight(k);
-         elementEnergy.dissipatedEnergy = elementEnergy.dissipatedEnergy + etaA/(h*CN05) * ((rN1-rN)'*(B'*B)*rN05)^2 * detJ * gaussWeight(k);
+         elementData.strainEnergy = elementData.strainEnergy + getStrainEnergy(EA,CN1) * detJ * gaussWeight(k);
+         elementData.dissipatedEnergy = elementData.dissipatedEnergy + etaA/(h*CN05) * ((rN1-rN)'*(B'*B)*rN05)^2 * detJ * gaussWeight(k);
 
     else
         % stress at gausspoint

@@ -103,7 +103,7 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
         numberOfAdditionalNonMixedFields = 0;
         numberOfMixedFields = 0;
         dofsPerMixedField = 0;
-        numberOfDofsBodyForce = dimension * size(meshObject.edof, 2);        
+        numberOfDofsBodyForce = dimension * size(meshObject.edof, 2);
     end
     if length(numberOfNodes) == 1
         numberOfPrimaryDofs = numberOfPrimaryDofsPerNode * numberOfNodes;
@@ -160,6 +160,8 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
                 dofs.thetaN1 = continuumObject.qN1(edof(e, :), dimension+1)';
             elseif isa(continuumObject, 'solidVelocityClass')
                 dofs.vN1 = continuumObject.qN1(edof(e, :), dimension+1:end)';
+            elseif isa(continuumObject, 'beamVelocityClass')
+                % TO CHECK: do sth else?
             elseif isa(continuumObject, 'solidElectroThermoClass')
                 dofs.phiN1 = continuumObject.qN1(edof(e, :), dimension+1)';
                 dofs.thetaN1 = continuumObject.qN1(edof(e, :), dimension+2)';
@@ -183,9 +185,9 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
             else
                 array = massMatrixElement(continuumObject, setupObject, e);
             end
-            
+
         else
-            [rData, kData, elementEnergy, array] = feval(elementName, continuumObject, setupObject, computePostData, e, rDataInitial, kDataInitial, dofs, array, stressTensor, false);
+            [rData, kData, elementData, array] = feval(elementName, continuumObject, setupObject, computePostData, e, rDataInitial, kDataInitial, dofs, array, stressTensor, false);
         end
 
         if strcmp(requiredData, 'residualAndTangent')
@@ -278,11 +280,15 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
             end
 
             % store energy
-            globalEnergy(e) = elementEnergy;
+            globalData(e) = elementData;
         end
 
         % store FE Data
-        elementDataFE = storageFEObject.assignElementDataFE(initialDataFE, array, globalEdofContinuumObject, e, numberOfPrimaryDofsPerNode, numberOfAdditionalNonMixedFields, N_k_I, requiredData);
+        if isa(continuumObject, 'solidVelocityClass') % FIXME: for linearImplicitScheme required, but could be solved more efficient
+            elementDataFE = storageFEObject.assignElementDataFE(initialDataFE, array, globalEdofContinuumObject, e, numberOfPrimaryDofsPerNode, numberOfAdditionalNonMixedFields*continuumObject.dimension, N_k_I, requiredData);
+        else
+            elementDataFE = storageFEObject.assignElementDataFE(initialDataFE, array, globalEdofContinuumObject, e, numberOfPrimaryDofsPerNode, numberOfAdditionalNonMixedFields, N_k_I, requiredData);
+        end
         dataFEContinuumObject(e) = elementDataFE;
     end
 
@@ -290,18 +296,18 @@ if isa(continuumObject, 'solidSuperClass') || isa(continuumObject, 'neumannClass
         if isa(continuumObject, 'solidSuperClass')
             mixedFEObject.dataFE = dataFEMixed;
         end
-        
+
         % save energy data for each time step
-        fieldnamesEnergy = fieldnames(globalEnergy);
+        fieldnamesData = fieldnames(globalData);
         if setupObject.timeStep == 1 && setupObject.newton.step(setupObject.timeStep) == 1
-            for ii = 1:size(fieldnamesEnergy, 1)
-                continuumObject.ePot(1).(fieldnamesEnergy{ii}) = sum([globalEnergy.(fieldnamesEnergy{ii})]);
+            for ii = 1:size(fieldnamesData, 1)
+                continuumObject.elementData(1).(fieldnamesData{ii}) = sum([globalData.(fieldnamesData{ii})]);
             end
         end
-        for ii = 1:size(fieldnamesEnergy, 1)
-            continuumObject.ePot(setupObject.timeStep+1).(fieldnamesEnergy{ii}) = sum([globalEnergy.(fieldnamesEnergy{ii})]);
+        for ii = 1:size(fieldnamesData, 1)
+            continuumObject.elementData(setupObject.timeStep+1).(fieldnamesData{ii}) = sum([globalData.(fieldnamesData{ii})]);
         end
-        clear globalEnergy;
+        clear globalData;
     end
 
     if isa(continuumObject, 'neumannClass') || isa(continuumObject, 'bodyForceClass')

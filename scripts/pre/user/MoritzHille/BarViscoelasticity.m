@@ -7,7 +7,7 @@
 % SEE ALSO
 % LShapeViscoelasticity
 % threeDimensionalBar (Bea Hummel)
-% 
+%
 % CREATOR(S)
 % Moritz Hille 08.05.2023
 
@@ -34,7 +34,7 @@ solidViscoObject = solidViscoClass(dofObject);          % initialize solidViscoO
 solidViscoObject.linearity = 'nonlinear';               % nonlinear viscoelastic material behavior
 
 % material
-solidViscoObject.materialObject.name = 'NeoHookeVisco';            
+solidViscoObject.materialObject.name = 'NeoHookeVisco';
 solidViscoObject.elementDisplacementType = 'displacement';
 
 % material parameter
@@ -44,7 +44,7 @@ nu = 3.95469e-01;
 solidViscoObject.materialObject.lambda = E*nu/((1+nu)*(1-2*nu));
 solidViscoObject.materialObject.mu = E/(2*(1+nu));
 solidViscoObject.materialObject.lambdaVisco = 227.2;
-solidViscoObject.materialObject.muVisco = 49.875;  
+solidViscoObject.materialObject.muVisco = 49.875;
 
 % mesh
 nel = 2;
@@ -80,17 +80,17 @@ timeVector = getTime(dofObject.postDataObject,setupObject);
 kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
 [linearMomentum, totalLinearMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'L',3);
 [angularMomentum, totalAngularMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'J',3);
-internalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
+internalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
 
 % viscous "energy" -> sum of dissipated energy
-viscousEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'viscousEnergy');
+viscousEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'viscousEnergy');
 Dt = setupObject.totalTime/setupObject.totalTimeSteps;
 viscousEnergy = Dt*viscousEnergy;
 for t = 2: setupObject.totalTimeSteps +1
-viscousEnergy(t) = viscousEnergy(t) + viscousEnergy(t-1);
+    viscousEnergy(t) = viscousEnergy(t) + viscousEnergy(t-1);
 end
 
-externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
 ElasticEnergy = internalEnergy + kineticEnergy;
 totalEnergy = ElasticEnergy + viscousEnergy;
 tStartDiff = ceil(bcTimeEnd/setupObject.totalTime*setupObject.totalTimeSteps);

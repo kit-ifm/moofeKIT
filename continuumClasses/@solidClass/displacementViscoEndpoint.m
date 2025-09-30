@@ -41,19 +41,19 @@ DT = setupObject.timeStepSize;
 selectMapVoigt(mapVoigtObject,dimension,'symmetric');
 
 if (dimension == 1)
-        DMat=2*mu;
-    else   
-DMat = [lambda+2*mu lambda lambda 0 0 0;...
-    lambda lambda+2*mu lambda 0 0 0;...
-    lambda lambda lambda+2*mu 0 0 0;...
-    0 0 0 mu 0 0;...
-    0 0 0 0 mu 0;...
-    0 0 0 0 0 mu];
-end 
+    DMat=2*mu;
+else
+    DMat = [lambda+2*mu lambda lambda 0 0 0;...
+        lambda lambda+2*mu lambda 0 0 0;...
+        lambda lambda lambda+2*mu 0 0 0;...
+        0 0 0 mu 0 0;...
+        0 0 0 0 mu 0;...
+        0 0 0 0 0 mu];
+end
 
 % initialization energy and storageFEObject
 timeStep = setupObject.timeStep;
-obj.ePot(timeStep).strainEnergy = 0;
+obj.elementData(timeStep).strainEnergy = 0;
 initializeDataFE(storageFEObject);
 %% element loop for residual and tangent
 for e = 1:numberOfElements
@@ -88,7 +88,7 @@ for e = 1:numberOfElements
             % Tangent
             array.Ke = array.Ke + B'*DMat*B*detJ*gaussWeight(k);
             %strain energy
-            obj.ePot(timeStep).strainEnergy = obj.ePot(timeStep).strainEnergy + 1/2*(B*uN1(:))'*DMat*(B*uN1(:))*detJ*gaussWeight(k);
+            obj.elementData(timeStep).strainEnergy = obj.elementData(timeStep).strainEnergy + 1/2*(B*uN1(:))'*DMat*(B*uN1(:))*detJ*gaussWeight(k);
         else
             % stress at gausspoint
             SN1_v = DMat*EN1_v;
@@ -100,5 +100,5 @@ for e = 1:numberOfElements
         end
     end
     storeDataFE(storageFEObject,obj,array,globalFullEdof,e,dimension,computePostData);
-end     
+end
 end

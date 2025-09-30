@@ -1,25 +1,25 @@
-% LSHAPEELECTROTHERMOMECHANICS Script for preprocessing a dynamic coupled 
+% LSHAPEELECTROTHERMOMECHANICS Script for preprocessing a dynamic coupled
 % electro-thermo-mechanical simulation.
-% 
+%
 % FORMULATION
-% Mixed finite element formulation for nonlinear electro-thermo-mechanical 
-% processes is pursued. This is accomplished under the assumption of a 
-% hyperelastic, isotropic material and based on a polyconvex inspired 
-% internal energy function. The discretization in time is pursued with an 
-% energy and momentum conserving scheme. 
-% 
-% 
+% Mixed finite element formulation for nonlinear electro-thermo-mechanical
+% processes is pursued. This is accomplished under the assumption of a
+% hyperelastic, isotropic material and based on a polyconvex inspired
+% internal energy function. The discretization in time is pursued with an
+% energy and momentum conserving scheme.
+%
+%
 % REFERENCE
 % https://doi.org/10.1016/j.cma.2021.114298
 % https://doi.org/10.1007/BF00913408
-% 
+%
 % SEE ALSO
-% LShape, 
+% LShape,
 % cooksMembrane
-% 
-% CREATOR(S) 
+%
+% CREATOR(S)
 % Marlon Franke
- 
+
 %% setup (mandatory: setup and dofs)
 setupObject = setupClass;
 setupObject.saveObject.fileName = 'LShapeElectroThermo';
@@ -148,11 +148,11 @@ dofObject = runNewton(setupObject,dofObject);
 %% postprocessing - energy
 timeVector = getTime(dofObject.postDataObject,setupObject);
 kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
-internalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
-DE = getEnergy(dofObject.postDataObject,dofObject,setupObject,'DE');
-TS = getEnergy(dofObject.postDataObject,dofObject,setupObject,'TS');
-externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
-figure; 
+internalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
+DE = getElementData(dofObject.postDataObject,dofObject,setupObject,'DE');
+TS = getElementData(dofObject.postDataObject,dofObject,setupObject,'TS');
+externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+figure;
 %plot(timeVector,kineticEnergy + internalEnergy + DE + TS);
 totalEnergy = kineticEnergy + internalEnergy;
 plot(timeVector,totalEnergy);

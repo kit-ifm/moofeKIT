@@ -27,7 +27,7 @@ for e = 1:numberOfElements
         end
     end
     %% residual and tangent computation
-%     [rData,kData,strainEnergy] = Residuum(e,obj,rDataInitial,kDataInitial,strainEnergy,[],false);
+    %     [rData,kData,strainEnergy] = Residuum(e,obj,rDataInitial,kDataInitial,strainEnergy,[],false);
 
     edof = obj.edof;
 
@@ -61,9 +61,9 @@ for e = 1:numberOfElements
     J = qR(edof(e,:),1:dimension)'*dNrAll';
     % Run through all Gauss points
     for k = 1:numberOfGausspoints
-%         edN1Dlarray = dlarray(edN1,'SSCB');
+        %         edN1Dlarray = dlarray(edN1,'SSCB');
         edN1Dlarray = dlarray(edN1(:));
-%         [RX,autoDiffGradient] = dlfeval(@ResiduumGaussLevel,edN1Dlarray,obj,dNrAll,J,k,RXinitial,DMat,gaussWeight);
+        %         [RX,autoDiffGradient] = dlfeval(@ResiduumGaussLevel,edN1Dlarray,obj,dNrAll,J,k,RXinitial,DMat,gaussWeight);
         [RX] = admDiffVFor(@ResiduumGaussLevel,edN1Dlarray,obj,dNrAll,J,k,RXinitial,DMat,gaussWeight);
     end
 
@@ -71,7 +71,7 @@ for e = 1:numberOfElements
     Ke(mechanicalDOFs,mechanicalDOFs) = KXX;
     storeDataFE(obj,Re,Ke,globalFullEdof,e);
 end
-obj.ePot(setupObject.timeStep).strainEnergy = strainEnergy;
+obj.elementData(setupObject.timeStep).strainEnergy = strainEnergy;
 end
 
 function [RX,autoDiffGradient] = ResiduumGaussLevel2(edN1,obj,dNrAll,J,k,RX,DMat,gaussWeight)
@@ -104,9 +104,9 @@ RX = RX + 2*BAkt'*DW1_v*detJ*gaussWeight(k);
 %     MAT(g:dimension:numberOfDOFs,g:dimension:numberOfDOFs) = A1;
 % end
 % KXX = KXX + 4*BAkt'*D2W1*BAkt*detJ*gaussWeight(k) + MAT;
-% % 
+% %
 % RX = RX(1);
-% % 
+% %
 autoDiffGradient = dlgradient(RX,edN1(:));
 end
 

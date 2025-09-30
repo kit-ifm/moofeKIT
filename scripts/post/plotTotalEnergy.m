@@ -39,8 +39,8 @@ for ii=1:numberOfPlots
     dofObject = dofObjects{ii};
     timeVector = getTime(dofObject.postDataObject, setupObject);
     kineticEnergy = getKineticEnergy(dofObject.postDataObject, setupObject);
-    internalEnergy = getEnergy(dofObject.postDataObject, dofObject, setupObject, 'internalEnergy');
-    externalEnergy = getEnergy(dofObject.postDataObject, dofObject, setupObject, 'externalEnergy');
+    internalEnergy = getElementData(dofObject.postDataObject, dofObject, setupObject, 'internalEnergy');
+    externalEnergy = getElementData(dofObject.postDataObject, dofObject, setupObject, 'externalEnergy');
     totalEnergy = kineticEnergy + internalEnergy;
     if ii == 1
         figure;
@@ -80,11 +80,11 @@ if plotTotalEnergyDifferences
     dofObject = dofObjects{plotTotalEnergyDifferencesForFile};
     timeVector = timeVectors{plotTotalEnergyDifferencesForFile};
     totalEnergy = totalEnergies{plotTotalEnergyDifferencesForFile};
-    
+
     totalEnergyBefore = totalEnergy(1:end-1);
     totalEnergyDifference = totalEnergy(2:end) - totalEnergyBefore;
     timeVector = timeVector(1:end-1);
-    
+
     if plotOnlyIncrementalEnergyChanges
         newtonTolerance = setupObject.newton.tolerance;
         for ii = 1:size(totalEnergyDifference, 1)
@@ -96,20 +96,20 @@ if plotTotalEnergyDifferences
     figure;
     plot(timeVector, totalEnergyDifference);
     yLimit = 2*max(totalEnergyDifference);
-    
+
     if isnan(yLimit)
         error("Can't plot total energy differences. The difference of total energy between one time step and another is too large!")
     end
-    
+
     xlim([timeVector(1), timeVector(end)]);
     ylim([-yLimit, yLimit]);
     xlabel('$t$ [s]');
     ylabel('$E_{n+1}-E_n$ [J]');
-    
+
     % plot horizontal line at y=0
     hold on;
     plot(timeVector, zeros(size(timeVector, 1), 1), '--k');
-    
+
     % plot vertical lines
     if plotVerticalLines
         for ii = 1:length(plotVerticalLinesAtTime)

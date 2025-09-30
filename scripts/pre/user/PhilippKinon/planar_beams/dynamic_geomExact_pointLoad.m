@@ -3,6 +3,7 @@ clearvars;
 %close all;
 
 rotationAngle = 0;
+class = 'beam'; % beam, beamVelocity
 
 %% Parameters
 lengthBeam = 1;
@@ -42,13 +43,19 @@ dofObject = dofClass; % required object for dof and object handling
 dofObject.postDataObject.storeStateFlag = true;
 
 %% continuum Objects
-beamObject = beamClass(dofObject,2);
+if strcmpi(class, 'beam')
+    beamObject = beamClass(dofObject,2);
+elseif strcmpi(class, 'beamVelocity')
+    solidObject = beamVelocityClass(dofObject,2);
+end
+
+
 beamObject.materialObject.name = "Hooke";
 beamObject.theory = beamType;
-%beamObject.elementDisplacementType = 'mixedPH';
-beamObject.elementDisplacementType = 'displacement';
+beamObject.elementDisplacementType = 'mixedPH';
+%beamObject.elementDisplacementType = 'displacement';
 %beamObject.elementNameAdditionalSpecification = 'StanderStein';
-beamObject.elementNameAdditionalSpecification = 'PhIrreducible';
+%beamObject.elementNameAdditionalSpecification = 'PhIrreducible';
 beamObject.materialObject.E = E;
 nu = 0.3;
 beamObject.materialObject.G = beamObject.materialObject.E/(2*(1+nu));
@@ -56,6 +63,13 @@ beamObject.materialObject.I = I;
 beamObject.materialObject.A = A;
 beamObject.materialObject.rho = rho;
 beamObject.materialObject.shearCorrectionCoefficient = shearCorFact;
+
+if strcmpi(class, 'beam')
+    beamObject.materialObject.rho = rho;
+elseif strcmpi(class, 'beamVelocity')
+    beamObject.materialObject.rho = 0;
+    solidObject.materialObject.rhoNew = rho;
+end
 
 startpoint = [0;0];
 endpoint = [cos(rotationAngle)*lengthBeam;sin(rotationAngle)*lengthBeam];
@@ -75,6 +89,14 @@ dirichletObject.nodeList = find(beamObject.meshObject.nodes(:, 1) == 0);
 dirichletObject.nodalDof = [1, 2, 3];
 dirichletObject.masterObject = beamObject;
 
+if strcmpi(class, 'beamVelocity')
+    %% TO CHECK: do sth else!?
+    dirichletObject = dirichletClass(dofObject);
+    dirichletObject.masterObject = beamObject;
+    dirichletObject.nodeList = find(beamObject.meshObject.nodes(:, 1) == 0);
+    dirichletObject.nodalDof = [1, 2, 3];
+end
+
 % neumann boundaries
 Q = 1000*[-sin(rotationAngle);cos(rotationAngle);0];
 nodalLoadObject = nodalLoadClass(dofObject);
@@ -88,28 +110,42 @@ beamObject.numericalTangentObject.computeNumericalTangent = true;
 beamObject.numericalTangentObject.showDifferences = false;
 dofObject = runNewton(setupObject, dofObject);
 
-% Get energy quantities
-kineticEnergy = zeros(setupObject.totalTimeSteps+1,1);
-potentialEnergy = zeros(setupObject.totalTimeSteps+1,1);
-time = zeros(setupObject.totalTimeSteps+1,1);
+% Get postprocessing quantities
+time = getTime(dofObject.postDataObject,setupObject);
+kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
+potentialEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'strainEnergy');
+[angularMomentum, totalAngularMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'J',1);
+drift = getElementData(dofObject.postDataObject,dofObject,setupObject,'drift');
 
-for j = 1:setupObject.totalTimeSteps+1
-    time(j) = (j-1)*setupObject.totalTime/setupObject.totalTimeSteps;
-    kineticEnergy(j) = dofObject.postDataObject.energyJournal(j).EKin;
-    potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.ePot(j).strainEnergy;
+% Compute increments
+energyIncrement = zeros(setupObject.totalTimeSteps,1);
+angMomIncrement = zeros(setupObject.totalTimeSteps,1);
+for i = 1:setupObject.totalTimeSteps
+    energyIncrement(i) = abs((kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i)));
+    angMomIncrement(i) = abs(angularMomentum(i+1) - angularMomentum(i));
 end
 
-% Compute increment
+%Plot energies
 figure()
 plot(time, kineticEnergy, time, potentialEnergy, time, kineticEnergy+potentialEnergy)
 legend('T', 'V', 'H');
 
-% Plot increment
+% Plot energy increment
 figure()
-energyIncrement = zeros(setupObject.totalTimeSteps,1);
-
-for i = 1:setupObject.totalTimeSteps
-    energyIncrement(i) = abs((kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i)));
-end
 plot(time(1:end-1),energyIncrement)
 legend('Energy increment');
+
+% Plot angular momentum
+figure()
+plot(time,angularMomentum)
+legend('Total Angular Momentum');
+
+% Plot angular momentum increment
+figure()
+plot(time(1:end-1),angMomIncrement)
+legend('Angular momentum increment');
+
+% Plot drift
+figure()
+plot(time,drift)
+legend('Difference of independent strains and displacement-based computation');

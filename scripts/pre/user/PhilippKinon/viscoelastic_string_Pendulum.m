@@ -1,9 +1,9 @@
 %% Visco-Elastic string pendulum
 %
-% problem: visco-hyperelastic or linear elastic string, fixed on one end, 
+% problem: visco-hyperelastic or linear elastic string, fixed on one end,
 %          time-dependent force on the other
 % spatial discretization: linear Lagrange shapefunction for disp
-%                         discont. constant ansatz for strain, 
+%                         discont. constant ansatz for strain,
 %                         mixed formulation
 % time discretization: endpoint, midpoint rule or discrete gradient
 %
@@ -40,7 +40,7 @@ setupObject.plotObject.stress.component = 1;
 setupObject.plotObject.view = [0,90];
 setupObject.plotObject.setXminXmax([-1;-2;0],[1;0;0]);
 setupObject.newton.tolerance = newtonTolerance;
-setupObject.integrator = integrator; 
+setupObject.integrator = integrator;
 dofObject = dofClass;
 %% Continuum object
 stringObject = stringClass(dofObject,2);
@@ -52,7 +52,7 @@ stringObject.elementNameAdditionalSpecification = 'C';
 stringObject.materialObject.name = material;
 stringObject.materialObject.EA = EA;
 stringObject.materialObject.etaA = etaA;
-stringObject.materialObject.rho = rhoA; 
+stringObject.materialObject.rho = rhoA;
 stringObject.numericalTangentObject.computeNumericalTangent = false;
 stringObject.numericalTangentObject.showDifferences = false;
 
@@ -98,7 +98,7 @@ if postprocess
 
     % Plot the problem
     plot(stringObject,setupObject)
-    
+
     % Get energy quantities
     kineticEnergy = zeros(setupObject.totalTimeSteps+1,1);
     potentialEnergy = zeros(setupObject.totalTimeSteps+1,1);
@@ -106,24 +106,24 @@ if postprocess
     time = zeros(setupObject.totalTimeSteps+1,1);
     totalDissipatedEnergy = zeros(setupObject.totalTimeSteps+1,1);
     energyIncrement = zeros(setupObject.totalTimeSteps,1);
-       
+
     for j = 1:setupObject.totalTimeSteps+1
         time(j) = (j-1)*setupObject.totalTime/setupObject.totalTimeSteps;
         kineticEnergy(j) = dofObject.postDataObject.energyJournal(j).EKin;
-        potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.ePot(j).strainEnergy + bodyForceObject.ePot(j).externalEnergy;
-        dissipatedEnergy(j) = dofObject.listContinuumObjects{1,1}.ePot(j).dissipatedEnergy;
+        potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.elementData(j).strainEnergy + bodyForceObject.elementData(j).externalEnergy;
+        dissipatedEnergy(j) = dofObject.listContinuumObjects{1,1}.elementData(j).dissipatedEnergy;
     end
     for i = 1:setupObject.totalTimeSteps
-        energyIncrement(i) = (kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i)); 
+        energyIncrement(i) = (kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i));
         totalDissipatedEnergy(i+1) = totalDissipatedEnergy(i) + dissipatedEnergy(i+1);
     end
-    
-    
+
+
     % Compute increment
     figure()
     plot(time, kineticEnergy, time, potentialEnergy, time, kineticEnergy+potentialEnergy, time, totalDissipatedEnergy, time, kineticEnergy+potentialEnergy+totalDissipatedEnergy)
     legend('T', 'V', 'H', 'E_{diss}','H+E_{diss}');
-    
+
     % Plot increment
     figure()
     plot(time(1:end-1),energyIncrement,time(1:end-1),dissipatedEnergy(2:end))

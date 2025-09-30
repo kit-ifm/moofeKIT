@@ -43,12 +43,12 @@ for e = 1:numberOfElements
     J = qR(edof(e,:),1:dimension)'*dNr';
     % Run through all Gauss points
     for k = 1:numberOfGausspoints
-%         [Re1, Ke1] = gaussDisplacementSCSaintVenantEndpoint(edN1(:),k,dimension,J,dNrAll,DMat,gaussWeight,I);
+        %         [Re1, Ke1] = gaussDisplacementSCSaintVenantEndpoint(edN1(:),k,dimension,J,dNrAll,DMat,gaussWeight,I);
         [Ke1,Re1] = admDiffFor(@gaussDisplacementSCSaintVenantEndpoint,1,edN1(:),k,dimension,J,dNr,DMat,gaussWeight,I,admOptions('flags', '--check-certificate'));
         Re = Re + Re1;
-        Ke = Ke + Ke1(1:numberOfDofs,1:numberOfDofs); 
+        Ke = Ke + Ke1(1:numberOfDofs,1:numberOfDofs);
     end
     storeDataFE(storageFEObject,Re,Ke,globalFullEdof,e);
 end
-obj.ePot(setupObject.timeStep).strainEnergy = strainEnergy;
+obj.elementData(setupObject.timeStep).strainEnergy = strainEnergy;
 end

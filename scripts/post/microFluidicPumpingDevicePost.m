@@ -28,10 +28,10 @@ if 0
     % assign data
     timeVector = getTime(dofObject.postDataObject,setupObject);
     kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
-    internalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
-    DE = getEnergy(dofObject.postDataObject,dofObject,setupObject,'DE');
-    TS = getEnergy(dofObject.postDataObject,dofObject,setupObject,'TS');
-    externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+    internalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
+    DE = getElementData(dofObject.postDataObject,dofObject,setupObject,'DE');
+    TS = getElementData(dofObject.postDataObject,dofObject,setupObject,'TS');
+    externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
     [linearMomentum, totalLinearMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'L',3);
     [angularMomentum, totalAngularMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'J',3);
     % energy
@@ -100,14 +100,14 @@ print(figPlot,'0','-depsc')
 clf(figPlot)
 
 colorBarCell = {'temp', 'stress', 'phi', 'D1';...
-                 [293 346], [0 40], [-phi0 phi0], [-4 4]*1e-10;...
-                cellstr('flipud(autumn)'), 'parula', 'jet', 'spring'};
+    [293 346], [0 40], [-phi0 phi0], [-4 4]*1e-10;...
+    cellstr('flipud(autumn)'), 'parula', 'jet', 'spring'};
 flagInitial = false;
 
 for ii = 1:size(setupObjectCell,1)
     for jj = 1:size(colorBarCell,2)
         for jjj = 1
-            switch jjj 
+            switch jjj
                 case 1
                     flagPlotColorbar = false;
                 case 2
@@ -179,7 +179,7 @@ for ii = 1:size(setupObjectCell,1)
             if flagPlotColorbar
                 clf(figPlot)
                 saveName = strcat(saveName,'Colorbar');
-            end            
+            end
             c = colorbar('Location','south');
             axis off
             if jj==1
@@ -192,7 +192,7 @@ for ii = 1:size(setupObjectCell,1)
             if ~flagPlotColorbar
                 colorbar off
             end
-%             print(figPlot,saveName,'-depsc');
+            %             print(figPlot,saveName,'-depsc');
             print(figPlot,saveName,'-dpng');
             if flagPlotColorbar
                 matlab2tikz([saveName,'.tikz'],'width','\figW','height','\figH')

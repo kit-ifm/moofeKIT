@@ -6,7 +6,6 @@ classdef setupClass < matlab.mixin.Copyable
         usePreconditioning = false;
         totalTime = 1;
         totalTimeSteps = 1;
-        roundDigit = 4;
         integrator = 'Endpoint';
         meshType = 'meshGenerator'; %abaqusInput
         meshName = 'Square';
@@ -69,12 +68,13 @@ classdef setupClass < matlab.mixin.Copyable
         end
         % get methods
         function out = get.timeStepSize(obj)
-            out = round(obj.totalTime/obj.totalTimeSteps, obj.roundDigit);
+            % out = round(obj.totalTime/obj.totalTimeSteps, obj.roundDigit);
+            out = obj.totalTime/obj.totalTimeSteps;
         end
         function out = get.factorIntegrator(obj)
             if strcmpi(obj.integrator, 'Endpoint')
                 out = [1, 1, 0];
-            elseif strcmpi(obj.integrator, 'Midpoint') || strcmpi(obj.integrator, 'DiscreteGradient')
+            elseif strcmpi(obj.integrator, 'Midpoint') || strcmpi(obj.integrator, 'DiscreteGradient') || strcmpi(obj.integrator, 'LinearImplicit')
                 out = [2, 2, 1];
             else
                 error('Integrator is not implemented.')

@@ -11,13 +11,10 @@ dofObject = dofClass;   % required object for dof and object handling
 
 %% continuum Objects
 solidObject = solidClass(dofObject);
-% solidObject.elementDisplacementType = 'displacement';
 solidObject.elementDisplacementType = 'eas';
-solidObject.elementNameAdditionalSpecification = 'PetrovGalerkin';
 solidObject.shapeFunctionObject.order = 1;
-[solidObject.meshObject.nodes, solidObject.meshObject.edof, edofNeumann] = meshCooksMembrane(2, 2, solidObject.shapeFunctionObject.order);
+[solidObject.meshObject.nodes, solidObject.meshObject.edof, edofNeumann] = meshCooksMembrane(2, 2, solidObject.shapeFunctionObject.order, false);
 solidObject.materialObject.name = 'HookeESZ';
-% solidObject.materialObject.name = 'Hooke';
 solidObject.materialObject.rho = 0;
 solidObject.materialObject.E = 1;
 solidObject.materialObject.nu = 1/3;

@@ -35,7 +35,7 @@ solidElectroObject.materialObject.e2 = 0;
 solidElectroObject.materialObject.ee = 0;
 solidElectroObject.materialObject.rhoSource = 0;
 solidElectroObject.materialObject.timeFunctionRhoSource = @(t) 0;
-% 
+%
 solidElectroObject.dimension = 3;
 solidElectroObject.shapeFunctionObject.order = 1;
 solidElectroObject.shapeFunctionObject.numberOfGausspoints = 8;
@@ -86,11 +86,11 @@ dofObject = runNewton(setupObject,dofObject);
 %% postprocessing - energy
 timeVector = getTime(dofObject.postDataObject,setupObject);
 kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
-omegaEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'omegaEnergy');
-ePotMechanical = getEnergy(dofObject.postDataObject,dofObject,setupObject,'ePotMechanical');
-ePotElectrical = getEnergy(dofObject.postDataObject,dofObject,setupObject,'ePotElectrical');
-ePotD0timesGRADphi = getEnergy(dofObject.postDataObject,dofObject,setupObject,'ePotD0timesGRADphi');
-figure; 
+omegaEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'omegaEnergy');
+ePotMechanical = getElementData(dofObject.postDataObject,dofObject,setupObject,'ePotMechanical');
+ePotElectrical = getElementData(dofObject.postDataObject,dofObject,setupObject,'ePotElectrical');
+ePotD0timesGRADphi = getElementData(dofObject.postDataObject,dofObject,setupObject,'ePotD0timesGRADphi');
+figure;
 plot(timeVector,kineticEnergy + ePotMechanical + ePotElectrical + ePotD0timesGRADphi);
 figure;
 plot(solidElectroObject)

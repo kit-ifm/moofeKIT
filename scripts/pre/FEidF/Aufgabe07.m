@@ -40,7 +40,7 @@ for elem = elements
     solidObject.materialObject.E = 1e2;
     solidObject.materialObject.nu = 0.499;
     numberOfElements = 10 / solidObject.shapeFunctionObject.order;
-    [solidObject.meshObject.nodes, solidObject.meshObject.edof, edofBoundary] = meshCooksMembrane(numberOfElements, numberOfElements, solidObject.shapeFunctionObject.order);
+    [solidObject.meshObject.nodes, solidObject.meshObject.edof, edofBoundary] = meshCooksMembrane(numberOfElements, numberOfElements, solidObject.shapeFunctionObject.order, false);
 
     % dirchlet boundary conditions
     dirichletObject = dirichletClass(dofObject);

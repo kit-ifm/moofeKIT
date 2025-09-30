@@ -29,7 +29,7 @@ classdef storageFEClass < matlab.mixin.Copyable
                 dataFE.indexKeJ = globalFullEdof2';
                 dataFE.Re = array.Re;
                 dataFE.Ke = array.Ke(:);
-            elseif strcmp(requiredData, 'postData')
+            elseif strcmp(requiredData, 'postData') 
                 globalFullEdof = globalFullEdof(:, 1:dimension+additionalFields:(dimension + additionalFields)*size(N, 2));
                 dataFE.indexReI = double(globalFullEdof(e, :))';
                 [globalFullEdof1, globalFullEdof2] = expandEdof(globalFullEdof(e, :));

@@ -103,37 +103,37 @@ dofObject = runNewton(setupObject,dofObject);
 %% Postprocessing
 
 if postprocess
-    
+
     % Plot the problem
     %plot(solidObject,setupObject)
-    
+
     % Get energy quantities
     kineticEnergy = zeros(setupObject.totalTimeSteps+1,1);
     potentialEnergy = zeros(setupObject.totalTimeSteps+1,1);
     time = zeros(setupObject.totalTimeSteps+1,1);
-    
+
     for j = 1:setupObject.totalTimeSteps+1
         time(j) = (j-1)*setupObject.totalTime/setupObject.totalTimeSteps;
         kineticEnergy(j) = dofObject.postDataObject.energyJournal(j).EKin;
-        potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.ePot(j).strainEnergy + bodyForceObject.ePot(j).externalEnergy;
+        potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.elementData(j).strainEnergy + bodyForceObject.elementData(j).externalEnergy;
     end
-    
+
     % Compute increment
     figure()
     plot(time, kineticEnergy, time, potentialEnergy, time, kineticEnergy+potentialEnergy)
     legend('T', 'V', 'H');
     matlab2tikz('height', '\figH', 'width', '\figW', 'filename', [exportFolder, 'energy', '.tikz'], 'showInfo', false, 'floatformat', '%.7g')
-    
+
     % Plot increment
     figure()
     energyIncrement = zeros(setupObject.totalTimeSteps,1);
-    
+
     for i = 1:setupObject.totalTimeSteps
         energyIncrement(i) = abs((kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i)));
     end
     plot(time(1:end-1),energyIncrement)
     legend('Energy increment');
     matlab2tikz('height', '\figH', 'width', '\figW', 'filename', [exportFolder, 'Hdiff', '.tikz'], 'showInfo', false, 'floatformat', '%.4g')
-    
+
 end
 

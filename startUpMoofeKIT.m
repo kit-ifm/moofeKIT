@@ -34,8 +34,8 @@ addpath('commonFunctions', ...
     'externalData/ANN/solid')
 
 % Set the property only if the graphical version of Matlab is used (not in bash version)
-%if usejava('desktop')
-%    set(0, 'DefaultFigureWindowStyle', 'docked')
-%end
+% if usejava('desktop')
+%     set(0, 'DefaultFigureWindowStyle', 'docked')
+% end
 
 % parpool(24);

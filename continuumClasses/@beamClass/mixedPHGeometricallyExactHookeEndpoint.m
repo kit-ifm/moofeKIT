@@ -1,4 +1,4 @@
-function [rData, kData, elementEnergy, array] = mixedPHGeometricallyExactHookeEndpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
+function [rData, kData, elementData, array] = mixedPHGeometricallyExactHookeEndpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
 %BEAMTIMOSHENKOENDPOINT Timoshenko beam
 
 %% SETUP
@@ -60,7 +60,7 @@ dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
 JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I); 
 
 % initialize elementEnergy
-elementEnergy.strainEnergy = 0;
+elementData.strainEnergy = 0;
 
 % coefficient matrices
 G1  = zeros(2,1);
@@ -98,7 +98,7 @@ for k = 1:numberOfGausspoints
         V   = V   + Phi1'   * (dsPhi2*rN1)' * skew_matrix * RN1 * Psi2 * detJ * gaussWeight(k);
         
         % potential energy due to strain
-        elementEnergy.strainEnergy = elementEnergy.strainEnergy + 1/2 * ((GammaN1)'*material_matrix*(GammaN1) + EI * kappaN1^2) * detJ * gaussWeight(k);
+        elementData.strainEnergy = elementData.strainEnergy + 1/2 * ((GammaN1)'*material_matrix*(GammaN1) + EI * kappaN1^2) * detJ * gaussWeight(k);
         
     else
         

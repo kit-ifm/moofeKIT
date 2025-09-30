@@ -6,8 +6,9 @@ classdef beamClass < solidSuperClass
     properties
         theory  % beam theory: 'bernoulli', 'timoshenko' or 'geometricallyExact'
         selectiveReducedShapeFunctionObject
-        historyVariableN % internal strain variable at timestep N
-        historyVariableN1 % internal strain variable at timestep N+1
+        flagHistoryFields = true;
+        historyN % internal strain variable at timestep N
+        historyN1 % internal strain variable at timestep N+1
     end
     properties (Dependent = true)
         permutationMatrix
@@ -16,7 +17,7 @@ classdef beamClass < solidSuperClass
         numberOfDofsPerNode = 1;
     end
     methods
-        
+
         %% constructor
         function obj = beamClass(dofObject,varargin)
             if nargin == 0
@@ -28,7 +29,7 @@ classdef beamClass < solidSuperClass
             end
             obj.selectiveReducedShapeFunctionObject = shapeFunctionClass();
         end
-        
+
         function initializeQR(obj)
             % method initializeQR
             numberOfNodes = size(obj.meshObject.nodes, 1);
@@ -40,7 +41,21 @@ classdef beamClass < solidSuperClass
                 obj.qR = zeros(numberOfNodes, 2); % vertical displacements and rotation angle
             end
         end
-        
+
+        function initializeHistoryN1(obj)
+            if strcmpi(obj.elementDisplacementType,'displacement') && (strcmpi(obj.elementNameAdditionalSpecification,'PhIrreducible'))
+                if isempty(obj.historyN1)
+                    numberOfElements = size(obj.meshObject.edof, 1);
+                    numberOfGausspoints = obj.shapeFunctionObject.numberOfGausspoints;
+                    for e = 1:numberOfElements
+                        for k = 1:numberOfGausspoints
+                            obj.historyN1(e,k).dilatationAndShear = [0;0];
+                        end
+                    end
+                end
+            end
+        end
+
         function out = getAngularMomentum(obj)   % Get method for the angular momentum in 2D.
             out = 0;
             if strcmpi(obj.theory , 'GeometricallyExact')
@@ -52,9 +67,9 @@ classdef beamClass < solidSuperClass
                 end
             end
         end
-        
+
         function out = get.permutationMatrix(obj)
-            
+
             %% permutation matrix
             % [x1 x2 phi1 phi2]
             % permute to (cf. edof and node vector)
@@ -62,7 +77,7 @@ classdef beamClass < solidSuperClass
             %
             % or [x1 y2 x2 y2 phi1 phi2]
             % to [x1 y1 phi1 x2 y2 phi2]
-            
+
             % total nbr of DOFs (including mixed fields)
             numberOfPrimalDOFs = size(obj.meshObject.globalFullEdof, 2);
             if ~isempty(obj.mixedFEObject.numberOfDofs)
@@ -82,7 +97,7 @@ classdef beamClass < solidSuperClass
             out = sparse(numberOfPrimalDOFs, numberOfPrimalDOFs);
             out(index) = 1;
         end
-        
+
         function set.theory(obj, input)
             assert(ischar(input), 'Input must be of type string!');
             if strcmp(input, 'bernoulli')
@@ -99,25 +114,15 @@ classdef beamClass < solidSuperClass
             end
         end
 
-        function initializeHistoryVariableN1(obj)
-            if isempty(obj.historyVariableN1) && strcmp(obj.elementNameAdditionalSpecification,'PhIrreducible')
-                numberOfElements = size(obj.meshObject.edof, 1);
-                numberOfGausspoints = obj.shapeFunctionObject.numberOfGausspoints;
-                obj.historyVariableN1 = zeros(numberOfElements, numberOfGausspoints, 2); % strain w.r.t elongation and shear is initially zero
-            end
-            if isempty(obj.historyVariableN) && strcmp(obj.elementNameAdditionalSpecification,'PhIrreducible')
-                obj.historyVariableN = obj.historyVariableN1; % strain w.r.t elongation and shear is initially zero
-            end
-        end
-        
+
         function updateIteratedHistoryField(obj,setupObject)
             [~] = callElements(obj, setupObject, 'postData');
         end
 
         function updateHistoryField(obj, ~)
-            obj.historyVariableN = obj.historyVariableN1;
+            obj.historyN = obj.historyN1;
         end
-        
+
     end
     methods (Access=private)
         function updateNumberOfDisplacementDofsPerNode(obj,nDOF)

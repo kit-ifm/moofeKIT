@@ -75,6 +75,8 @@ classdef artificialNeuralNetworkClass < handle
             Wstress = -obj.A*(J-1);
             Wenergy = b2;
             W = obj.normalizationFactor*(Wdev + Wstress + Wenergy) + Wvol;
+            %% TODO: for Anne's model
+            % W = obj.normalizationFactor*(Wdev + Wstress + Wenergy + Wvol);
         end        
         function [dW_I, dW_II, dW_J, dW_Jstar] = computeDiffEnergyANN(obj,C,G,c)
             w1 = obj.layer(1).weight;

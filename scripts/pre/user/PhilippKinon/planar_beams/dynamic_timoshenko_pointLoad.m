@@ -82,7 +82,7 @@ deflection = zeros(setupObject.totalTimeSteps+1,1);
 for j = 1:setupObject.totalTimeSteps+1
     time(j) = (j-1)*setupObject.totalTime/setupObject.totalTimeSteps;
     kineticEnergy(j) = dofObject.postDataObject.energyJournal(j).EKin;
-    potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.ePot(j).strainEnergy;
+    potentialEnergy(j) = dofObject.listContinuumObjects{1,1}.elementData(j).strainEnergy;
     deflection(j) = dofObject.postDataObject.stateJournal(j).position(end-1);
 end
 
@@ -101,7 +101,7 @@ figure()
 energyIncrement = zeros(setupObject.totalTimeSteps,1);
 
 for i = 1:setupObject.totalTimeSteps
-    energyIncrement(i) = abs((kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i)));  
+    energyIncrement(i) = abs((kineticEnergy(i+1)-kineticEnergy(i))+(potentialEnergy(i+1)-potentialEnergy(i)));
 end
 plot(time(1:end-1),energyIncrement)
 legend('Energy increment');

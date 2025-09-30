@@ -1,4 +1,4 @@
-function [rData, kData, elementEnergy, array] = displacementPhIrreducibleGeometricallyExactHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
+function [rData, kData, elementData, array] = displacementPhIrreducibleGeometricallyExactHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, flagNumericalTangent)
 % Geometrically exact beam in EM conserving, displacement Formulation by
 % Stander and Stein
 
@@ -50,7 +50,7 @@ dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
 JAll = computeJacobianForAllGausspoints(edR, dN_xi_k_I);
 
 % initialize elementEnergy
-elementEnergy.strainEnergy = 0;
+elementData.strainEnergy = 0;
 
 % residual
 rData{2} = zeros(2,1);
@@ -68,7 +68,7 @@ for k = 1:numberOfGausspoints
         0         dN_X_I(1) 0         dN_X_I(2)];
     
     
-    GammaN = squeeze(obj.historyVariableN(e, k, :));
+    GammaN = obj.historyN(e,k).dilatationAndShear;
     
     if ~computePostData
         
@@ -82,7 +82,9 @@ for k = 1:numberOfGausspoints
         GammaN05 = 1/2 * (GammaN + GammaN1);
         
         % update internal variable
-        obj.historyVariableN1(e, k, :) = GammaN1;
+        if ~flagNumericalTangent
+            obj.historyN1(e,k).dilatationAndShear = GammaN1;
+        end
         
         % stress resultants
         resultant_momentN05 = EI*kappaN05;
@@ -98,14 +100,12 @@ for k = 1:numberOfGausspoints
         rData{2} = rData{2} - V*resultant_forcesN05 + G1*resultant_momentN05;
         
         % potential energy due to strain
-        elementEnergy.strainEnergy = elementEnergy.strainEnergy + (1/2 * EI * kappaN1^2 + 1/2 * (GammaN1)'*material_matrix*(GammaN1)) * detJ * gaussWeight(k);
+        elementData.strainEnergy = elementData.strainEnergy + (1/2 * EI * kappaN1^2 + 1/2 * (GammaN1)'*material_matrix*(GammaN1)) * detJ * gaussWeight(k);
         
     else
         
         RN05 = get_planar_rotation_matrix(Phi1*phiN05);
         GammaN1 = GammaN + Phi1*(phiN1-phiN) * RN05' * skew_matrix * (dsPhi2*rN05) + RN05' * dsPhi2*(rN1 - rN);
-        % update internal variable
-        obj.historyVariableN1(e, k, :) = GammaN1;
         
         % for plotting
         resultant_forcesN1  = material_matrix*GammaN1;

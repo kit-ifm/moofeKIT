@@ -1,4 +1,4 @@
-function [rData, kData, elementEnergy, array] = mixedPHTimoshenkoHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
+function [rData, kData, elementData, array] = mixedPHTimoshenkoHookeMidpoint(obj, setupObject, computePostData, e, rData, kData, dofs, array, ~, ~)
 %BEAMTIMOSHENKOENDPOINT Timoshenko beam
 
 %% SETUP
@@ -59,7 +59,7 @@ dN_xi_k_I = shapeFunctionObject.dN_xi_k_I;
 JAll = computeJacobianForAllGausspoints(edRef, dN_xi_k_I);
 
 % initialize elementEnergy
-elementEnergy.strainEnergy = 0;
+elementData.strainEnergy = 0;
 
 %% Gauss loop
 for k = 1:numberOfGausspoints
@@ -89,7 +89,7 @@ for k = 1:numberOfGausspoints
         kData{4,2} = kData{4,2} - 1/h*K * detJ * gaussWeight(k);
         
         % % strain energy
-        elementEnergy.strainEnergy = elementEnergy.strainEnergy + 1/2 * (E*I * kappaN1^2 + shearCorFact*G*A*gammaN1^2) * detJ * gaussWeight(k);
+        elementData.strainEnergy = elementData.strainEnergy + 1/2 * (E*I * kappaN1^2 + shearCorFact*G*A*gammaN1^2) * detJ * gaussWeight(k);
         
     else
         

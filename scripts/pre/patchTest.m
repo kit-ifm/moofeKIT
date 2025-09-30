@@ -134,7 +134,7 @@ boundaryK2 = dirichletClass(dofObject);
 boundaryK2.nodeList = find(solidElectroThermoObject.meshObject.nodes(:,3) == 1);
 boundaryK2.nodalDof = 3;
 boundaryK2.masterObject = solidElectroThermoObject;
-boundaryK2.timeFunction = str2func('@(t,Z) (Z - 0.5).*(t >= 1) + (Z - 0.5*t).*(t >= 0).*(t < 1)');  
+boundaryK2.timeFunction = str2func('@(t,Z) (Z - 0.5).*(t >= 1) + (Z - 0.5*t).*(t >= 0).*(t < 1)');
 
 %% solver
 tic
@@ -159,12 +159,12 @@ toc
 % campos([-5,-6,5]);
 % %set(gcf, 'Renderer', 'painter');
 % % export_fig('test','-eps');
-% 
+%
 % timeVector = getTime(dofObject.postDataObject,setupObject);
 % kineticEnergy = getKineticEnergy(dofObject.postDataObject,setupObject);
-% strainEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
-% externalEnergy = getEnergy(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
-% %figure; 
+% strainEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'internalEnergy');
+% externalEnergy = getElementData(dofObject.postDataObject,dofObject,setupObject,'externalEnergy');
+% %figure;
 % %plot(timeVector,kineticEnergy + strainEnergy);
 % %plot(solidThermoObject)
 % % filename = 'execute';

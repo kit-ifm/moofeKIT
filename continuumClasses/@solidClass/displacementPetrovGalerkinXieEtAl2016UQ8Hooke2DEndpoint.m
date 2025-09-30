@@ -123,14 +123,14 @@ nodalPointsInSkewCoordinates = computeSkewCoordinates(nodalPointsInLocalCoordina
 for k = 1:numberOfGausspoints
     % compute the Jacobian determinant
     [J, detJ] = extractJacobianForGausspoint(JAll, k, setupObject, dimension);
-    dN_X_k_I = computedN_X_I(dN_xi_k_I, J, k);
+    dN_X_I = computedN_X_I(dN_xi_k_I, J, k);
 
     % compute nodal operator matrix
-    B = BMatrix(dN_X_k_I);
+    B = BMatrix(dN_X_I);
 
     index = dimension * (k - 1) + 1:dimension * k;
-    dM_X_k_I = J0' \ dM_xiBar_k_I(index, :);
-    L = BMatrix(dM_X_k_I);
+    dM_X_I = J0.' \ dM_xiBar_k_I(index, :);
+    L = BMatrix(dM_X_I);
 
     if ~computePostData
         % TANGENT

@@ -17,7 +17,7 @@ classdef nodalLoadClass < baseFEClass
         nodeList
     end
     properties (SetAccess = private)
-        ePot = struct();
+        elementData = struct();
     end
 
     %% constructor
@@ -133,7 +133,7 @@ classdef nodalLoadClass < baseFEClass
             else
                 displacementDofsPerNode = size(obj.masterObject.qR, 2) - obj.masterObject.additionalFields;
             end
-   
+
             if strcmp(obj.loadPhysics, 'mechanical')
                 globalNodesDof = globalNodesDof(:, 1:displacementDofsPerNode);
             elseif strcmp(obj.loadPhysics, 'thermal')
@@ -186,9 +186,9 @@ classdef nodalLoadClass < baseFEClass
             end
             uN1 = (obj.masterObject.qN1(obj.nodeList, fieldsToConsider) - obj.masterObject.qR(obj.nodeList, fieldsToConsider)).'; % displacement of nodes
             F = repmat(obj.loadVector, numberOfNodes, 1)* obj.timeFunction(setupObject.time); % force on nodes
-            obj.ePot(setupObject.timeStep+1).externalEnergy = uN1(:).' * F;
+            obj.elementData(setupObject.timeStep+1).externalEnergy = uN1(:).' * F;
             if setupObject.timeStep ==1 %% initialise for t=0
-                obj.ePot(1).externalEnergy = 0;
+                obj.elementData(1).externalEnergy = 0;
             end
         end
     end

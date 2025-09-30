@@ -28,7 +28,7 @@ function [nodes, edof, bounEdof] = meshCurvedBeam3D(innerRadius, outerRadius, nu
 % check input
 assert(innerRadius < outerRadius, 'innerRadius must be smaller than outerRadius!');
 assert(numberOfElements >= 1, 'number of elements must be positve and greater or equal to 1!');
-assert(nelZ == 1, 'number of elements in z-Dimension must be 1 otherwise adjustement is needed');
+assert(nelZ >= 1, 'number of elements in z-Dimension must be greater or equal to 1');
 
 % compute nodal positions 
 [nodesOriginal, edof, bounEdof] = meshGeneratorCube(1, 1,width, numberOfElements, 1,nelZ, order, serendipity);
@@ -50,7 +50,7 @@ for ii = 1:(numberOfElements+1)
     nodes(nodesInColumn(1:2),2) = yValues;
 end
 
-% Anpassung nötig für mehr als 1 Element in z Richtung
-numberOfnodesInPlane=size(nodes,1)/2;
-nodes(numberOfnodesInPlane+1:end,1:2) = nodes(1:numberOfnodesInPlane,1:2);
-
+numberOfnodesInPlane=size(nodes,1)/(nelZ+1);
+for ii = 1 : nelZ
+    nodes(numberOfnodesInPlane*ii+1:numberOfnodesInPlane*(ii+1),1:2) = nodes(1:numberOfnodesInPlane,1:2);
+end

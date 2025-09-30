@@ -1,253 +1,142 @@
+% unit test for geometrically exact beam elements 
+
 disp('=======================================');
-disp('Now testing: Beam scripts');
+disp('Now testing: Geometrically exact beam elements');
 disp('=======================================');
 
-% turn off figures
-set(0,'DefaultFigureVisible','off');
+elementsToTest = {'displacementStanderSteinGeometricallyExactHookeMidpoint', ...
+    'displacementPhIrreducibleGeometricallyExactHookeMidpoint', ...
+    'mixedPHGeometricallyExactHookeEndpoint', ...
+    'mixedPHGeometricallyExactHookeMidpoint'};
 
-% name test cases
-testCases = {'static_bernoulli_standard','static_timoshenko_standard','static_timoshenko_PH',...
-    'static_timoshenko_standard_purebending','static_timoshenko_PH_purebending', ...
-    'static_timoshenko_standard_forceAndMoment','static_timoshenko_PH_forceAndMoment', ...
-    'dynamic_bernoulli_standard','dynamic_timoshenko_standard','dynamic_timoshenko_PH', ...
-    'static_timoshenko_ANS', 'static_timoshenko_PetrovGalerkinANS'};
+for ii = 1:size(elementsToTest, 2)
+    elementProperties = getElementProperties(elementsToTest{ii});
 
-for i = 1:numel(testCases)
-    % Catch data for test case
-    materialName = 'Hooke';
-    elementNameAdditionalSpecification = '';
-    switch testCases{i}
-        case 'static_bernoulli_standard'
-            widthToLength = 1/50;
-            beamType = 'Bernoulli';
-            formulationType = 'displacement';
-            nGP = 2;
-            timeSteps = 1;
-            Q = [100;0];
-            q = [1;0];
-            rhoA = 0;
-            integrator = 'Endpoint';
-            timeFunction = str2func('@(t) 1');
-            correct_value = 16.5344;
-            error_tolerance = 1e-4;
-        case 'static_timoshenko_standard'
-            widthToLength = 1/20;
-            beamType = 'Timoshenko';
-            formulationType = 'displacement';
-            nGP = 1;
-            timeSteps = 1;
-            Q = [100;0];
-            q = [1;0];
-            rhoA = 0;
-            integrator = 'Endpoint';
-            timeFunction = str2func('@(t) 1');
-            correct_value = 0.411324867724855;
-            error_tolerance = 1e-12;
-        case 'static_timoshenko_PH'
-            widthToLength = 1/3;
-            beamType = 'Timoshenko';
-            formulationType = 'mixedPH';
-            nGP = 2;
-            timeSteps = 1;
-            Q = -[100;0]; % positive z-direction is upwards
-            q = [-1;0];
-            rhoA = 0;
-            integrator = 'Endpoint';
-            timeFunction = str2func('@(t) 1');
-            correct_value = -2.2457e-04;
-            error_tolerance = 1e-8;
-        case 'static_timoshenko_standard_purebending'
-            widthToLength = 1/3;
-            beamType = 'Timoshenko';
-            formulationType = 'displacement';
-            nGP = 1;
-            timeSteps = 1;
-            Q = [0;0];
-            q = [0;-10]; % positive phi-direction is counterclockwise
-            rhoA = 0;
-            integrator = 'Endpoint';
-            timeFunction = str2func('@(t) 1');
-            correct_value = 1.5e-05; % positive z-direction is downwards
-            error_tolerance = 1e-9;
-        case 'static_timoshenko_PH_purebending'
-            widthToLength = 1/3;
-            beamType = 'Timoshenko';
-            formulationType = 'mixedPH';
-            nGP = 2;
-            timeSteps = 1;
-            Q = [0;0];
-            q = [0;-10]; % positive phi-direction is counterclockwise
-            rhoA = 0;
-            integrator = 'Endpoint';
-            timeFunction = str2func('@(t) 1');
-            correct_value = -1.5e-05; % positive z-direction is upwards
-            error_tolerance = 1e-9;
-        case 'static_timoshenko_standard_forceAndMoment'
-            widthToLength = 1/3;
-            beamType = 'Timoshenko';
-            formulationType = 'displacement';
-            nGP = 1;
-            timeSteps = 1;
-            Q = [100;0];
-            q = [1;-10]; % positive phi-direction is counterclockwise
-            rhoA = 0;
-            integrator = 'Endpoint';
-            timeFunction = str2func('@(t) 1');
-            correct_value = 2.3957e-04; % positive z-direction is downwards
-            error_tolerance = 1e-8;
-        case 'static_timoshenko_PH_forceAndMoment'
-            widthToLength = 1/3;
-            beamType = 'Timoshenko';
-            formulationType = 'mixedPH';
-            nGP = 2;
-            timeSteps = 1;
-            Q = -[100;0];
-            q = [-1;-10]; % positive phi-direction is counterclockwise
-            rhoA = 0;
-            integrator = 'Endpoint';
-            timeFunction = str2func('@(t) 1');
-            correct_value = -2.3957e-04; % positive z-direction is upwards
-            error_tolerance = 1e-8;
-        case 'dynamic_bernoulli_standard'
-            widthToLength = 1/50;
-            beamType = 'Bernoulli';
-            formulationType = 'displacement';
-            nGP = 2;
-            timeSteps = 10;
-            Q = [1000;0];
-            q = [10;20];
-            rhoA = 1;
-            integrator = 'Midpoint';
-            timeFunction = str2func('@(t) sin(pi*t/0.5).*(t<=0.5+1e-12)');
-            correct_value = [];
-            error_tolerance = [];
-        case 'dynamic_timoshenko_standard'
-            widthToLength = 1/3;
-            beamType = 'Timoshenko';
-            formulationType = 'displacement';
-            nGP = 1;
-            timeSteps = 10;
-            Q = [1000;0];
-            q = [10;20];
-            rhoA = 1;
-            integrator = 'Midpoint';
-            timeFunction = str2func('@(t) sin(pi*t/0.5).*(t<=0.5+1e-12)');
-            correct_value = [];
-            error_tolerance = [];
-        case 'dynamic_timoshenko_PH'
-            widthToLength = 1/3;
-            beamType = 'Timoshenko';
-            formulationType = 'mixedPH';
-            nGP = 2;
-            timeSteps = 10;
-            Q = [1000;0];
-            q = [10;20];
-            rhoA = 1;
-            integrator = 'Midpoint';
-            timeFunction = str2func('@(t) sin(pi*t/0.5).*(t<=0.5+1e-12)');
-            correct_value = [];
-            error_tolerance = [];
-        case 'static_timoshenko_ANS'
-            widthToLength = 1/20;
-            beamType = 'Timoshenko';
-            formulationType = 'displacement';
-            elementNameAdditionalSpecification = 'ANS';
-            nGP = 2;
-            timeSteps = 1;
-            Q = [100;0];
-            q = [1;0];
-            rhoA = 0;
-            integrator = 'Endpoint';
-            timeFunction = str2func('@(t) 1');
-            correct_value = 0.411324867724855;
-            error_tolerance = 1e-12;
-        case 'static_timoshenko_PetrovGalerkinANS'
-            widthToLength = 1/20;
-            beamType = 'Timoshenko';
-            formulationType = 'displacement';
-            elementNameAdditionalSpecification = 'PetrovGalerkinANS';
-            nGP = 2;
-            timeSteps = 1;
-            Q = [100;0];
-            q = [1;0];
-            rhoA = 0;
-            integrator = 'Endpoint';
-            timeFunction = str2func('@(t) 1');
-            correct_value = 0.411324867724855;
-            error_tolerance = 1e-12;
-    end
-
-    %% setup (setup and dofs)
+    disp('---------------------------------------');
+    disp(['- Current Element: ', elementsToTest{ii}]);
+    disp('---------------------------------------');
+    
+    rotationAngle = 0;
+    
+    %% Parameters
+    lengthBeam = 1;
+    beamType = 'GeometricallyExact';
+    numberOfElements = 10;
+    E = 184000;
+    R = 0.186;
+    selRednGP = 1;
+    rho = 920;
+    A = pi*R^2;
+    I = (pi*R^4)/4;
+    rhoA = rho*A;
+    shearCorFact = 6/7; %shear correction factor (rectangle 5/6, circle 6/7)
+    
+    %% setup (mandatory: setup and dofs)
     setupObject = setupClass;
-    setupObject.saveObject.fileName = 'testbeams';
+    setupObject.saveObject.fileName = mfilename;
     setupObject.saveObject.saveData = false;
-    setupObject.totalTimeSteps = timeSteps;
-    setupObject.totalTime = 1;
+    setupObject.totalTimeSteps = 2;
+    setupObject.totalTime = 0.2;
     setupObject.plotObject.flag = false;
     setupObject.plotObject.postPlotType = 'zero';
-    setupObject.newton.tolerance = 1e-9;
-    setupObject.integrator = integrator;
+    setupObject.newton.tolerance = 1e-10;
+    setupObject.integrator = elementProperties.integrator;
     setupObject.plotObject.flag = false;
-
+    setupObject.plotObject.postPlotType = 'zero';
+    
     dofObject = dofClass; % required object for dof and object handling
-
+    dofObject.postDataObject.storeStateFlag = true;
+    
     %% continuum Objects
-    beamObject = beamClass(dofObject);
-    beamObject.materialObject.name = materialName;
+    beamObject = beamClass(dofObject,2);
+    beamObject.materialObject.name = "Hooke";
     beamObject.theory = beamType;
-    beamObject.elementDisplacementType = formulationType;
-    beamObject.elementNameAdditionalSpecification = elementNameAdditionalSpecification;
-    lengthBeam = 100;
-    widthBeam = widthToLength * lengthBeam;
-    beamObject.materialObject.E = 2.1 * 10^6;
+    beamObject.elementDisplacementType = elementProperties.displacementType;
+    beamObject.elementNameAdditionalSpecification = elementProperties.elementNameAdditionalSpecification;
+    beamObject.materialObject.E = E;
     nu = 0.3;
     beamObject.materialObject.G = beamObject.materialObject.E/(2*(1+nu));
-    beamObject.materialObject.I = widthBeam^4 / 12;
-    beamObject.materialObject.A = widthBeam^2;
-    beamObject.materialObject.rho = rhoA;
+    beamObject.materialObject.I = I;
+    beamObject.materialObject.A = A;
+    beamObject.materialObject.rho = rho;
+    beamObject.materialObject.shearCorrectionCoefficient = shearCorFact;
     
-    numberOfElements = 3;
-    [nodes, beamObject.meshObject.edof, edofNeumann] = meshOneDimensional(lengthBeam, numberOfElements, 1);
-    nodes = nodes + 1 / 2 * lengthBeam;
-    beamObject.meshObject.nodes = [nodes, zeros(size(nodes))];
+    startpoint = [0;0];
+    endpoint = [cos(rotationAngle)*lengthBeam;sin(rotationAngle)*lengthBeam];
+    length = lengthBeam;
     
+    % Mesh
+    [beamObject.meshObject.nodes,beamObject.meshObject.edof,edofNeumann] = linearString(length,numberOfElements,1,startpoint,endpoint);
     beamObject.dimension = 1;
     beamObject.shapeFunctionObject.order = 1;
-    beamObject.shapeFunctionObject.numberOfGausspoints = nGP;
+    beamObject.shapeFunctionObject.numberOfGausspoints = 2;
+    beamObject.selectiveReducedShapeFunctionObject.order = 1;
+    beamObject.selectiveReducedShapeFunctionObject.numberOfGausspoints = selRednGP;
     
     % dirichlet boundaries
     dirichletObject = dirichletClass(dofObject);
     dirichletObject.nodeList = find(beamObject.meshObject.nodes(:, 1) == 0);
-    dirichletObject.nodalDof = [1, 2];
+    dirichletObject.nodalDof = [1, 2, 3];
     dirichletObject.masterObject = beamObject;
     
-    % neumann boundary
+    % neumann boundaries
+    Q = 1000*[-sin(rotationAngle);cos(rotationAngle);0];
     nodalLoadObject = nodalLoadClass(dofObject);
     nodalLoadObject.masterObject = beamObject;
     nodalLoadObject.loadVector = Q;
-    nodalLoadObject.nodeList = find(beamObject.meshObject.nodes(:, 1) == lengthBeam);
-    nodalLoadObject.timeFunction = timeFunction;
+    nodalLoadObject.nodeList = find(beamObject.meshObject.nodes(:, 1) == endpoint(1));
+    nodalLoadObject.timeFunction = str2func('@(t) sin(pi*t/0.2).*(t<=0.2+1e-12)');
 
-    % distributed load
-    distributedForceObject = bodyForceClass(dofObject);
-    distributedForceObject.typeOfLoad = 'deadLoad';
-    distributedForceObject.masterObject = beamObject;
-    distributedForceObject.loadFunction = q;
-    distributedForceObject.timeFunction = timeFunction;
-    distributedForceObject.dimension = 2; % second dimension required to fix bodyforce vector
-    distributedForceObject.meshObject.edof = beamObject.meshObject.edof;
-    distributedForceObject.shapeFunctionObject.order = 1;
-    distributedForceObject.shapeFunctionObject.numberOfGausspoints = nGP;
-
+    %Bodyforce
+    bodyForceObject = bodyForceClass(dofObject);
+    bodyForceObject.typeOfLoad = 'deadLoad';
+    bodyForceObject.masterObject = beamObject;
+    bodyForceObject.loadFunction = rhoA*[0; -9.81];
+    bodyForceObject.dimension = 2;
+    bodyForceObject.timeFunction = str2func('@(t) 1');
+    bodyForceObject.meshObject.edof = beamObject.meshObject.edof;
+    bodyForceObject.shapeFunctionObject.order = 1;
+    bodyForceObject.shapeFunctionObject.numberOfGausspoints = 2;
+    
     %% solver
+    beamObject.numericalTangentObject.computeNumericalTangent = true;
+    beamObject.numericalTangentObject.showDifferences = false;
+    
+    % runNewton
     dofObject = runNewton(setupObject, dofObject);
-    
-    %% Check result
-    if ~isempty(correct_value)
-        displacementLastNode = dofObject.listContinuumObjects{1}.qN1(end, 1);
-        assert(abs(displacementLastNode - correct_value) <= error_tolerance, ['Wrong results for testcase: ',testCases{i}]);
-    end
-    
+    nodeToMeasure = numberOfElements+1;
+    DisplacementAndRotation = beamObject.qN1(nodeToMeasure,:)-beamObject.qR(nodeToMeasure,:);
+    disp(['Displacement and Rotation: ', num2str(DisplacementAndRotation)]);
+    assert(~any((DisplacementAndRotation-elementProperties.correctSolution) > 10^-5*[1,1,1]) , ['Wrong results for ', elementsToTest{ii}]);
 end
 
-close all
+function elementProperties = getElementProperties(elementName)
+displacementType = 'displacement';
+elementNameAdditionalSpecification = '';
+integrator = 'Midpoint';
+switch elementName
+    case 'displacementStanderSteinGeometricallyExactHookeMidpoint'
+        elementNameAdditionalSpecification = 'StanderStein';
+        correctSolution = [-0.093072 0.29187 0.74402];
+    case 'displacementPhIrreducibleGeometricallyExactHookeMidpoint'
+        elementNameAdditionalSpecification = 'PhIrreducible';
+        correctSolution = [-0.08888 0.28768 0.73163];
+    case 'mixedPHGeometricallyExactHookeEndpoint'
+        displacementType = 'mixedPH';
+        integrator = 'Endpoint';
+        correctSolution = [-0.07859 0.16118 0.33823];
+    case 'mixedPHGeometricallyExactHookeMidpoint'
+        displacementType = 'mixedPH';
+        correctSolution = [-0.091077 0.28976 0.74456];
+    otherwise
+        warning(['Element ', elementName, ' not implemented!'])
+end
+
+elementProperties = struct();
+elementProperties.displacementType = displacementType;
+elementProperties.elementNameAdditionalSpecification = elementNameAdditionalSpecification;
+elementProperties.integrator = integrator;
+elementProperties.elementNameAdditionalSpecification = elementNameAdditionalSpecification;
+elementProperties.correctSolution = correctSolution;
+
+end

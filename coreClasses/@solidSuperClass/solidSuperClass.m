@@ -38,7 +38,7 @@ classdef solidSuperClass < baseFEClass
         elementDisplacementType = 'displacement';   % mixedSC
         elementNameAdditionalSpecification = '';    % for mixedSC: NonCascadeCGc, InvariantCGc; attention: empty '' means cascade version of CGc
         qR
-        ePot = struct();
+        elementData = struct();
         momenta = struct('L',[],'J',[]);
         %flagNumericalTangent = [false;...   % compute element with numerical tangent
         %                        false];     % show difference of numerical and analytical tangent
@@ -134,9 +134,6 @@ classdef solidSuperClass < baseFEClass
                             0 0 1];
             end
             obj.meshObject.nodes(:,1:3) = (R*(obj.meshObject.nodes(:,1:3))')';
-            obj.qR(:,1:3) = (R*(obj.qR(:,1:3))')';
-            obj.qN(:,1:3) = (R*(obj.qN(:,1:3))')';
-            obj.qN1(:,1:3) = (R*(obj.qN1(:,1:3))')';
         end
         function reflection(obj,reflectionAxis)
             assert(obj.dimension==3,'the reflection operation is only implemented for 3D')

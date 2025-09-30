@@ -83,7 +83,6 @@ for k = 1:numberOfGausspoints
     
     % B-matrix (current configuration)
     BN1 = BMatrix(dN_X_I,FxN1);
-    BN1 = 2*BN1;
 
     % Helmholtz energy function
     PsiIsoN1 = a*(trace(CxN1)-dimension) + b*(trace(GxN1)-dimension);
@@ -107,9 +106,9 @@ for k = 1:numberOfGausspoints
     
     if ~computePostData
         if ~(numel(CxN1)==1)
-            rX = BN1.'*0.5*matrixToVoigt(SN1, 'stress');
+            rX = BN1.'*matrixToVoigt(SN1, 'stress');
         else
-            rX = BN1.'*0.5*SN1;
+            rX = BN1.'*SN1;
         end
         etaN1 = kappa*log(thetaN1e/thetaR)+dimension*beta*(c*(sqrt(cxN1)-1)-d/sqrt(cxN1));
         etaN = kappa*log(thetaNe/thetaR)+dimension*beta*(c*(sqrt(cxN)-1)-d/sqrt(cxN));

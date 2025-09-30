@@ -35,8 +35,8 @@ if computeInitialConfiguration
     setupObject.plotObject.makeMovie = false;
     % setupObject.plotObject.time = 'R';
     % setupObject.plotObject.postPlotType = 'none';
-%     setupObject.plotObject.postPlotType = 'temp';
-%     setupObject.plotObject.postPlotType = 'phi';
+    %     setupObject.plotObject.postPlotType = 'temp';
+    %     setupObject.plotObject.postPlotType = 'phi';
     setupObject.plotObject.postPlotType = 'stress';
     % setupObject.plotObject.postPlotType = 'none';
     % setupObject.plotObject.postPlotType = 'D1';
@@ -133,14 +133,14 @@ if computeInitialConfiguration
     parfevalOnAll(gcp(), @warning, 0, 'off', 'MATLAB:nearlySingularMatrix')
     runNewton(setupObject,dofObject);
 
-%     clear;
+    %     clear;
 end
 
 % plot total energy
 timeVector = getTime(dofObject.postDataObject, setupObject);
 kineticEnergy = getKineticEnergy(dofObject.postDataObject, setupObject);
-internalEnergy = getEnergy(dofObject.postDataObject, dofObject, setupObject, 'internalEnergy');
-externalEnergy = getEnergy(dofObject.postDataObject, dofObject, setupObject, 'externalEnergy');
+internalEnergy = getElementData(dofObject.postDataObject, dofObject, setupObject, 'internalEnergy');
+externalEnergy = getElementData(dofObject.postDataObject, dofObject, setupObject, 'externalEnergy');
 totalEnergy = kineticEnergy + internalEnergy;
 figure;
 plot(timeVector, totalEnergy);
@@ -164,15 +164,15 @@ if computeConvergence
         % load Data of first steps
         load('rotatingXElectroThermoMechanicsInitialData.mat');
         load('rotatingXElectroThermoMechanicsBasis.mat', 'setupObject10', 'dofObject10');
-        
+
         %% setup (mandatory: setup and dofs)
         setupObject = setupClass;
         setupObject.saveObject.fileName = strcat('rotatingXElectroThermoMechanicsDT', num2str(variableTimeStepSizeVector(jj)));
         setupObject.totalTime = 0.1;
         lastTimeStep = setupObject.totalTime/variableTimeStepSizeVector(jj);
-        
+
         setupObject.totalTimeSteps = lastTimeStep;
-        
+
         setupObject.saveObject.saveData = true;
         setupObject.saveObject.saveForTimeSteps = lastTimeStep;
         if mod(lastTimeStep, 1000) == 0
@@ -195,15 +195,15 @@ if computeConvergence
         % setupObject.integrator = 'Endpoint';
         % setupObject.integrator = 'Midpoint';
         setupObject.integrator = 'DiscreteGradient';
-        
+
         if variableTimeStepSizeVector(jj) < 1e-4
             setupObject.integrator = 'Midpoint';
         else
             setupObject.integrator = 'DiscreteGradient';
         end
-    
+
         dofObject = dofClass;   % required object for dof and object handling
-    
+
         %% continuum Objects
         solidElectroThermoObject = solidElectroThermoClass(dofObject);
         solidElectroThermoObject.meshObject.nodes = initialNodes;
@@ -236,16 +236,16 @@ if computeConvergence
         solidElectroThermoObject.shapeFunctionObject.numberOfGausspoints = 27;
         solidElectroThermoObject.mixedFEObject.condensation = true;
         solidElectroThermoObject.mixedFEObject.typeShapeFunctionData = 1;
-    
+
         solidElectroThermoObject.mixedFEObject.qN = dofObject10.listContinuumObjects{1}.mixedFEObject.qN1;
         solidElectroThermoObject.qN = dofObject10.listContinuumObjects{1}.qN1;
         solidElectroThermoObject.vN = dofObject10.listContinuumObjects{1}.vN1;
-    
-    
+
+
         % electrical dirichlet boundary conditions
         maxPotential = 1e6;
         timeFunction = @(t,Z) maxPotential;
-    
+
         % Mid
         dirichletObject1 = dirichletClass(dofObject);
         dirichletObject1.nodeList = nodeListDirichletObjects{1};
@@ -258,13 +258,13 @@ if computeConvergence
         dirichletObject2.nodalDof = 4;
         dirichletObject2.timeFunction = timeFunction;
         dirichletObject2.masterObject = solidElectroThermoObject;
-    
+
         %% solver
         warning off;
         parfevalOnAll(gcp(), @warning, 0, 'off', 'MATLAB:singularMatrix')
         parfevalOnAll(gcp(), @warning, 0, 'off', 'MATLAB:nearlySingularMatrix')
         runNewton(setupObject,dofObject);
-        
+
         clear;
     end
 end

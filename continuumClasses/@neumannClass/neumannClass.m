@@ -15,7 +15,7 @@ classdef neumannClass < baseFEClass
         timeFunction = @(t) 1;
         projectionType = 'none' % which length is used for calculation of area (not needed in 1D) --> 'none': real length, 'x': length in xdirection, 'y': length in ydirection
 
-        ePot = struct('externalEnergy', 0);
+        elementData = struct('externalEnergy', 0);
     end
     properties (SetAccess = private)
         elementGeometryType
@@ -216,8 +216,12 @@ classdef neumannClass < baseFEClass
 
             % load vector
             if strcmp(obj.loadPhysics, 'mechanical')
-                numberOfAdditionalDofsPerNode = sum(obj.masterObject.dofsPerAdditionalField);
-                displacementDofsPerNode = size(obj.masterObject.qR, 2) - numberOfAdditionalDofsPerNode;
+                % if isa(obj.masterObject,'solidVelocityClass')
+                %     displacementDofsPerNode = size(obj.masterObject.qR, 2);
+                % else
+                    numberOfAdditionalDofsPerNode = sum(obj.masterObject.dofsPerAdditionalField);
+                    displacementDofsPerNode = size(obj.masterObject.qR, 2) - numberOfAdditionalDofsPerNode;
+                % end
                 if ~isempty(obj.loadVector)
                     % check loadVector
                     assert(size(obj.loadVector, 1) == displacementDofsPerNode, ['loadVector must be of size "', num2str(displacementDofsPerNode), ' x 1"']);

@@ -95,8 +95,8 @@ fprintf('\nDisplacement: %4.3f\n', yDisplacementUpperRightNode)
 %% postprocessing - energy
 timeVector = getTime(dofObject.postDataObject, setupObject);
 kineticEnergy = getKineticEnergy(dofObject.postDataObject, setupObject);
-strainEnergy = getEnergy(dofObject.postDataObject, dofObject, setupObject, 'strainEnergy');
-externalEnergy = getEnergy(dofObject.postDataObject, dofObject, setupObject, 'externalEnergy');
+strainEnergy = getElementData(dofObject.postDataObject, dofObject, setupObject, 'strainEnergy');
+externalEnergy = getElementData(dofObject.postDataObject, dofObject, setupObject, 'externalEnergy');
 figure;
 if strcmp(formulation, 'Livens')
     plot(timeVector, strainEnergy);

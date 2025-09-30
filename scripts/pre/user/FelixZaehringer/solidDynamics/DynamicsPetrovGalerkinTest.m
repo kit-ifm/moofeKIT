@@ -10,7 +10,7 @@ setupObject = setupClass;
 setupObject.saveObject.fileName = 'block';
 setupObject.saveObject.saveData = false;
 setupObject.totalTime = 10;
-setupObject.plotObject.flag = true;
+setupObject.plotObject.flag = false;
 setupObject.plotObject.view = 2;
 setupObject.plotObject.postPlotType = 'zero';
 setupObject.plotObject.stress.component = 11;
@@ -40,12 +40,13 @@ elseif strcmpi(class, 'solidVelocity')
     solidObject = solidVelocityClass(dofObject);
 end
 solidObject.dimension = 2;
-% solidObject.elementDisplacementType = 'eas';
+solidObject.elementDisplacementType = 'eas';
 % solidObject.elementNameAdditionalSpecification = 'PetrovGalerkin';
 % solidObject.elementNameAdditionalSpecification = 'NewConstraint';
 solidObject.elementNameAdditionalSpecification = 'PetrovGalerkinNewConstraint';
-solidObject.numericalTangentObject.computeNumericalTangent = true;
+solidObject.numericalTangentObject.computeNumericalTangent = false;
 solidObject.numericalTangentObject.showDifferences = false;
+solidObject.mixedFEObject.typeShapeFunction = 2;
 solidObject.mixedFEObject.typeShapeFunctionData = 4;
 solidObject.mixedFEObject.condensation = true;
 order = 1;
@@ -137,17 +138,17 @@ timeVector = getTime(dofObject.postDataObject, setupObject);
 if strcmpi(class, 'solid')
     kineticEnergy = getKineticEnergy(dofObject.postDataObject, setupObject);
 elseif strcmpi(class, 'solidVelocity')
-    kineticEnergy = getEnergy(dofObject.postDataObject, dofObject, setupObject, 'kineticEnergy');
+    kineticEnergy = getElementData(dofObject.postDataObject, dofObject, setupObject, 'kineticEnergy');
 end
-strainEnergy = getEnergy(dofObject.postDataObject, dofObject, setupObject, 'strainEnergy');
-externalEnergy = getEnergy(dofObject.postDataObject, dofObject, setupObject, 'externalEnergy');
+strainEnergy = getElementData(dofObject.postDataObject, dofObject, setupObject, 'strainEnergy');
+externalEnergy = getElementData(dofObject.postDataObject, dofObject, setupObject, 'externalEnergy');
 figure;
 plot(timeVector, kineticEnergy+strainEnergy);
-% 
+%
 % [angularMomentum, totalAngularMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'J',2);
 % figure;
 % plot(timeVector, totalAngularMomentum);
-% 
+%
 % [linearMomentum, totalLinearMomentum] = getMomentum(dofObject.postDataObject,dofObject,setupObject,'L',2);
 % figure;
 % plot(timeVector, totalLinearMomentum);
