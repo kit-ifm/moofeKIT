@@ -1,3 +1,8 @@
 # List of untracked files to ignore
-# .txt files
-*.txt
+# image files
+*.eps
+*.png
+*.svg
+*.jpg
+*.jpeg
+*.tikz
